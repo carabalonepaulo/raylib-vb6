@@ -10,10 +10,6 @@ Function LoadTexture(ByVal filePath As String) As Texture2D
 Sub UnloadTexture(ByVal textureID As Long)
 Function LoadImageFont(ByVal filePath As String, ByVal charList As String) As ImageFont
 
-Function LoadRenderTexture(ByVal Width As Long, ByVal Height As Long) As RenderTexture2D
-Sub BeginTextureMode(ByRef Target As RenderTexture2D)
-Sub EndTextureMode()
-
 Sub BeginDrawing()
 Sub Clear(ByVal r As Single, ByVal G As Single, ByVal B As Single, ByVal A As Single)
 Sub EndDrawing()

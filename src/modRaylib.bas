@@ -1694,7 +1694,7 @@ Public Sub DrawTextureNPatch(ByRef tex As Texture2D, ByRef info As NPatchInfo, B
     rightBorder = CSng(info.Right)
     bottomBorder = CSng(info.Bottom)
 
-    If patchWidth <= (leftBorder + rightBorder) And info.Layout <> NPATCH_THREE_PATCH_VERTICAL Then
+    If patchWidth <= (leftBorder + rightBorder) And info.Layout <> ThreePatchVertical Then
         drawCenter = False
         If (leftBorder + rightBorder) > 0! Then
             leftBorder = (leftBorder / (leftBorder + rightBorder)) * patchWidth
@@ -1702,7 +1702,7 @@ Public Sub DrawTextureNPatch(ByRef tex As Texture2D, ByRef info As NPatchInfo, B
         rightBorder = patchWidth - leftBorder
     End If
 
-    If patchHeight <= (topBorder + bottomBorder) And info.Layout <> NPATCH_THREE_PATCH_HORIZONTAL Then
+    If patchHeight <= (topBorder + bottomBorder) And info.Layout <> ThreePatchHorizontal Then
         drawMiddle = False
         If (topBorder + bottomBorder) > 0! Then
             topBorder = (topBorder / (topBorder + bottomBorder)) * patchHeight
