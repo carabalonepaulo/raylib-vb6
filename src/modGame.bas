@@ -11,7 +11,7 @@ Dim mouseColor As ColorRGBA
 Dim camera As Camera2D
 
 Sub Main()
-    Run frmMain, InitialScreenWidth, InitialScreenHeight, TargetFPS
+    Run frmMain, 1280, 768, 60
 End Sub
 
 Sub Game_Load()
