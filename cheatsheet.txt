@@ -1,0 +1,75 @@
+Function LoadImage(ByVal filePath As String) As Image
+Function ImageGetPixel(ByRef img As Image, ByVal X As Long, ByVal Y As Long) As ColorRGBA
+Sub ImageSetPixel(ByRef img As Image, ByVal X As Long, ByVal Y As Long, ByRef col As ColorRGBA)
+Sub ImageClear(ByRef img As Image, ByRef col As ColorRGBA)
+Sub ImageDrawRect(ByRef img As Image, ByRef Rect As Rectangle, ByRef col As ColorRGBA)
+Sub ImageDrawImage(ByRef imgDst As Image, ByRef Rect As Rectangle, ByRef imgSrc As Image, ByRef col As ColorRGBA)
+
+Function LoadTextureFromImage(ByRef img As Image) As Texture2D
+Function LoadTexture(ByVal filePath As String) As Texture2D
+Sub UnloadTexture(ByVal textureID As Long)
+Function LoadImageFont(ByVal filePath As String, ByVal charList As String) As ImageFont
+
+Function LoadRenderTexture(ByVal Width As Long, ByVal Height As Long) As RenderTexture2D
+Sub BeginTextureMode(ByRef Target As RenderTexture2D)
+Sub EndTextureMode()
+
+Sub BeginDrawing()
+Sub Clear(ByVal r As Single, ByVal G As Single, ByVal B As Single, ByVal A As Single)
+Sub EndDrawing()
+
+Sub DrawRectangle(ByVal X As Single, ByVal Y As Single, ByVal Width As Single, ByVal Height As Single, ByRef color As ColorRGBA)
+Sub DrawRectangleRec(ByRef r As Rectangle, ByRef color As ColorRGBA)
+Sub DrawRectanglePro(ByRef r As Rectangle, ByRef origin As Vector2, ByVal rot As Single, ByRef color As ColorRGBA)
+Sub DrawRectangleLines(ByVal X As Single, ByVal Y As Single, ByVal Width As Single, ByVal Height As Single, ByRef color As ColorRGBA)
+Sub DrawRectangleLinesEx(ByRef r As Rectangle, ByRef thick As Single, ByRef color As ColorRGBA)
+Sub DrawRectangleRounded(ByRef r As Rectangle, ByRef roundness As Single, ByVal segments As Long, ByRef color As ColorRGBA)
+Sub DrawRectangleRoundedLines(ByRef r As Rectangle, ByRef roundness As Single, ByVal segments As Long, ByRef color As ColorRGBA)
+Sub DrawRectangleRoundedLinesEx(ByRef r As Rectangle, ByRef roundness As Single, ByVal segments As Long, ByVal thick As Single, ByRef color As ColorRGBA)
+
+Sub DrawCircle(ByVal centerX As Long, ByVal centerY As Long, ByVal radius As Single, ByRef color As ColorRGBA)
+Sub DrawCircleV(ByRef center As Vector2, ByVal radius As Single, ByRef color As ColorRGBA)
+Sub DrawCircleGradient(ByRef center As Vector2, ByVal radius As Single, ByRef inner As ColorRGBA, ByRef outer As ColorRGBA)
+Sub DrawCircleSector(ByRef center As Vector2, ByVal radius As Single, ByVal startAngle As Single, ByVal endAngle As Single, ByVal segments As Long, ByRef color As ColorRGBA)
+Sub DrawCircleSectorLines(ByRef center As Vector2, ByVal radius As Single, ByVal startAngle As Single, ByVal endAngle As Single, ByVal segments As Long, ByRef color As ColorRGBA)
+Sub DrawCircleSectorLinesEx(ByRef center As Vector2, ByVal radius As Single, ByVal startAngle As Single, ByVal endAngle As Single, ByVal segments As Long, ByVal thick As Single, ByRef color As ColorRGBA)
+Sub DrawCircleLines(ByVal centerX As Long, ByVal centerY As Long, ByVal radius As Single, ByRef color As ColorRGBA)
+Sub DrawCircleLinesV(ByRef center As Vector2, ByVal radius As Single, ByRef color As ColorRGBA)
+Sub DrawCircleLinesEx(ByRef center As Vector2, ByVal radius As Single, ByVal thick As Single, ByRef color As ColorRGBA)
+
+Sub DrawTriangle(ByVal x1 As Single, ByVal y1 As Single, ByVal x2 As Single, ByVal y2 As Single, ByVal x3 As Single, ByVal y3 As Single, ByRef color As ColorRGBA)
+Sub DrawLine(ByVal x1 As Single, ByVal y1 As Single, ByVal x2 As Single, ByVal y2 As Single, ByRef color As ColorRGBA, ByVal thickness As Single)
+
+Sub DrawTexture(ByRef tex As Texture2D, ByVal X As Single, ByVal Y As Single, ByVal Width As Single, ByVal Height As Single, ByRef tint As ColorRGBA)
+Sub DrawTextureRec(ByRef tex As Texture2D, ByRef sourceRec As Rectangle, ByRef pos As Vector2, ByRef tint As ColorRGBA)
+Sub DrawTexturePro(ByRef tex As Texture2D, ByRef sourceRec As Rectangle, ByRef dstrect As Rectangle, ByRef origin As Vector2, ByVal rot As Single, ByRef tint As ColorRGBA)
+Sub DrawTextureNPatch(ByRef tex As Texture2D, ByRef info As NPatchInfo, ByRef dstrect As Rectangle, ByRef origin As Vector2, ByVal rot As Single, ByRef color As ColorRGBA)
+
+Sub DrawText(ByRef font As ImageFont, ByVal text As String, ByVal X As Single, ByVal Y As Single, ByRef tint As ColorRGBA)
+
+Sub PlaySound(ByVal path As String)
+Sub PlayMusic(ByVal path As String)
+Sub StopMusic()
+
+Function IsKeyPressed(ByVal key As KeyboardKey) As Boolean
+Function IsKeyPressedRepeat(ByVal key As KeyboardKey) As Boolean
+Function IsKeyDown(ByVal key As KeyboardKey) As Boolean
+Function IsKeyReleased(ByVal key As KeyboardKey) As Boolean
+Function IsKeyUp(ByVal key As KeyboardKey) As Boolean
+Function GetKeyPressed() As Long
+Function GetCharPressed() As Long
+Function GetKeyName(ByVal key As KeyboardKey) As String
+
+Function IsMouseButtonPressed(ByVal button As MouseButton) As Boolean
+Function IsMouseButtonDown(ByVal button As MouseButton) As Boolean
+Function IsMouseButtonReleased(ByVal button As MouseButton) As Boolean
+Function IsMouseButtonUp(ByVal button As MouseButton) As Boolean
+Function GetMouseX() As Long
+Function GetMouseY() As Long
+Function GetMouseDeltaX() As Single
+Function GetMouseDeltaY() As Single
+Function GetMouseWheelMove() As Single
+Sub SetMouseWheel(ByVal value As Single)
+
+Function GetWorldToScreen2D(ByRef position As Vector2, ByRef camera As Camera2D) As Vector2
+Function GetScreenToWorld2D(ByRef position As Vector2, ByRef camera As Camera2D) As Vector2
