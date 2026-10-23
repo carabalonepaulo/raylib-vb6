@@ -164,7 +164,7 @@ End Type
 
 Private Declare Function GdiplusStartup Lib "gdiplus" (token As Long, inputbuf As GsiStartupInput, ByVal outputbuf As Long) As Long
 Private Declare Function GdiplusShutdown Lib "gdiplus" (ByVal token As Long) As Long
-Private Declare Function GdipLoadImageFromFile Lib "gdiplus" (ByVal filename As Long, Image As Long) As Long
+Private Declare Function GdipLoadImageFromFile Lib "gdiplus" (ByVal fileName As Long, Image As Long) As Long
 Private Declare Function GdipDisposeImage Lib "gdiplus" (ByVal Image As Long) As Long
 Private Declare Function GdipGetImageWidth Lib "gdiplus" (ByVal Image As Long, Width As Long) As Long
 Private Declare Function GdipGetImageHeight Lib "gdiplus" (ByVal Image As Long, Height As Long) As Long
@@ -176,7 +176,7 @@ Private Type BitmapData
     Height As Long
     stride As Long
     PixelFormat As Long
-    Scan0 As Long
+    scan0 As Long
     Reserved As Long
 End Type
 
@@ -205,10 +205,10 @@ Public Type Rectangle
 End Type
 
 Public Type ColorRGBA
-    R As Single
-    G As Single
-    B As Single
-    A As Single
+    r As Single
+    g As Single
+    b As Single
+    a As Single
 End Type
 
 Public Type Texture2D
@@ -221,8 +221,8 @@ End Type
 ' renderbuffer de profundidade (Depth.Width/Height nao sao usados).
 Public Type RenderTexture2D
     Id As Long
-    Texture As Texture2D
-    Depth As Texture2D
+    texture As Texture2D
+    depth As Texture2D
 End Type
 
 Public Type Image
@@ -232,12 +232,12 @@ Public Type Image
 End Type
 
 Public Type GlyphRect
-    Left As Single
+    left As Single
     Width As Single
 End Type
 
 Public Type ImageFont
-    Texture As Texture2D
+    texture As Texture2D
     Glyphs() As GlyphRect
     CharList As String
     Height As Long
@@ -251,16 +251,16 @@ End Enum
 
 Public Type NPatchInfo
     Source As Rectangle
-    Left As Long
-    Top As Long
-    Right As Long
-    Bottom As Long
+    left As Long
+    top As Long
+    right As Long
+    bottom As Long
     Layout As NPatchMode
 End Type
 
 Public Type Camera2D
     Offset As Vector2
-    Target As Vector2
+    target As Vector2
     Rot As Single
     Zoom As Single
 End Type
@@ -321,7 +321,7 @@ Private mSubclassed As Boolean
 Private mOldWndProc As Long
 Private mSavedStyle As Long
 Private mSavedExStyle As Long
-Private mSavedRect As RECT
+Private mSavedRect As Rect
 
 Private mTargetFPS As Long
 Private mFrameTime As Single
@@ -356,17 +356,17 @@ Private mRenderTop As Long
 
 ' Core: janela / monitor / clipboard / cursor (declaracoes Win32)
 
-Private Type RECT
-    Left As Long
-    Top As Long
-    Right As Long
-    Bottom As Long
+Private Type Rect
+    left As Long
+    top As Long
+    right As Long
+    bottom As Long
 End Type
 
 Private Type MONITORINFO
     cbSize As Long
-    rcMonitor As RECT
-    rcWork As RECT
+    rcMonitor As Rect
+    rcWork As Rect
     dwFlags As Long
 End Type
 
@@ -512,16 +512,16 @@ Private Declare Function ShowWindow Lib "user32" (ByVal hwnd As Long, ByVal nCmd
 Private Declare Function GetForegroundWindow Lib "user32" () As Long
 Private Declare Function IsIconic Lib "user32" (ByVal hwnd As Long) As Long
 Private Declare Function IsZoomed Lib "user32" (ByVal hwnd As Long) As Long
-Private Declare Function GetClientRect Lib "user32" (ByVal hwnd As Long, lpRect As RECT) As Long
-Private Declare Function GetWindowRect Lib "user32" (ByVal hwnd As Long, lpRect As RECT) As Long
-Private Declare Function AdjustWindowRectEx Lib "user32" (lpRect As RECT, ByVal dwStyle As Long, ByVal bMenu As Long, ByVal dwExStyle As Long) As Long
+Private Declare Function GetClientRect Lib "user32" (ByVal hwnd As Long, lpRect As Rect) As Long
+Private Declare Function GetWindowRect Lib "user32" (ByVal hwnd As Long, lpRect As Rect) As Long
+Private Declare Function AdjustWindowRectEx Lib "user32" (lpRect As Rect, ByVal dwStyle As Long, ByVal bMenu As Long, ByVal dwExStyle As Long) As Long
 Private Declare Function SetLayeredWindowAttributes Lib "user32" (ByVal hwnd As Long, ByVal crKey As Long, ByVal bAlpha As Byte, ByVal dwFlags As Long) As Long
 Private Declare Function GetSystemMetrics Lib "user32" (ByVal nIndex As Long) As Long
 Private Declare Function GetDC Lib "user32" (ByVal hwnd As Long) As Long
-Private Declare Function ReleaseDC Lib "user32" (ByVal hwnd As Long, ByVal hdc As Long) As Long
-Private Declare Function GetDeviceCaps Lib "gdi32" (ByVal hdc As Long, ByVal nIndex As Long) As Long
+Private Declare Function ReleaseDC Lib "user32" (ByVal hwnd As Long, ByVal hDC As Long) As Long
+Private Declare Function GetDeviceCaps Lib "gdi32" (ByVal hDC As Long, ByVal nIndex As Long) As Long
 
-Private Declare Function EnumDisplayMonitors Lib "user32" (ByVal hdc As Long, ByVal lprcClip As Long, ByVal lpfnEnum As Long, ByVal dwData As Long) As Long
+Private Declare Function EnumDisplayMonitors Lib "user32" (ByVal hDC As Long, ByVal lprcClip As Long, ByVal lpfnEnum As Long, ByVal dwData As Long) As Long
 Private Declare Function GetMonitorInfoA Lib "user32" (ByVal hMonitor As Long, lpmi As MONITORINFO) As Long
 Private Declare Function MonitorFromWindow Lib "user32" (ByVal hwnd As Long, ByVal dwFlags As Long) As Long
 Private Declare Function EnumDisplaySettingsA Lib "user32" (ByVal lpszDeviceName As Long, ByVal iModeNum As Long, lpDevMode As DEVMODE) As Long
@@ -542,8 +542,8 @@ Private Declare Function LoadCursorA Lib "user32" (ByVal hInstance As Long, ByVa
 Private Declare Function SetCursorPos Lib "user32" (ByVal x As Long, ByVal y As Long) As Long
 Private Declare Function ClientToScreen Lib "user32" (ByVal hwnd As Long, lpPoint As POINTAPI) As Long
 
-Private Declare Function GdipCreateBitmapFromScan0 Lib "gdiplus" (ByVal Width As Long, ByVal Height As Long, ByVal stride As Long, ByVal PixelFormat As Long, ByVal scan0 As Long, Bitmap As Long) As Long
-Private Declare Function GdipSaveImageToFile Lib "gdiplus" (ByVal Image As Long, ByVal filename As Long, ByRef clsidEncoder As GUID, ByVal encoderParams As Long) As Long
+Private Declare Function GdipCreateBitmapFromScan0 Lib "gdiplus" (ByVal Width As Long, ByVal Height As Long, ByVal stride As Long, ByVal PixelFormat As Long, ByVal scan0 As Long, bitmap As Long) As Long
+Private Declare Function GdipSaveImageToFile Lib "gdiplus" (ByVal Image As Long, ByVal fileName As Long, ByRef clsidEncoder As GUID, ByVal encoderParams As Long) As Long
 
 ' Utils
 
@@ -551,11 +551,11 @@ Public Function GetFullPath(ByVal relativePath As String) As String
     Dim basePath As String
     basePath = app.path
 
-    If Right$(basePath, 1) <> "\" Then
+    If right$(basePath, 1) <> "\" Then
         basePath = basePath & "\"
     End If
 
-    If Left$(relativePath, 1) = "\" Then
+    If left$(relativePath, 1) = "\" Then
         relativePath = Mid$(relativePath, 2)
     End If
 
@@ -563,20 +563,20 @@ Public Function GetFullPath(ByVal relativePath As String) As String
 End Function
 
 Private Function VBGetByte(ByVal Addr As Long) As Byte
-    Dim B As Byte
-    CopyMemory B, ByVal Addr, 1
-    VBGetByte = B
+    Dim b As Byte
+    CopyMemory b, ByVal Addr, 1
+    VBGetByte = b
 End Function
 
-Private Sub VBPutByte(ByVal Addr As Long, ByVal B As Byte)
-    CopyMemory ByVal Addr, B, 1
+Private Sub VBPutByte(ByVal Addr As Long, ByVal b As Byte)
+    CopyMemory ByVal Addr, b, 1
 End Sub
 
-Sub Color(ByRef c As ColorRGBA, ByVal R As Single, ByVal G As Single, ByVal B As Single, ByVal A As Single)
-    c.R = R
-    c.G = G
-    c.B = B
-    c.A = A
+Sub Color(ByRef c As ColorRGBA, ByVal r As Single, ByVal g As Single, ByVal b As Single, ByVal a As Single)
+    c.r = r
+    c.g = g
+    c.b = b
+    c.a = a
 End Sub
 
 Sub Vec(ByRef v As Vector2, ByVal x As Single, ByVal y As Single)
@@ -584,18 +584,18 @@ Sub Vec(ByRef v As Vector2, ByVal x As Single, ByVal y As Single)
     v.y = y
 End Sub
 
-Sub Rect(ByRef R As Rectangle, ByVal x As Single, ByVal y As Single, ByVal w As Single, ByVal h As Single)
-    R.x = x
-    R.y = y
-    R.Width = w
-    R.Height = h
+Sub Rect(ByRef r As Rectangle, ByVal x As Single, ByVal y As Single, ByVal w As Single, ByVal h As Single)
+    r.x = x
+    r.y = y
+    r.Width = w
+    r.Height = h
 End Sub
 
 Public Function GetWorldToScreen2D(ByRef position As Vector2, ByRef camera As Camera2D) As Vector2
     Dim result As Vector2
 
-    result.x = position.x - camera.Target.x
-    result.y = position.y - camera.Target.y
+    result.x = position.x - camera.target.x
+    result.y = position.y - camera.target.y
 
     If camera.Rot <> 0! Then
         Const PI As Single = 3.14159265
@@ -641,8 +641,8 @@ Public Function GetScreenToWorld2D(ByRef position As Vector2, ByRef camera As Ca
         result.y = ry
     End If
 
-    result.x = result.x + camera.Target.x
-    result.y = result.y + camera.Target.y
+    result.x = result.x + camera.target.x
+    result.y = result.y + camera.target.y
 
     GetScreenToWorld2D = result
 End Function
@@ -656,9 +656,12 @@ Private Sub InitImageLoader()
     GdiplusStartup token, si, 0
 End Sub
 
-Private Function InitOpenGL(ByVal hDC As Long, ByVal w As Long, ByVal h As Long) As Boolean
+Public Function InitWindow(ByRef frmMain As Form, ByVal Width As Long, ByVal Height As Long) As Boolean
     Dim pfd As PIXELFORMATDESCRIPTOR
     Dim pf As Long
+    Dim hDC As Long
+
+    hDC = frmMain.hDC
 
     With pfd
         .nSize = Len(pfd)
@@ -681,25 +684,26 @@ Private Function InitOpenGL(ByVal hDC As Long, ByVal w As Long, ByVal h As Long)
     End If
 
     m_hDC = hDC
+    m_hWnd = frmMain.hwnd
 
     If wglMakeCurrent(hDC, m_hRC) = 0 Then
         Debug.Print "wglMakeCurrent falhou"
         Exit Function
     End If
 
-    screenWidth = w
-    screenHeight = h
+    screenWidth = Width
+    screenHeight = Height
 
-    wglMakeCurrent hDC, m_hRC
-    glViewport 0, 0, w, h
+    glViewport 0, 0, Width, Height
 
     glEnable GL_BLEND
     glBlendFunc GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
 
     InitImageLoader
     InitColors
+    rlglInit
 
-    InitOpenGL = True
+    InitWindow = True
 End Function
 
 Private Sub InitColors()
@@ -747,15 +751,13 @@ Public Sub Run(ByRef TargetForm As Form, ByVal ScreenW As Long, ByVal ScreenH As
     TargetForm.ScaleMode = 3
     TargetForm.Width = (ScreenW * Screen.TwipsPerPixelX) + (TargetForm.Width - (TargetForm.ScaleWidth * Screen.TwipsPerPixelX))
     TargetForm.Height = (ScreenH * Screen.TwipsPerPixelY) + (TargetForm.Height - (TargetForm.ScaleHeight * Screen.TwipsPerPixelY))
-    TargetForm.Left = (Screen.Width - TargetForm.Width) / 2
-    TargetForm.Top = (Screen.Height - TargetForm.Height) / 2
+    TargetForm.left = (Screen.Width - TargetForm.Width) / 2
+    TargetForm.top = (Screen.Height - TargetForm.Height) / 2
 
     TargetForm.Show
     DoEvents
 
-    m_hWnd = TargetForm.hwnd
-
-    If InitOpenGL(TargetForm.hDC, TargetForm.ScaleWidth, TargetForm.ScaleHeight) = False Then
+    If InitWindow(TargetForm, ScreenW, ScreenH) = False Then
         MsgBox "Failed to init OpenGL!", vbCritical
         Unload TargetForm
         Exit Sub
@@ -935,15 +937,15 @@ Public Sub SetWindowTitle(ByVal title As String)
     SetWindowTextA m_hWnd, title
 End Sub
 
-Public Sub SetWindowSize(ByVal width As Long, ByVal height As Long)
-    Dim r As RECT
+Public Sub SetWindowSize(ByVal Width As Long, ByVal Height As Long)
+    Dim r As Rect
     If m_hWnd = 0 Then Exit Sub
-    If width <= 0 Or height <= 0 Then Exit Sub
+    If Width <= 0 Or Height <= 0 Then Exit Sub
 
-    r.Left = 0: r.Top = 0: r.Right = width: r.Bottom = height
+    r.left = 0: r.top = 0: r.right = Width: r.bottom = Height
     AdjustWindowRectEx r, GetWindowLongA(m_hWnd, GWL_STYLE), 0, GetWindowLongA(m_hWnd, GWL_EXSTYLE)
-    SetWindowPos m_hWnd, 0, 0, 0, r.Right - r.Left, r.Bottom - r.Top, SWP_NOMOVE Or SWP_NOZORDER
-    UpdateViewport width, height
+    SetWindowPos m_hWnd, 0, 0, 0, r.right - r.left, r.bottom - r.top, SWP_NOMOVE Or SWP_NOZORDER
+    UpdateViewport Width, Height
 End Sub
 
 Public Sub SetWindowPosition(ByVal x As Long, ByVal y As Long)
@@ -952,9 +954,9 @@ Public Sub SetWindowPosition(ByVal x As Long, ByVal y As Long)
 End Sub
 
 ' Minimo de tamanho via subclass do WndProc (WM_GETMINMAXINFO).
-Public Sub SetWindowMinSize(ByVal width As Long, ByVal height As Long)
-    mMinSizeW = width
-    mMinSizeH = height
+Public Sub SetWindowMinSize(ByVal Width As Long, ByVal Height As Long)
+    mMinSizeW = Width
+    mMinSizeH = Height
     If m_hWnd <> 0 Then EnsureSubclass
 End Sub
 
@@ -1080,8 +1082,8 @@ Private Sub EnterFullscreen()
     If GetMonitorInfoA(MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST), mi) = 0 Then Exit Sub
 
     SetWindowLongA m_hWnd, GWL_STYLE, mSavedStyle And Not (WS_CAPTION Or WS_THICKFRAME)
-    SetWindowPos m_hWnd, 0, mi.rcMonitor.Left, mi.rcMonitor.Top, _
-        mi.rcMonitor.Right - mi.rcMonitor.Left, mi.rcMonitor.Bottom - mi.rcMonitor.Top, _
+    SetWindowPos m_hWnd, 0, mi.rcMonitor.left, mi.rcMonitor.top, _
+        mi.rcMonitor.right - mi.rcMonitor.left, mi.rcMonitor.bottom - mi.rcMonitor.top, _
         SWP_FRAMECHANGED Or SWP_NOZORDER
 
     mFullscreen = True
@@ -1093,8 +1095,8 @@ Private Sub LeaveFullscreen()
 
     SetWindowLongA m_hWnd, GWL_STYLE, mSavedStyle
     SetWindowLongA m_hWnd, GWL_EXSTYLE, mSavedExStyle
-    SetWindowPos m_hWnd, 0, mSavedRect.Left, mSavedRect.Top, _
-        mSavedRect.Right - mSavedRect.Left, mSavedRect.Bottom - mSavedRect.Top, _
+    SetWindowPos m_hWnd, 0, mSavedRect.left, mSavedRect.top, _
+        mSavedRect.right - mSavedRect.left, mSavedRect.bottom - mSavedRect.top, _
         SWP_FRAMECHANGED Or SWP_NOZORDER
 
     mFullscreen = False
@@ -1149,7 +1151,7 @@ Private Sub EnsureMonitors()
     Dim tmp As MONITORINFO
     Dim tmpH As Long
     For i = 1 To mMonitorCount - 1
-        If mMonitors(i).rcMonitor.Left = 0 And mMonitors(i).rcMonitor.Top = 0 Then
+        If mMonitors(i).rcMonitor.left = 0 And mMonitors(i).rcMonitor.top = 0 Then
             tmp = mMonitors(0)
             mMonitors(0) = mMonitors(i)
             mMonitors(i) = tmp
@@ -1161,7 +1163,7 @@ Private Sub EnsureMonitors()
     Next i
 End Sub
 
-Private Function EnumMonitorsProc(ByVal hMonitor As Long, ByVal hdc As Long, ByRef lprc As RECT, ByVal dwData As Long) As Long
+Private Function EnumMonitorsProc(ByVal hMonitor As Long, ByVal hDC As Long, ByRef lprc As Rect, ByVal dwData As Long) As Long
     If mMonitorCount <= UBound(mMonitors) Then
         Dim mi As MONITORINFO
         mi.cbSize = Len(mi)
@@ -1183,14 +1185,14 @@ Public Function GetMonitorWidth(ByVal monitor As Long) As Long
     EnsureMonitors
     If mMonitorCount = 0 Then Exit Function
     If monitor < 0 Or monitor >= mMonitorCount Then monitor = 0
-    GetMonitorWidth = mMonitors(monitor).rcMonitor.Right - mMonitors(monitor).rcMonitor.Left
+    GetMonitorWidth = mMonitors(monitor).rcMonitor.right - mMonitors(monitor).rcMonitor.left
 End Function
 
 Public Function GetMonitorHeight(ByVal monitor As Long) As Long
     EnsureMonitors
     If mMonitorCount = 0 Then Exit Function
     If monitor < 0 Or monitor >= mMonitorCount Then monitor = 0
-    GetMonitorHeight = mMonitors(monitor).rcMonitor.Bottom - mMonitors(monitor).rcMonitor.Top
+    GetMonitorHeight = mMonitors(monitor).rcMonitor.bottom - mMonitors(monitor).rcMonitor.top
 End Function
 
 ' Taxa de atualizacao do monitor atual (usa o dispositivo primario).
@@ -1217,13 +1219,13 @@ End Function
 
 Public Function GetWindowScaleDPI() As Vector2
     Dim v As Vector2
-    Dim hdc As Long
+    Dim hDC As Long
     v.x = 1!: v.y = 1!
-    hdc = GetDC(0)
-    If hdc <> 0 Then
-        v.x = CSng(GetDeviceCaps(hdc, LOGPIXELSX)) / 96!
-        v.y = CSng(GetDeviceCaps(hdc, LOGPIXELSY)) / 96!
-        ReleaseDC 0, hdc
+    hDC = GetDC(0)
+    If hDC <> 0 Then
+        v.x = CSng(GetDeviceCaps(hDC, LOGPIXELSX)) / 96!
+        v.y = CSng(GetDeviceCaps(hDC, LOGPIXELSY)) / 96!
+        ReleaseDC 0, hDC
     End If
     GetWindowScaleDPI = v
 End Function
@@ -1302,6 +1304,9 @@ Public Sub TakeScreenshot(ByVal fileName As String)
     ReDim pixels(0 To (w * h * 4) - 1)
     ReDim flipped(0 To (w * h * 4) - 1)
 
+    ' Garante que tudo que foi acumulado no lote ja esta no framebuffer.
+    rlDrawRenderBatchActive
+
     glReadPixels 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, ByVal VarPtr(pixels(0))
 
     ' GL entrega de baixo para cima e em RGBA; GDI+ espera de cima para
@@ -1324,11 +1329,11 @@ Public Sub TakeScreenshot(ByVal fileName As String)
     SaveImageAsPng GetFullPath(fileName), flipped(), w, h
 End Sub
 
-Private Sub SaveImageAsPng(ByVal path As String, ByRef data() As Byte, ByVal w As Long, ByVal h As Long)
+Private Sub SaveImageAsPng(ByVal path As String, ByRef Data() As Byte, ByVal w As Long, ByVal h As Long)
     Dim bmp As Long
     Dim clsid As GUID
     If w <= 0 Or h <= 0 Then Exit Sub
-    If GdipCreateBitmapFromScan0(w, h, w * 4, PixelFormat32bppARGB, VarPtr(data(0)), bmp) <> 0 Then Exit Sub
+    If GdipCreateBitmapFromScan0(w, h, w * 4, PixelFormat32bppARGB, VarPtr(Data(0)), bmp) <> 0 Then Exit Sub
 
     ' CLSID do encoder PNG: {557CF406-1A04-11D3-9A73-0000F81EF32E}
     clsid.Data1 = &H557CF406
@@ -1369,20 +1374,20 @@ Public Sub DisableCursor()
 End Sub
 
 Public Sub SetMouseCursor(ByVal cursor As MouseCursor)
-    Dim id As Long
+    Dim Id As Long
     Select Case cursor
-        Case MOUSE_CURSOR_IBEAM: id = IDC_IBEAM
-        Case MOUSE_CURSOR_CROSSHAIR: id = IDC_CROSS
-        Case MOUSE_CURSOR_POINTING_HAND: id = IDC_HAND
-        Case MOUSE_CURSOR_RESIZE_EW: id = IDC_SIZEWE
-        Case MOUSE_CURSOR_RESIZE_NS: id = IDC_SIZENS
-        Case MOUSE_CURSOR_RESIZE_NWSE: id = IDC_SIZENWSE
-        Case MOUSE_CURSOR_RESIZE_NESW: id = IDC_SIZENESW
-        Case MOUSE_CURSOR_RESIZE_ALL: id = IDC_SIZEALL
-        Case MOUSE_CURSOR_NOT_ALLOWED: id = IDC_NO
-        Case Else: id = IDC_ARROW
+        Case MOUSE_CURSOR_IBEAM: Id = IDC_IBEAM
+        Case MOUSE_CURSOR_CROSSHAIR: Id = IDC_CROSS
+        Case MOUSE_CURSOR_POINTING_HAND: Id = IDC_HAND
+        Case MOUSE_CURSOR_RESIZE_EW: Id = IDC_SIZEWE
+        Case MOUSE_CURSOR_RESIZE_NS: Id = IDC_SIZENS
+        Case MOUSE_CURSOR_RESIZE_NWSE: Id = IDC_SIZENWSE
+        Case MOUSE_CURSOR_RESIZE_NESW: Id = IDC_SIZENESW
+        Case MOUSE_CURSOR_RESIZE_ALL: Id = IDC_SIZEALL
+        Case MOUSE_CURSOR_NOT_ALLOWED: Id = IDC_NO
+        Case Else: Id = IDC_ARROW
     End Select
-    apiSetCursor LoadCursorA(0, id)
+    apiSetCursor LoadCursorA(0, Id)
 End Sub
 
 ' Audio
@@ -1662,7 +1667,7 @@ Public Function GetKeyName(ByVal key As KeyboardKey) As String
 
     result = GetKeyNameText(lParam, nameBuffer, 128)
     If result > 0 Then
-        GetKeyName = Left$(nameBuffer, InStr(nameBuffer, vbNullChar) - 1)
+        GetKeyName = left$(nameBuffer, InStr(nameBuffer, vbNullChar) - 1)
     Else
         GetKeyName = "UNKNOWN"
     End If
@@ -1670,11 +1675,11 @@ End Function
 
 ' Color
 
-Private Sub RGBToHSV(ByVal R As Single, ByVal G As Single, ByVal B As Single, ByRef h As Single, ByRef s As Single, ByRef v As Single)
+Private Sub RGBToHSV(ByVal r As Single, ByVal g As Single, ByVal b As Single, ByRef h As Single, ByRef s As Single, ByRef v As Single)
     Dim min As Single, max As Single, delta As Single
 
-    min = R: If G < min Then min = G: If B < min Then min = B
-    max = R: If G > max Then max = G: If B > max Then max = B
+    min = r: If g < min Then min = g: If b < min Then min = b
+    max = r: If g > max Then max = g: If b > max Then max = b
 
     v = max
     delta = max - min
@@ -1692,21 +1697,21 @@ Private Sub RGBToHSV(ByVal R As Single, ByVal G As Single, ByVal B As Single, By
         Exit Sub
     End If
 
-    If R = max Then
-        h = (G - B) / delta
-    ElseIf G = max Then
-        h = 2! + (B - R) / delta
+    If r = max Then
+        h = (g - b) / delta
+    ElseIf g = max Then
+        h = 2! + (b - r) / delta
     Else
-        h = 4! + (R - G) / delta
+        h = 4! + (r - g) / delta
     End If
 
     h = h * 60!
     If h < 0! Then h = h + 360!
 End Sub
 
-Private Sub HSVToRGB(ByVal h As Single, ByVal s As Single, ByVal v As Single, ByRef R As Single, ByRef G As Single, ByRef B As Single)
+Private Sub HSVToRGB(ByVal h As Single, ByVal s As Single, ByVal v As Single, ByRef r As Single, ByRef g As Single, ByRef b As Single)
     If s = 0! Then
-        R = v: G = v: B = v
+        r = v: g = v: b = v
         Exit Sub
     End If
 
@@ -1721,12 +1726,12 @@ Private Sub HSVToRGB(ByVal h As Single, ByVal s As Single, ByVal v As Single, By
     t = v * (1! - s * (1! - f))
 
     Select Case i
-    Case 0: R = v: G = t: B = p
-    Case 1: R = q: G = v: B = p
-    Case 2: R = p: G = v: B = t
-    Case 3: R = p: G = q: B = v
-    Case 4: R = t: G = p: B = v
-    Case Else: R = v: G = p: B = q
+    Case 0: r = v: g = t: b = p
+    Case 1: r = q: g = v: b = p
+    Case 2: r = p: g = v: b = t
+    Case 3: r = p: g = q: b = v
+    Case 4: r = t: g = p: b = v
+    Case Else: r = v: g = p: b = q
     End Select
 End Sub
 
@@ -1742,25 +1747,25 @@ End Function
 
 Public Function ColorTint(ByRef Color As ColorRGBA, ByRef tint As ColorRGBA) As ColorRGBA
     Dim result As ColorRGBA
-    result.R = Clamp01(Color.R * tint.R)
-    result.G = Clamp01(Color.G * tint.G)
-    result.B = Clamp01(Color.B * tint.B)
-    result.A = Clamp01(Color.A * tint.A)
+    result.r = Clamp01(Color.r * tint.r)
+    result.g = Clamp01(Color.g * tint.g)
+    result.b = Clamp01(Color.b * tint.b)
+    result.a = Clamp01(Color.a * tint.a)
     ColorTint = result
 End Function
 
 Public Function ColorBrightness(ByRef Color As ColorRGBA, ByVal factor As Single) As ColorRGBA
     Dim h As Single, s As Single, v As Single
 
-    RGBToHSV Color.R, Color.G, Color.B, h, s, v
+    RGBToHSV Color.r, Color.g, Color.b, h, s, v
 
     v = v + factor
     If v < 0.1 Then v = 0.1
     If v > 1! Then v = 1!
 
     Dim result As ColorRGBA
-    HSVToRGB h, s, v, result.R, result.G, result.B
-    result.A = Color.A
+    HSVToRGB h, s, v, result.r, result.g, result.b
+    result.a = Color.a
 
     ColorBrightness = result
 End Function
@@ -1773,19 +1778,19 @@ Public Function ColorContrast(ByRef Color As ColorRGBA, ByVal contrast As Single
         contrast = 0!
     End If
 
-    result.R = Clamp01(((Color.R - 0.5) * contrast) + 0.5)
-    result.G = Clamp01(((Color.G - 0.5) * contrast) + 0.5)
-    result.B = Clamp01(((Color.B - 0.5) * contrast) + 0.5)
-    result.A = Color.A
+    result.r = Clamp01(((Color.r - 0.5) * contrast) + 0.5)
+    result.g = Clamp01(((Color.g - 0.5) * contrast) + 0.5)
+    result.b = Clamp01(((Color.b - 0.5) * contrast) + 0.5)
+    result.a = Color.a
     ColorContrast = result
 End Function
 
 Public Function ColorAlpha(ByRef Color As ColorRGBA, ByVal alpha As Single) As ColorRGBA
     Dim result As ColorRGBA
-    result.R = Color.R
-    result.G = Color.G
-    result.B = Color.B
-    result.A = Clamp01(alpha)
+    result.r = Color.r
+    result.g = Color.g
+    result.b = Color.b
+    result.a = Clamp01(alpha)
     ColorAlpha = result
 End Function
 
@@ -1793,18 +1798,18 @@ Public Function ColorAlphaBlend(ByRef dst As ColorRGBA, ByRef src As ColorRGBA, 
     Dim result As ColorRGBA
     Dim srcTint As ColorRGBA
 
-    srcTint.R = src.R * tint.R
-    srcTint.G = src.G * tint.G
-    srcTint.B = src.B * tint.B
-    srcTint.A = src.A * tint.A
+    srcTint.r = src.r * tint.r
+    srcTint.g = src.g * tint.g
+    srcTint.b = src.b * tint.b
+    srcTint.a = src.a * tint.a
 
     Dim alpha As Single
-    alpha = srcTint.A
+    alpha = srcTint.a
 
-    result.R = Clamp01(srcTint.R * alpha + dst.R * (1! - alpha))
-    result.G = Clamp01(srcTint.G * alpha + dst.G * (1! - alpha))
-    result.B = Clamp01(srcTint.B * alpha + dst.B * (1! - alpha))
-    result.A = Clamp01(alpha + dst.A * (1! - alpha))
+    result.r = Clamp01(srcTint.r * alpha + dst.r * (1! - alpha))
+    result.g = Clamp01(srcTint.g * alpha + dst.g * (1! - alpha))
+    result.b = Clamp01(srcTint.b * alpha + dst.b * (1! - alpha))
+    result.a = Clamp01(alpha + dst.a * (1! - alpha))
 
     ColorAlphaBlend = result
 End Function
@@ -1816,8 +1821,8 @@ Public Function ColorLerp(ByRef color1 As ColorRGBA, ByRef color2 As ColorRGBA, 
     Dim h1 As Single, s1 As Single, v1 As Single
     Dim h2 As Single, s2 As Single, v2 As Single
 
-    RGBToHSV color1.R, color1.G, color1.B, h1, s1, v1
-    RGBToHSV color2.R, color2.G, color2.B, h2, s2, v2
+    RGBToHSV color1.r, color1.g, color1.b, h1, s1, v1
+    RGBToHSV color2.r, color2.g, color2.b, h2, s2, v2
 
     If Abs(h2 - h1) > 180! Then
         If h1 < h2 Then
@@ -1834,31 +1839,31 @@ Public Function ColorLerp(ByRef color1 As ColorRGBA, ByRef color2 As ColorRGBA, 
 
     sRes = s1 + (s2 - s1) * factor
     vRes = v1 + (v2 - v1) * factor
-    aRes = color1.A + (color2.A - color1.A) * factor
+    aRes = color1.a + (color2.a - color1.a) * factor
 
     Dim result As ColorRGBA
-    HSVToRGB hRes, sRes, vRes, result.R, result.G, result.B
-    result.A = aRes
+    HSVToRGB hRes, sRes, vRes, result.r, result.g, result.b
+    result.a = aRes
 
     ColorLerp = result
 End Function
 
 Public Function ColorIsEqual(ByRef col1 As ColorRGBA, ByRef col2 As ColorRGBA) As Boolean
     Const EPSILON As Single = 0.00001
-    ColorIsEqual = (Abs(col1.R - col2.R) < EPSILON) And _
-                   (Abs(col1.G - col2.G) < EPSILON) And _
-                   (Abs(col1.B - col2.B) < EPSILON) And _
-                   (Abs(col1.A - col2.A) < EPSILON)
+    ColorIsEqual = (Abs(col1.r - col2.r) < EPSILON) And _
+                   (Abs(col1.g - col2.g) < EPSILON) And _
+                   (Abs(col1.b - col2.b) < EPSILON) And _
+                   (Abs(col1.a - col2.a) < EPSILON)
 End Function
 
 Public Function ColorToInt(ByRef Color As ColorRGBA) As Long
-    Dim R As Long, G As Long, B As Long, A As Long
-    R = CLng(Clamp01(Color.R) * 255!)
-    G = CLng(Clamp01(Color.G) * 255!)
-    B = CLng(Clamp01(Color.B) * 255!)
-    A = CLng(Clamp01(Color.A) * 255!)
+    Dim r As Long, g As Long, b As Long, a As Long
+    r = CLng(Clamp01(Color.r) * 255!)
+    g = CLng(Clamp01(Color.g) * 255!)
+    b = CLng(Clamp01(Color.b) * 255!)
+    a = CLng(Clamp01(Color.a) * 255!)
 
-    ColorToInt = (R * &H1000000) Or (G * &H10000) Or (B * &H100) Or A
+    ColorToInt = (r * &H1000000) Or (g * &H10000) Or (b * &H100) Or a
 End Function
 
 ' Image
@@ -1891,7 +1896,7 @@ Public Function LoadImage(ByVal filePath As String) As Image
         resultImage.Height = h
         ReDim resultImage.Data(0 To totalBytes - 1)
 
-        CopyMemory resultImage.Data(0), ByVal bmpData.Scan0, totalBytes
+        CopyMemory resultImage.Data(0), ByVal bmpData.scan0, totalBytes
 
         Dim i As Long
         Dim bVal As Byte
@@ -1934,20 +1939,20 @@ Public Sub ImageSetPixel(ByRef img As Image, ByVal x As Long, ByVal y As Long, B
     Dim idx As Long
     idx = (y * img.Width + x) * 4
 
-    img.Data(idx) = CByte(col.R * 255#)
-    img.Data(idx + 1) = CByte(col.G * 255#)
-    img.Data(idx + 2) = CByte(col.B * 255#)
-    img.Data(idx + 3) = CByte(col.A * 255#)
+    img.Data(idx) = CByte(col.r * 255#)
+    img.Data(idx + 1) = CByte(col.g * 255#)
+    img.Data(idx + 2) = CByte(col.b * 255#)
+    img.Data(idx + 3) = CByte(col.a * 255#)
 End Sub
 
 Public Sub ImageClear(ByRef img As Image, ByRef col As ColorRGBA)
     Dim x As Long, y As Long
-    Dim R As Byte, G As Byte, B As Byte, A As Byte
+    Dim r As Byte, g As Byte, b As Byte, a As Byte
 
-    R = CByte(col.R * 255#)
-    G = CByte(col.G * 255#)
-    B = CByte(col.B * 255#)
-    A = CByte(col.A * 255#)
+    r = CByte(col.r * 255#)
+    g = CByte(col.g * 255#)
+    b = CByte(col.b * 255#)
+    a = CByte(col.a * 255#)
 
     Dim rowBytes As Long
     rowBytes = img.Width * 4
@@ -1958,10 +1963,10 @@ Public Sub ImageClear(ByRef img As Image, ByRef col As ColorRGBA)
         For x = 0 To img.Width - 1
             Dim idx As Long
             idx = rowStart + (x * 4)
-            img.Data(idx) = R
-            img.Data(idx + 1) = G
-            img.Data(idx + 2) = B
-            img.Data(idx + 3) = A
+            img.Data(idx) = r
+            img.Data(idx + 1) = g
+            img.Data(idx + 2) = b
+            img.Data(idx + 3) = a
         Next x
     Next y
 End Sub
@@ -1973,11 +1978,11 @@ Public Sub ImageDrawRect(ByRef img As Image, ByRef Rect As Rectangle, ByRef col 
     rw = CLng(Rect.Width)
     rh = CLng(Rect.Height)
 
-    Dim R As Byte, G As Byte, B As Byte, A As Byte
-    R = CByte(col.R * 255#)
-    G = CByte(col.G * 255#)
-    B = CByte(col.B * 255#)
-    A = CByte(col.A * 255#)
+    Dim r As Byte, g As Byte, b As Byte, a As Byte
+    r = CByte(col.r * 255#)
+    g = CByte(col.g * 255#)
+    b = CByte(col.b * 255#)
+    a = CByte(col.a * 255#)
 
     Dim x As Long, y As Long
     Dim startY As Long, endY As Long
@@ -1995,10 +2000,10 @@ Public Sub ImageDrawRect(ByRef img As Image, ByRef Rect As Rectangle, ByRef col 
         For x = startX To endX - 1
             Dim idx As Long
             idx = rowStart + (x * 4)
-            img.Data(idx) = R
-            img.Data(idx + 1) = G
-            img.Data(idx + 2) = B
-            img.Data(idx + 3) = A
+            img.Data(idx) = r
+            img.Data(idx + 1) = g
+            img.Data(idx + 2) = b
+            img.Data(idx + 3) = a
         Next x
     Next y
 End Sub
@@ -2039,7 +2044,7 @@ End Sub
 
 Public Function LoadTextureFromImage(ByRef img As Image) As Texture2D
     Dim tex As Texture2D
-    Dim textureID As Long
+    Dim textureId As Long
 
     tex.Id = 0
     tex.Width = 0
@@ -2050,15 +2055,15 @@ Public Function LoadTextureFromImage(ByRef img As Image) As Texture2D
         Exit Function
     End If
 
-    glGenTextures 1, textureID
-    glBindTexture GL_TEXTURE_2D, textureID
+    glGenTextures 1, textureId
+    glBindTexture GL_TEXTURE_2D, textureId
 
     glTexParameteri GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST
     glTexParameteri GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST
 
     glTexImage2D GL_TEXTURE_2D, 0, GL_RGBA, img.Width, img.Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, ByVal VarPtr(img.Data(0))
 
-    tex.Id = textureID
+    tex.Id = textureId
     tex.Width = img.Width
     tex.Height = img.Height
 
@@ -2073,9 +2078,9 @@ Public Function LoadTexture(ByVal filePath As String) As Texture2D
     LoadTexture = LoadTextureFromImage(img)
 End Function
 
-Public Sub UnloadTexture(ByVal textureID As Long)
-    If textureID <> 0 Then
-        glDeleteTextures 1, textureID
+Public Sub UnloadTexture(ByVal textureId As Long)
+    If textureId <> 0 Then
+        glDeleteTextures 1, textureId
     End If
 End Sub
 
@@ -2087,10 +2092,10 @@ Public Function LoadRenderTexture(ByVal Width As Long, ByVal Height As Long) As 
     Dim status As Long
 
     rt.Id = 0
-    rt.Texture.Id = 0
-    rt.Texture.Width = 0
-    rt.Texture.Height = 0
-    rt.Depth.Id = 0
+    rt.texture.Id = 0
+    rt.texture.Width = 0
+    rt.texture.Height = 0
+    rt.depth.Id = 0
 
     If GLFramebufferSupported() = False Then
         Debug.Print "FBO nao suportado por este driver"
@@ -2111,23 +2116,23 @@ Public Function LoadRenderTexture(ByVal Width As Long, ByVal Height As Long) As 
     glBindFramebufferEXT GL_FRAMEBUFFER, rt.Id
 
     ' textura de cor
-    glGenTextures 1, rt.Texture.Id
-    glBindTexture GL_TEXTURE_2D, rt.Texture.Id
+    glGenTextures 1, rt.texture.Id
+    glBindTexture GL_TEXTURE_2D, rt.texture.Id
     glTexImage2D GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0
     glTexParameteri GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR
     glTexParameteri GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR
     glTexParameteri GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE
     glTexParameteri GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE
-    glFramebufferTexture2DEXT GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt.Texture.Id, 0
+    glFramebufferTexture2DEXT GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt.texture.Id, 0
 
     ' renderbuffer de profundidade
-    glGenRenderbuffersEXT 1, rt.Depth.Id
-    glBindRenderbufferEXT GL_RENDERBUFFER, rt.Depth.Id
+    glGenRenderbuffersEXT 1, rt.depth.Id
+    glBindRenderbufferEXT GL_RENDERBUFFER, rt.depth.Id
     glRenderbufferStorageEXT GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, Width, Height
-    glFramebufferRenderbufferEXT GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rt.Depth.Id
+    glFramebufferRenderbufferEXT GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rt.depth.Id
 
-    rt.Texture.Width = Width
-    rt.Texture.Height = Height
+    rt.texture.Width = Width
+    rt.texture.Height = Height
 
     ' verifica enquanto o FBO ainda esta ligado
     status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER)
@@ -2141,24 +2146,24 @@ Public Function LoadRenderTexture(ByVal Width As Long, ByVal Height As Long) As 
         Debug.Print "Framebuffer incompleto: &H" & Hex$(status)
         UnloadRenderTexture rt
         rt.Id = 0
-        rt.Texture.Id = 0
-        rt.Texture.Width = 0
-        rt.Texture.Height = 0
-        rt.Depth.Id = 0
+        rt.texture.Id = 0
+        rt.texture.Width = 0
+        rt.texture.Height = 0
+        rt.depth.Id = 0
     End If
 
     LoadRenderTexture = rt
 End Function
 
 Public Sub UnloadRenderTexture(ByRef target As RenderTexture2D)
-    If target.Texture.Id <> 0 Then
-        glDeleteTextures 1, target.Texture.Id
-        target.Texture.Id = 0
+    If target.texture.Id <> 0 Then
+        glDeleteTextures 1, target.texture.Id
+        target.texture.Id = 0
     End If
 
-    If target.Depth.Id <> 0 Then
-        glDeleteRenderbuffersEXT 1, target.Depth.Id
-        target.Depth.Id = 0
+    If target.depth.Id <> 0 Then
+        glDeleteRenderbuffersEXT 1, target.depth.Id
+        target.depth.Id = 0
     End If
 
     If target.Id <> 0 Then
@@ -2193,9 +2198,9 @@ Public Function LoadImageFont(ByVal filePath As String, ByVal CharList As String
     Do While x < img.Width And charIndex < Len(CharList)
         Do While x < img.Width
             vbCol = ImageGetPixel(img, x, 0)
-            If Abs(vbCol.R - sepCol.R) < 0.05 And _
-               Abs(vbCol.G - sepCol.G) < 0.05 And _
-               Abs(vbCol.B - sepCol.B) < 0.05 Then
+            If Abs(vbCol.r - sepCol.r) < 0.05 And _
+               Abs(vbCol.g - sepCol.g) < 0.05 And _
+               Abs(vbCol.b - sepCol.b) < 0.05 Then
                 x = x + 1
             Else
                 Exit Do
@@ -2208,9 +2213,9 @@ Public Function LoadImageFont(ByVal filePath As String, ByVal CharList As String
 
         Do While x < img.Width
             vbCol = ImageGetPixel(img, x, 0)
-            If Abs(vbCol.R - sepCol.R) < 0.05 And _
-               Abs(vbCol.G - sepCol.G) < 0.05 And _
-               Abs(vbCol.B - sepCol.B) < 0.05 Then
+            If Abs(vbCol.r - sepCol.r) < 0.05 And _
+               Abs(vbCol.g - sepCol.g) < 0.05 And _
+               Abs(vbCol.b - sepCol.b) < 0.05 Then
                 Exit Do
             Else
                 x = x + 1
@@ -2220,13 +2225,13 @@ Public Function LoadImageFont(ByVal filePath As String, ByVal CharList As String
         w = x - startX
         If w <= 0 Then w = 1
 
-        fnt.Glyphs(charIndex).Left = CSng(startX) / CSng(img.Width)
+        fnt.Glyphs(charIndex).left = CSng(startX) / CSng(img.Width)
         fnt.Glyphs(charIndex).Width = CSng(w)
 
         charIndex = charIndex + 1
     Loop
 
-    fnt.Texture = LoadTextureFromImage(img)
+    fnt.texture = LoadTextureFromImage(img)
     LoadImageFont = fnt
 End Function
 
@@ -2235,22 +2240,22 @@ End Function
 Public Sub UpdateViewport(ByVal w As Long, ByVal h As Long)
     screenWidth = w
     screenHeight = h
-    glViewport 0, 0, screenWidth, screenHeight
+    rlViewport 0, 0, screenWidth, screenHeight
 End Sub
 
 Public Sub BeginDrawing()
-    glMatrixMode GL_PROJECTION
-    glLoadIdentity
-    glOrtho 0, screenWidth, screenHeight, 0, -1, 1
+    rlMatrixMode RL_PROJECTION
+    rlLoadIdentity
+    rlOrtho 0, screenWidth, screenHeight, 0, -1, 1
 
-    glMatrixMode GL_MODELVIEW
-    glLoadIdentity
+    rlMatrixMode RL_MODELVIEW
+    rlLoadIdentity
 End Sub
 
 ' Render target: redireciona o desenho para um framebuffer.
 '
 ' Dentro do BeginTextureMode as coordenadas continuam sendo y-para-baixo iguais
-' as da tela: a projecao usa glOrtho(0, w, 0, h), que inverte a textura em
+' as da tela: a projecao usa rlOrtho(0, w, 0, h), que inverte a textura em
 ' relacao ao framebuffer, e o DrawTexture inverte de volta ao exibir. O efeito
 ' liquido e identidade, sem precisar mexer em nenhum codigo de desenho.
 Public Sub BeginTextureMode(ByRef target As RenderTexture2D)
@@ -2259,6 +2264,10 @@ Public Sub BeginTextureMode(ByRef target As RenderTexture2D)
 
     If mRenderTop >= RENDER_STACK_MAX Then Exit Sub
     If target.Id = 0 Then Exit Sub
+
+    ' O lote pendente pertence ao alvo anterior: precisa ser desenhado antes de
+    ' trocar o framebuffer.
+    rlDrawRenderBatchActive
 
     glGetIntegerv GL_FRAMEBUFFER_BINDING, prevFbo
     glGetIntegerv GL_VIEWPORT, vp(0)
@@ -2269,206 +2278,210 @@ Public Sub BeginTextureMode(ByRef target As RenderTexture2D)
     mRenderTop = mRenderTop + 1
 
     glBindFramebufferEXT GL_FRAMEBUFFER, target.Id
-    glViewport 0, 0, target.Texture.Width, target.Texture.Height
+    rlViewport 0, 0, target.texture.Width, target.texture.Height
 
-    glMatrixMode GL_PROJECTION
-    glPushMatrix
-    glLoadIdentity
-    glOrtho 0, target.Texture.Width, 0, target.Texture.Height, -1, 1
+    rlMatrixMode RL_PROJECTION
+    rlPushMatrix
+    rlLoadIdentity
+    rlOrtho 0, target.texture.Width, 0, target.texture.Height, -1, 1
 
-    glMatrixMode GL_MODELVIEW
-    glPushMatrix
-    glLoadIdentity
+    rlMatrixMode RL_MODELVIEW
+    rlPushMatrix
+    rlLoadIdentity
 End Sub
 
 Public Sub EndTextureMode()
     If mRenderTop <= 0 Then Exit Sub
+
+    ' Desenha o que foi acumulado dentro do alvo antes de voltar ao framebuffer
+    ' anterior.
+    rlDrawRenderBatchActive
+
     mRenderTop = mRenderTop - 1
 
-    glMatrixMode GL_PROJECTION
-    glPopMatrix
+    rlMatrixMode RL_PROJECTION
+    rlPopMatrix
 
-    glMatrixMode GL_MODELVIEW
-    glPopMatrix
+    rlMatrixMode RL_MODELVIEW
+    rlPopMatrix
 
     glBindFramebufferEXT GL_FRAMEBUFFER, mRenderFbo(mRenderTop)
-    glViewport 0, 0, mRenderW(mRenderTop), mRenderH(mRenderTop)
+    rlViewport 0, 0, mRenderW(mRenderTop), mRenderH(mRenderTop)
 End Sub
 
-Public Sub Clear(ByVal R As Single, ByVal G As Single, ByVal B As Single, ByVal A As Single)
-    glClearColor R, G, B, A
-    glClear GL_COLOR_BUFFER_BIT Or GL_DEPTH_BUFFER_BIT
+Public Sub Clear(ByVal r As Single, ByVal g As Single, ByVal b As Single, ByVal a As Single)
+    rlClearColor r, g, b, a
+    rlClearScreenBuffers
 End Sub
 
 Public Sub EndDrawing()
+    rlDrawRenderBatchActive
     SwapBuffers m_hDC
 End Sub
 
 Public Sub BeginMode2D(ByRef camera As Camera2D)
-    glMatrixMode GL_PROJECTION
-    glPushMatrix
+    rlMatrixMode RL_PROJECTION
+    rlPushMatrix
 
-    glMatrixMode GL_MODELVIEW
-    glPushMatrix
+    rlMatrixMode RL_MODELVIEW
+    rlPushMatrix
 
-    glTranslatef camera.Offset.x, camera.Offset.y, 0!
-    glRotatef camera.Rot, 0!, 0!, 1!
-    glScalef camera.Zoom, camera.Zoom, 1!
-    glTranslatef -camera.Target.x, -camera.Target.y, 0!
+    rlTranslatef camera.Offset.x, camera.Offset.y, 0!
+    rlRotatef camera.Rot, 0!, 0!, 1!
+    rlScalef camera.Zoom, camera.Zoom, 1!
+    rlTranslatef -camera.target.x, -camera.target.y, 0!
 End Sub
 
 Public Sub EndMode2D()
-    glMatrixMode GL_PROJECTION
-    glPopMatrix
+    rlMatrixMode RL_PROJECTION
+    rlPopMatrix
 
-    glMatrixMode GL_MODELVIEW
-    glPopMatrix
+    rlMatrixMode RL_MODELVIEW
+    rlPopMatrix
 End Sub
 
 Public Sub DrawRectangle(ByVal x As Single, ByVal y As Single, ByVal Width As Single, ByVal Height As Single, ByRef Color As ColorRGBA)
-    glDisable GL_TEXTURE_2D
+    rlDisableTexture
 
-    glBegin GL_QUADS
-    glColor4f Color.R, Color.G, Color.B, Color.A
-    glVertex2f x, y
-    glVertex2f x + Width, y
-    glVertex2f x + Width, y + Height
-    glVertex2f x, y + Height
-    glEnd
+    rlBegin RL_QUADS
+    rlColor4f Color.r, Color.g, Color.b, Color.a
+    rlVertex2f x, y
+    rlVertex2f x + Width, y
+    rlVertex2f x + Width, y + Height
+    rlVertex2f x, y + Height
+    rlEnd
 End Sub
 
-Public Sub DrawRectangleRec(ByRef R As Rectangle, ByRef Color As ColorRGBA)
-    DrawRectangle R.x, R.y, R.Width, R.Height, Color
+Public Sub DrawRectangleRec(ByRef r As Rectangle, ByRef Color As ColorRGBA)
+    DrawRectangle r.x, r.y, r.Width, r.Height, Color
 End Sub
 
-Public Sub DrawRectanglePro(ByRef R As Rectangle, ByRef origin As Vector2, ByVal Rot As Single, ByRef Color As ColorRGBA)
-    glPushMatrix
-    glTranslatef R.x, R.y, 0!
+Public Sub DrawRectanglePro(ByRef r As Rectangle, ByRef origin As Vector2, ByVal Rot As Single, ByRef Color As ColorRGBA)
+    rlPushMatrix
+    rlTranslatef r.x, r.y, 0!
 
     If Rot <> 0! Then
-        glTranslatef origin.x, origin.y, 0!
-        glRotatef Rot, 0!, 0!, 1!
-        glTranslatef -origin.x, -origin.y, 0!
+        rlTranslatef origin.x, origin.y, 0!
+        rlRotatef Rot, 0!, 0!, 1!
+        rlTranslatef -origin.x, -origin.y, 0!
     End If
 
-    glDisable GL_TEXTURE_2D
-    glBegin GL_QUADS
-    glColor4f Color.R, Color.G, Color.B, Color.A
-    glVertex2f -origin.x, -origin.y
-    glVertex2f -origin.x + R.Width, -origin.y
-    glVertex2f -origin.x + R.Width, -origin.y + R.Height
-    glVertex2f -origin.x, -origin.y + R.Height
-    glEnd
+    rlDisableTexture
+    rlBegin RL_QUADS
+    rlColor4f Color.r, Color.g, Color.b, Color.a
+    rlVertex2f -origin.x, -origin.y
+    rlVertex2f -origin.x + r.Width, -origin.y
+    rlVertex2f -origin.x + r.Width, -origin.y + r.Height
+    rlVertex2f -origin.x, -origin.y + r.Height
+    rlEnd
 
-    glPopMatrix
+    rlPopMatrix
 End Sub
 
 Public Sub DrawRectangleLines(ByVal x As Single, ByVal y As Single, ByVal Width As Single, ByVal Height As Single, ByRef Color As ColorRGBA)
-    glDisable GL_TEXTURE_2D
+    rlDisableTexture
 
-    glBegin GL_LINE_LOOP
-    glColor4f Color.R, Color.G, Color.B, Color.A
-    glVertex2f x, y
-    glVertex2f x + Width, y
-    glVertex2f x + Width, y + Height
-    glVertex2f x, y + Height
-    glEnd
+    rlBegin RL_LINE_LOOP
+    rlColor4f Color.r, Color.g, Color.b, Color.a
+    rlVertex2f x, y
+    rlVertex2f x + Width, y
+    rlVertex2f x + Width, y + Height
+    rlVertex2f x, y + Height
+    rlEnd
 End Sub
 
-Public Sub DrawRectangleLinesEx(ByRef R As Rectangle, ByRef thick As Single, ByRef Color As ColorRGBA)
+Public Sub DrawRectangleLinesEx(ByRef r As Rectangle, ByRef thick As Single, ByRef Color As ColorRGBA)
     Dim halfThick As Single
     halfThick = thick * 0.5
 
-    DrawRectangle R.x, R.y, R.Width, thick, Color
-    DrawRectangle R.x, R.y + R.Height - thick, R.Width, thick, Color
-    DrawRectangle R.x, R.y + thick, thick, R.Height - (thick * 2), Color
-    DrawRectangle R.x + R.Width - thick, R.y + thick, thick, R.Height - (thick * 2), Color
+    DrawRectangle r.x, r.y, r.Width, thick, Color
+    DrawRectangle r.x, r.y + r.Height - thick, r.Width, thick, Color
+    DrawRectangle r.x, r.y + thick, thick, r.Height - (thick * 2), Color
+    DrawRectangle r.x + r.Width - thick, r.y + thick, thick, r.Height - (thick * 2), Color
 End Sub
 
-Public Sub DrawRectangleRounded(ByRef R As Rectangle, ByRef roundness As Single, ByVal segments As Long, ByRef Color As ColorRGBA)
+Public Sub DrawRectangleRounded(ByRef r As Rectangle, ByRef roundness As Single, ByVal segments As Long, ByRef Color As ColorRGBA)
     If roundness <= 0! Then
-        DrawRectangleRec R, Color
+        DrawRectangleRec r, Color
         Exit Sub
     End If
     If roundness > 1! Then roundness = 1!
 
     Dim radius As Single
-    If R.Width < R.Height Then
-        radius = (R.Width * 0.5) * roundness
+    If r.Width < r.Height Then
+        radius = (r.Width * 0.5) * roundness
     Else
-        radius = (R.Height * 0.5) * roundness
+        radius = (r.Height * 0.5) * roundness
     End If
 
     If segments < 4 Then segments = 4
 
-    DrawRectangle R.x + radius, R.y, R.Width - (radius * 2), R.Height, Color
-    DrawRectangle R.x, R.y + radius, radius, R.Height - (radius * 2), Color
-    DrawRectangle R.x + R.Width - radius, R.y + radius, radius, R.Height - (radius * 2), Color
+    DrawRectangle r.x + radius, r.y, r.Width - (radius * 2), r.Height, Color
+    DrawRectangle r.x, r.y + radius, radius, r.Height - (radius * 2), Color
+    DrawRectangle r.x + r.Width - radius, r.y + radius, radius, r.Height - (radius * 2), Color
 
-    DrawCircleSectorSimple R.x + radius, R.y + radius, radius, 180, 270, segments, Color
-    DrawCircleSectorSimple R.x + R.Width - radius, R.y + radius, radius, 270, 360, segments, Color
-    DrawCircleSectorSimple R.x + radius, R.y + R.Height - radius, radius, 90, 180, segments, Color
-    DrawCircleSectorSimple R.x + R.Width - radius, R.y + R.Height - radius, radius, 0, 90, segments, Color
+    DrawCircleSectorSimple r.x + radius, r.y + radius, radius, 180, 270, segments, Color
+    DrawCircleSectorSimple r.x + r.Width - radius, r.y + radius, radius, 270, 360, segments, Color
+    DrawCircleSectorSimple r.x + radius, r.y + r.Height - radius, radius, 90, 180, segments, Color
+    DrawCircleSectorSimple r.x + r.Width - radius, r.y + r.Height - radius, radius, 0, 90, segments, Color
 End Sub
 
-Public Sub DrawRectangleRoundedLines(ByRef R As Rectangle, ByRef roundness As Single, ByVal segments As Long, ByRef Color As ColorRGBA)
-    DrawRectangleRoundedLinesEx R, roundness, segments, 1#, Color
+Public Sub DrawRectangleRoundedLines(ByRef r As Rectangle, ByRef roundness As Single, ByVal segments As Long, ByRef Color As ColorRGBA)
+    DrawRectangleRoundedLinesEx r, roundness, segments, 1#, Color
 End Sub
 
-Public Sub DrawRectangleRoundedLinesEx(ByRef R As Rectangle, ByRef roundness As Single, ByVal segments As Long, ByVal thick As Single, ByRef Color As ColorRGBA)
+Public Sub DrawRectangleRoundedLinesEx(ByRef r As Rectangle, ByRef roundness As Single, ByVal segments As Long, ByVal thick As Single, ByRef Color As ColorRGBA)
     If roundness <= 0! Then
-        DrawRectangleLinesEx R, thick, Color
+        DrawRectangleLinesEx r, thick, Color
         Exit Sub
     End If
 
-    DrawRectangleLines R.x + roundness, R.y, R.Width - (roundness * 2), R.Height, Color
+    DrawRectangleLines r.x + roundness, r.y, r.Width - (roundness * 2), r.Height, Color
 End Sub
 
 Public Sub DrawTriangle(ByVal x1 As Single, ByVal y1 As Single, ByVal x2 As Single, ByVal y2 As Single, ByVal x3 As Single, ByVal y3 As Single, ByRef Color As ColorRGBA)
-    glDisable GL_TEXTURE_2D
+    rlDisableTexture
 
-    glBegin GL_TRIANGLES
-    glColor4f Color.R, Color.G, Color.B, Color.A
-    glVertex2f x1, y1
-    glVertex2f x2, y2
-    glVertex2f x3, y3
-    glEnd
+    rlBegin RL_TRIANGLES
+    rlColor4f Color.r, Color.g, Color.b, Color.a
+    rlVertex2f x1, y1
+    rlVertex2f x2, y2
+    rlVertex2f x3, y3
+    rlEnd
 End Sub
 
 Public Sub DrawLine(ByVal x1 As Single, ByVal y1 As Single, ByVal x2 As Single, ByVal y2 As Single, ByRef Color As ColorRGBA, ByVal thickness As Single)
-    glLineWidth thickness
-    glBegin GL_LINES
-    glColor4f Color.R, Color.G, Color.B, Color.A
-    glVertex2f x1, y1
-    glVertex2f x2, y2
-    glEnd
+    rlSetLineWidth thickness
+    rlBegin RL_LINES
+    rlColor4f Color.r, Color.g, Color.b, Color.a
+    rlVertex2f x1, y1
+    rlVertex2f x2, y2
+    rlEnd
 End Sub
 
 Public Sub DrawTexture(ByRef tex As Texture2D, ByVal x As Single, ByVal y As Single, ByVal Width As Single, ByVal Height As Single, ByRef tint As ColorRGBA)
     If tex.Id = 0 Then Exit Sub
 
-    glEnable GL_TEXTURE_2D
-    glBindTexture GL_TEXTURE_2D, tex.Id
+    rlSetTexture tex.Id
 
-    glColor4f tint.R, tint.G, tint.B, tint.A
+    rlColor4f tint.r, tint.g, tint.b, tint.a
 
-    glBegin GL_QUADS
-    glTexCoord2f 0#, 0#: glVertex2f x, y
-    glTexCoord2f 1#, 0#: glVertex2f x + Width, y
-    glTexCoord2f 1#, 1#: glVertex2f x + Width, y + Height
-    glTexCoord2f 0#, 1#: glVertex2f x, y + Height
-    glEnd
+    rlBegin RL_QUADS
+    rlTexCoord2f 0#, 0#: rlVertex2f x, y
+    rlTexCoord2f 1#, 0#: rlVertex2f x + Width, y
+    rlTexCoord2f 1#, 1#: rlVertex2f x + Width, y + Height
+    rlTexCoord2f 0#, 1#: rlVertex2f x, y + Height
+    rlEnd
 
-    glDisable GL_TEXTURE_2D
+    rlDisableTexture
 End Sub
 
 Public Sub DrawTextureRec(ByRef tex As Texture2D, ByRef sourceRec As Rectangle, ByRef pos As Vector2, ByRef tint As ColorRGBA)
     If tex.Id = 0 Then Exit Sub
 
-    glEnable GL_TEXTURE_2D
-    glBindTexture GL_TEXTURE_2D, tex.Id
+    rlSetTexture tex.Id
 
-    glColor4f tint.R, tint.G, tint.B, tint.A
+    rlColor4f tint.r, tint.g, tint.b, tint.a
 
     Dim u1 As Single, v1 As Single, u2 As Single, v2 As Single
 
@@ -2477,14 +2490,14 @@ Public Sub DrawTextureRec(ByRef tex As Texture2D, ByRef sourceRec As Rectangle, 
     u2 = (sourceRec.x + sourceRec.Width) / tex.Width
     v2 = (sourceRec.y + sourceRec.Height) / tex.Height
 
-    glBegin GL_QUADS
-    glTexCoord2f u1, v1: glVertex2f pos.x, pos.y
-    glTexCoord2f u2, v1: glVertex2f pos.x + sourceRec.Width, pos.y
-    glTexCoord2f u2, v2: glVertex2f pos.x + sourceRec.Width, pos.y + sourceRec.Height
-    glTexCoord2f u1, v2: glVertex2f pos.x, pos.y + sourceRec.Height
-    glEnd
+    rlBegin RL_QUADS
+    rlTexCoord2f u1, v1: rlVertex2f pos.x, pos.y
+    rlTexCoord2f u2, v1: rlVertex2f pos.x + sourceRec.Width, pos.y
+    rlTexCoord2f u2, v2: rlVertex2f pos.x + sourceRec.Width, pos.y + sourceRec.Height
+    rlTexCoord2f u1, v2: rlVertex2f pos.x, pos.y + sourceRec.Height
+    rlEnd
 
-    glDisable GL_TEXTURE_2D
+    rlDisableTexture
 End Sub
 
 Public Sub DrawTexturePro(ByRef tex As Texture2D, ByRef sourceRec As Rectangle, ByRef dstrect As Rectangle, ByRef origin As Vector2, ByVal Rot As Single, ByRef tint As ColorRGBA)
@@ -2498,30 +2511,29 @@ Public Sub DrawTexturePro(ByRef tex As Texture2D, ByRef sourceRec As Rectangle, 
     u2 = (sourceRec.x + sourceRec.Width) / tex.Width
     v2 = (sourceRec.y + sourceRec.Height) / tex.Height
 
-    glEnable GL_TEXTURE_2D
-    glBindTexture GL_TEXTURE_2D, tex.Id
+    rlSetTexture tex.Id
 
-    glPushMatrix
+    rlPushMatrix
 
-    glTranslatef dstrect.x, dstrect.y, 0!
+    rlTranslatef dstrect.x, dstrect.y, 0!
 
     If Rot <> 0! Then
-        glTranslatef origin.x, origin.y, 0!
-        glRotatef Rot, 0!, 0!, 1!
-        glTranslatef -origin.x, -origin.y, 0!
+        rlTranslatef origin.x, origin.y, 0!
+        rlRotatef Rot, 0!, 0!, 1!
+        rlTranslatef -origin.x, -origin.y, 0!
     End If
 
-    glColor4f tint.R, tint.G, tint.B, tint.A
+    rlColor4f tint.r, tint.g, tint.b, tint.a
 
-    glBegin GL_QUADS
-    glTexCoord2f u1, v1: glVertex2f -origin.x, -origin.y
-    glTexCoord2f u2, v1: glVertex2f -origin.x + dstrect.Width, -origin.y
-    glTexCoord2f u2, v2: glVertex2f -origin.x + dstrect.Width, -origin.y + dstrect.Height
-    glTexCoord2f u1, v2: glVertex2f -origin.x, -origin.y + dstrect.Height
-    glEnd
+    rlBegin RL_QUADS
+    rlTexCoord2f u1, v1: rlVertex2f -origin.x, -origin.y
+    rlTexCoord2f u2, v1: rlVertex2f -origin.x + dstrect.Width, -origin.y
+    rlTexCoord2f u2, v2: rlVertex2f -origin.x + dstrect.Width, -origin.y + dstrect.Height
+    rlTexCoord2f u1, v2: rlVertex2f -origin.x, -origin.y + dstrect.Height
+    rlEnd
 
-    glPopMatrix
-    glDisable GL_TEXTURE_2D
+    rlPopMatrix
+    rlDisableTexture
 End Sub
 
 Public Sub DrawTextureNPatch(ByRef tex As Texture2D, ByRef info As NPatchInfo, ByRef dstrect As Rectangle, ByRef origin As Vector2, ByVal Rot As Single, ByRef Color As ColorRGBA)
@@ -2561,10 +2573,10 @@ Public Sub DrawTextureNPatch(ByRef tex As Texture2D, ByRef info As NPatchInfo, B
     drawMiddle = True
 
     Dim leftBorder As Single, topBorder As Single, rightBorder As Single, bottomBorder As Single
-    leftBorder = CSng(info.Left)
-    topBorder = CSng(info.Top)
-    rightBorder = CSng(info.Right)
-    bottomBorder = CSng(info.Bottom)
+    leftBorder = CSng(info.left)
+    topBorder = CSng(info.top)
+    rightBorder = CSng(info.right)
+    bottomBorder = CSng(info.bottom)
 
     If patchWidth <= (leftBorder + rightBorder) And info.Layout <> ThreePatchVertical Then
         drawCenter = False
@@ -2610,117 +2622,116 @@ Public Sub DrawTextureNPatch(ByRef tex As Texture2D, ByRef info As NPatchInfo, B
     coordDX = (srcX + srcWidth) / texWidth
     coordDY = (srcY + srcHeight) / texHeight
 
-    glEnable GL_TEXTURE_2D
-    glBindTexture GL_TEXTURE_2D, tex.Id
+    rlSetTexture tex.Id
 
-    glPushMatrix
-    glTranslatef CSng(dstrect.x), CSng(dstrect.y), 0!
+    rlPushMatrix
+    rlTranslatef CSng(dstrect.x), CSng(dstrect.y), 0!
 
     If Rot <> 0! Then
-        glTranslatef origin.x, origin.y, 0!
-        glRotatef Rot, 0!, 0!, 1!
-        glTranslatef -origin.x, -origin.y, 0!
+        rlTranslatef origin.x, origin.y, 0!
+        rlRotatef Rot, 0!, 0!, 1!
+        rlTranslatef -origin.x, -origin.y, 0!
     End If
 
-    glColor4f Color.R, Color.G, Color.B, Color.A
+    rlColor4f Color.r, Color.g, Color.b, Color.a
 
-    glBegin GL_QUADS
+    rlBegin RL_QUADS
 
     If info.Layout = NinePatch Then
-        glTexCoord2f coordAX, coordBY: glVertex2f vertAX, vertBY
-        glTexCoord2f coordBX, coordBY: glVertex2f vertBX, vertBY
-        glTexCoord2f coordBX, coordAY: glVertex2f vertBX, vertAY
-        glTexCoord2f coordAX, coordAY: glVertex2f vertAX, vertAY
+        rlTexCoord2f coordAX, coordBY: rlVertex2f vertAX, vertBY
+        rlTexCoord2f coordBX, coordBY: rlVertex2f vertBX, vertBY
+        rlTexCoord2f coordBX, coordAY: rlVertex2f vertBX, vertAY
+        rlTexCoord2f coordAX, coordAY: rlVertex2f vertAX, vertAY
 
         If drawCenter Then
-            glTexCoord2f coordBX, coordBY: glVertex2f vertBX, vertBY
-            glTexCoord2f coordCX, coordBY: glVertex2f vertCX, vertBY
-            glTexCoord2f coordCX, coordAY: glVertex2f vertCX, vertAY
-            glTexCoord2f coordBX, coordAY: glVertex2f vertBX, vertAY
+            rlTexCoord2f coordBX, coordBY: rlVertex2f vertBX, vertBY
+            rlTexCoord2f coordCX, coordBY: rlVertex2f vertCX, vertBY
+            rlTexCoord2f coordCX, coordAY: rlVertex2f vertCX, vertAY
+            rlTexCoord2f coordBX, coordAY: rlVertex2f vertBX, vertAY
         End If
 
-        glTexCoord2f coordCX, coordBY: glVertex2f vertCX, vertBY
-        glTexCoord2f coordDX, coordBY: glVertex2f vertDX, vertBY
-        glTexCoord2f coordDX, coordAY: glVertex2f vertDX, vertAY
-        glTexCoord2f coordCX, coordAY: glVertex2f vertCX, vertAY
+        rlTexCoord2f coordCX, coordBY: rlVertex2f vertCX, vertBY
+        rlTexCoord2f coordDX, coordBY: rlVertex2f vertDX, vertBY
+        rlTexCoord2f coordDX, coordAY: rlVertex2f vertDX, vertAY
+        rlTexCoord2f coordCX, coordAY: rlVertex2f vertCX, vertAY
 
         If drawMiddle Then
-            glTexCoord2f coordAX, coordCY: glVertex2f vertAX, vertCY
-            glTexCoord2f coordBX, coordCY: glVertex2f vertBX, vertCY
-            glTexCoord2f coordBX, coordBY: glVertex2f vertBX, vertBY
-            glTexCoord2f coordAX, coordBY: glVertex2f vertAX, vertBY
+            rlTexCoord2f coordAX, coordCY: rlVertex2f vertAX, vertCY
+            rlTexCoord2f coordBX, coordCY: rlVertex2f vertBX, vertCY
+            rlTexCoord2f coordBX, coordBY: rlVertex2f vertBX, vertBY
+            rlTexCoord2f coordAX, coordBY: rlVertex2f vertAX, vertBY
 
             If drawCenter Then
-                glTexCoord2f coordBX, coordCY: glVertex2f vertBX, vertCY
-                glTexCoord2f coordCX, coordCY: glVertex2f vertCX, vertCY
-                glTexCoord2f coordCX, coordBY: glVertex2f vertCX, vertBY
-                glTexCoord2f coordBX, coordBY: glVertex2f vertBX, vertBY
+                rlTexCoord2f coordBX, coordCY: rlVertex2f vertBX, vertCY
+                rlTexCoord2f coordCX, coordCY: rlVertex2f vertCX, vertCY
+                rlTexCoord2f coordCX, coordBY: rlVertex2f vertCX, vertBY
+                rlTexCoord2f coordBX, coordBY: rlVertex2f vertBX, vertBY
             End If
 
-            glTexCoord2f coordCX, coordCY: glVertex2f vertCX, vertCY
-            glTexCoord2f coordDX, coordCY: glVertex2f vertDX, vertCY
-            glTexCoord2f coordDX, coordBY: glVertex2f vertDX, vertBY
-            glTexCoord2f coordCX, coordBY: glVertex2f vertCX, vertBY
+            rlTexCoord2f coordCX, coordCY: rlVertex2f vertCX, vertCY
+            rlTexCoord2f coordDX, coordCY: rlVertex2f vertDX, vertCY
+            rlTexCoord2f coordDX, coordBY: rlVertex2f vertDX, vertBY
+            rlTexCoord2f coordCX, coordBY: rlVertex2f vertCX, vertBY
         End If
 
-        glTexCoord2f coordAX, coordDY: glVertex2f vertAX, vertDY
-        glTexCoord2f coordBX, coordDY: glVertex2f vertBX, vertDY
-        glTexCoord2f coordBX, coordCY: glVertex2f vertBX, vertCY
-        glTexCoord2f coordAX, coordCY: glVertex2f vertAX, vertCY
+        rlTexCoord2f coordAX, coordDY: rlVertex2f vertAX, vertDY
+        rlTexCoord2f coordBX, coordDY: rlVertex2f vertBX, vertDY
+        rlTexCoord2f coordBX, coordCY: rlVertex2f vertBX, vertCY
+        rlTexCoord2f coordAX, coordCY: rlVertex2f vertAX, vertCY
 
         If drawCenter Then
-            glTexCoord2f coordBX, coordDY: glVertex2f vertBX, vertDY
-            glTexCoord2f coordCX, coordDY: glVertex2f vertCX, vertDY
-            glTexCoord2f coordCX, coordCY: glVertex2f vertCX, vertCY
-            glTexCoord2f coordBX, coordCY: glVertex2f vertBX, vertCY
+            rlTexCoord2f coordBX, coordDY: rlVertex2f vertBX, vertDY
+            rlTexCoord2f coordCX, coordDY: rlVertex2f vertCX, vertDY
+            rlTexCoord2f coordCX, coordCY: rlVertex2f vertCX, vertCY
+            rlTexCoord2f coordBX, coordCY: rlVertex2f vertBX, vertCY
         End If
 
-        glTexCoord2f coordCX, coordDY: glVertex2f vertCX, vertDY
-        glTexCoord2f coordDX, coordDY: glVertex2f vertDX, vertDY
-        glTexCoord2f coordDX, coordCY: glVertex2f vertDX, vertCY
-        glTexCoord2f coordCX, coordCY: glVertex2f vertCX, vertCY
+        rlTexCoord2f coordCX, coordDY: rlVertex2f vertCX, vertDY
+        rlTexCoord2f coordDX, coordDY: rlVertex2f vertDX, vertDY
+        rlTexCoord2f coordDX, coordCY: rlVertex2f vertDX, vertCY
+        rlTexCoord2f coordCX, coordCY: rlVertex2f vertCX, vertCY
 
     ElseIf info.Layout = ThreePatchVertical Then
-        glTexCoord2f coordAX, coordBY: glVertex2f vertAX, vertBY
-        glTexCoord2f coordDX, coordBY: glVertex2f vertDX, vertBY
-        glTexCoord2f coordDX, coordAY: glVertex2f vertDX, vertAY
-        glTexCoord2f coordAX, coordAY: glVertex2f vertAX, vertAY
+        rlTexCoord2f coordAX, coordBY: rlVertex2f vertAX, vertBY
+        rlTexCoord2f coordDX, coordBY: rlVertex2f vertDX, vertBY
+        rlTexCoord2f coordDX, coordAY: rlVertex2f vertDX, vertAY
+        rlTexCoord2f coordAX, coordAY: rlVertex2f vertAX, vertAY
 
         If drawCenter Then
-            glTexCoord2f coordAX, coordCY: glVertex2f vertAX, vertCY
-            glTexCoord2f coordDX, coordCY: glVertex2f vertDX, vertCY
-            glTexCoord2f coordDX, coordBY: glVertex2f vertDX, vertBY
-            glTexCoord2f coordAX, coordBY: glVertex2f vertAX, vertBY
+            rlTexCoord2f coordAX, coordCY: rlVertex2f vertAX, vertCY
+            rlTexCoord2f coordDX, coordCY: rlVertex2f vertDX, vertCY
+            rlTexCoord2f coordDX, coordBY: rlVertex2f vertDX, vertBY
+            rlTexCoord2f coordAX, coordBY: rlVertex2f vertAX, vertBY
         End If
 
-        glTexCoord2f coordAX, coordDY: glVertex2f vertAX, vertDY
-        glTexCoord2f coordDX, coordDY: glVertex2f vertDX, vertDY
-        glTexCoord2f coordDX, coordCY: glVertex2f vertDX, vertCY
-        glTexCoord2f coordAX, coordCY: glVertex2f vertAX, vertCY
+        rlTexCoord2f coordAX, coordDY: rlVertex2f vertAX, vertDY
+        rlTexCoord2f coordDX, coordDY: rlVertex2f vertDX, vertDY
+        rlTexCoord2f coordDX, coordCY: rlVertex2f vertDX, vertCY
+        rlTexCoord2f coordAX, coordCY: rlVertex2f vertAX, vertCY
 
     ElseIf info.Layout = ThreePatchHorizontal Then
-        glTexCoord2f coordAX, coordDY: glVertex2f vertAX, vertDY
-        glTexCoord2f coordBX, coordDY: glVertex2f vertBX, vertDY
-        glTexCoord2f coordBX, coordAY: glVertex2f vertBX, vertAY
-        glTexCoord2f coordAX, coordAY: glVertex2f vertAX, vertAY
+        rlTexCoord2f coordAX, coordDY: rlVertex2f vertAX, vertDY
+        rlTexCoord2f coordBX, coordDY: rlVertex2f vertBX, vertDY
+        rlTexCoord2f coordBX, coordAY: rlVertex2f vertBX, vertAY
+        rlTexCoord2f coordAX, coordAY: rlVertex2f vertAX, vertAY
 
         If drawCenter Then
-            glTexCoord2f coordBX, coordDY: glVertex2f vertBX, vertDY
-            glTexCoord2f coordCX, coordDY: glVertex2f vertCX, vertDY
-            glTexCoord2f coordCX, coordAY: glVertex2f vertCX, vertAY
-            glTexCoord2f coordBX, coordAY: glVertex2f vertBX, vertAY
+            rlTexCoord2f coordBX, coordDY: rlVertex2f vertBX, vertDY
+            rlTexCoord2f coordCX, coordDY: rlVertex2f vertCX, vertDY
+            rlTexCoord2f coordCX, coordAY: rlVertex2f vertCX, vertAY
+            rlTexCoord2f coordBX, coordAY: rlVertex2f vertBX, vertAY
         End If
 
-        glTexCoord2f coordCX, coordDY: glVertex2f vertCX, vertDY
-        glTexCoord2f coordDX, coordDY: glVertex2f vertDX, vertDY
-        glTexCoord2f coordDX, coordAY: glVertex2f vertDX, vertAY
-        glTexCoord2f coordCX, coordAY: glVertex2f vertCX, vertAY
+        rlTexCoord2f coordCX, coordDY: rlVertex2f vertCX, vertDY
+        rlTexCoord2f coordDX, coordDY: rlVertex2f vertDX, vertDY
+        rlTexCoord2f coordDX, coordAY: rlVertex2f vertDX, vertAY
+        rlTexCoord2f coordCX, coordAY: rlVertex2f vertCX, vertAY
     End If
 
-    glEnd
+    rlEnd
 
-    glPopMatrix
-    glDisable GL_TEXTURE_2D
+    rlPopMatrix
+    rlDisableTexture
 End Sub
 
 Public Sub DrawText(ByRef font As ImageFont, ByVal text As String, ByVal x As Single, ByVal y As Single, ByRef tint As ColorRGBA)
@@ -2728,15 +2739,14 @@ Public Sub DrawText(ByRef font As ImageFont, ByVal text As String, ByVal x As Si
     Dim curX As Single
     curX = x
 
-    glEnable GL_TEXTURE_2D
-    glBindTexture GL_TEXTURE_2D, font.Texture.Id
+    rlSetTexture font.texture.Id
 
-    glColor4f tint.R, tint.G, tint.B, tint.A
+    rlColor4f tint.r, tint.g, tint.b, tint.a
 
-    glBegin GL_QUADS
+    rlBegin RL_QUADS
 
     Dim texelWidth As Single
-    texelWidth = 1! / CSng(font.Texture.Width)
+    texelWidth = 1! / CSng(font.texture.Width)
     Dim fHeight As Single
     fHeight = CSng(font.Height)
 
@@ -2753,23 +2763,23 @@ Public Sub DrawText(ByRef font As ImageFont, ByVal text As String, ByVal x As Si
             charIdx = 0
         End If
 
-        Dim G As GlyphRect
-        G = font.Glyphs(charIdx)
+        Dim g As GlyphRect
+        g = font.Glyphs(charIdx)
 
         Dim u1 As Single, u2 As Single
-        u1 = G.Left + (texelWidth * 0.1)
-        u2 = (G.Left + (G.Width / CSng(font.Texture.Width))) - (texelWidth * 0.1)
+        u1 = g.left + (texelWidth * 0.1)
+        u2 = (g.left + (g.Width / CSng(font.texture.Width))) - (texelWidth * 0.1)
 
-        glTexCoord2f u1, 1#: glVertex2f curX, y + fHeight
-        glTexCoord2f u2, 1#: glVertex2f curX + G.Width, y + fHeight
-        glTexCoord2f u2, 0#: glVertex2f curX + G.Width, y
-        glTexCoord2f u1, 0#: glVertex2f curX, y
+        rlTexCoord2f u1, 1#: rlVertex2f curX, y + fHeight
+        rlTexCoord2f u2, 1#: rlVertex2f curX + g.Width, y + fHeight
+        rlTexCoord2f u2, 0#: rlVertex2f curX + g.Width, y
+        rlTexCoord2f u1, 0#: rlVertex2f curX, y
 
-        curX = curX + G.Width
+        curX = curX + g.Width
     Next i
 
-    glEnd
-    glDisable GL_TEXTURE_2D
+    rlEnd
+    rlDisableTexture
 End Sub
 
 Public Sub DrawCircle(ByVal centerX As Long, ByVal centerY As Long, ByVal radius As Single, ByRef Color As ColorRGBA)
@@ -2789,20 +2799,20 @@ Public Sub DrawCircleGradient(ByRef center As Vector2, ByVal radius As Single, B
     segments = 32
     angleStep = 2! * PI / segments
 
-    glDisable GL_TEXTURE_2D
-    glBegin GL_TRIANGLE_FAN
+    rlDisableTexture
+    rlBegin RL_TRIANGLE_FAN
 
-    glColor4f inner.R, inner.G, inner.B, inner.A
-    glVertex2f center.x, center.y
+    rlColor4f inner.r, inner.g, inner.b, inner.a
+    rlVertex2f center.x, center.y
 
     For i = 0 To segments
         Dim currentAngle As Single
         currentAngle = i * angleStep
 
-        glColor4f outer.R, outer.G, outer.B, outer.A
-        glVertex2f center.x + Cos(currentAngle) * radius, center.y + Sin(currentAngle) * radius
+        rlColor4f outer.r, outer.g, outer.b, outer.a
+        rlVertex2f center.x + Cos(currentAngle) * radius, center.y + Sin(currentAngle) * radius
     Next i
-    glEnd
+    rlEnd
 End Sub
 
 Public Sub DrawCircleSector(ByRef center As Vector2, ByVal radius As Single, ByVal startAngle As Single, ByVal endAngle As Single, ByVal segments As Long, ByRef Color As ColorRGBA)
@@ -2817,20 +2827,20 @@ Public Sub DrawCircleSectorLines(ByRef center As Vector2, ByVal radius As Single
     If segments < 4 Then segments = 4
     angleStep = (endAngle - startAngle) * (PI / 180!) / segments
 
-    glDisable GL_TEXTURE_2D
-    glBegin GL_LINE_STRIP
-    glColor4f Color.R, Color.G, Color.B, Color.A
+    rlDisableTexture
+    rlBegin RL_LINE_STRIP
+    rlColor4f Color.r, Color.g, Color.b, Color.a
 
-    glVertex2f center.x, center.y
+    rlVertex2f center.x, center.y
 
     For i = 0 To segments
         Dim currentAngle As Single
         currentAngle = (startAngle * (PI / 180!)) + (i * angleStep)
-        glVertex2f center.x + Cos(currentAngle) * radius, center.y + Sin(currentAngle) * radius
+        rlVertex2f center.x + Cos(currentAngle) * radius, center.y + Sin(currentAngle) * radius
     Next i
 
-    glVertex2f center.x, center.y
-    glEnd
+    rlVertex2f center.x, center.y
+    rlEnd
 End Sub
 
 Public Sub DrawCircleSectorLinesEx(ByRef center As Vector2, ByVal radius As Single, ByVal startAngle As Single, ByVal endAngle As Single, ByVal segments As Long, ByVal thick As Single, ByRef Color As ColorRGBA)
@@ -2849,16 +2859,16 @@ Public Sub DrawCircleLines(ByVal centerX As Long, ByVal centerY As Long, ByVal r
     segments = 32
     angleStep = 2! * PI / segments
 
-    glDisable GL_TEXTURE_2D
-    glBegin GL_LINE_LOOP
-    glColor4f Color.R, Color.G, Color.B, Color.A
+    rlDisableTexture
+    rlBegin RL_LINE_LOOP
+    rlColor4f Color.r, Color.g, Color.b, Color.a
 
     For i = 0 To segments - 1
         Dim currentAngle As Single
         currentAngle = i * angleStep
-        glVertex2f centerX + Cos(currentAngle) * radius, centerY + Sin(currentAngle) * radius
+        rlVertex2f centerX + Cos(currentAngle) * radius, centerY + Sin(currentAngle) * radius
     Next i
-    glEnd
+    rlEnd
 End Sub
 
 Public Sub DrawCircleLinesV(ByRef center As Vector2, ByVal radius As Single, ByRef Color As ColorRGBA)
@@ -2879,15 +2889,15 @@ Private Sub DrawCircleSectorSimple(ByVal centerX As Single, ByVal centerY As Sin
 
     angleStep = (endAngle - startAngle) * (PI / 180!) / segments
 
-    glDisable GL_TEXTURE_2D
-    glBegin GL_TRIANGLE_FAN
-    glColor4f Color.R, Color.G, Color.B, Color.A
-    glVertex2f centerX, centerY
+    rlDisableTexture
+    rlBegin RL_TRIANGLE_FAN
+    rlColor4f Color.r, Color.g, Color.b, Color.a
+    rlVertex2f centerX, centerY
 
     For i = 0 To segments
         Dim currentAngle As Single
         currentAngle = (startAngle * (PI / 180!)) + (i * angleStep)
-        glVertex2f centerX + Cos(currentAngle) * radius, centerY + Sin(currentAngle) * radius
+        rlVertex2f centerX + Cos(currentAngle) * radius, centerY + Sin(currentAngle) * radius
     Next i
-    glEnd
+    rlEnd
 End Sub

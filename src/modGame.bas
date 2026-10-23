@@ -155,10 +155,16 @@ Private Sub DrawMap(ByRef map As Tilemap)
     If map.TotalVertices <= 0 Then Exit Sub
     If map.Tileset.Id = 0 Then Exit Sub
 
+    ' O mapa usa uma array propria em espaco de mundo. O flush do lote precisa
+    ' vir ANTES de configurar textura/arrays crus: se viesse depois, o lote
+    ' sobrescreveria esse estado. rlDrawVertexArray entao envia as matrizes da
+    ' CPU (camera/projecao) para o OpenGL, desenha e restaura.
+    rlDrawRenderBatchActive
+
     glEnable GL_TEXTURE_2D
     glBindTexture GL_TEXTURE_2D, map.Tileset.Id
 
-    glColor4f White.r, White.G, White.b, White.A
+    glColor4f White.r, White.g, White.b, White.a
 
     glEnableClientState GL_VERTEX_ARRAY
     glEnableClientState GL_TEXTURE_COORD_ARRAY
@@ -166,7 +172,7 @@ Private Sub DrawMap(ByRef map As Tilemap)
     glVertexPointer 2, GL_FLOAT, 0, ByVal VarPtr(map.Vertices(0))
     glTexCoordPointer 2, GL_FLOAT, 0, ByVal VarPtr(map.TexCoords(0))
 
-    glDrawArrays GL_QUADS, 0, map.TotalVertices
+    rlDrawVertexArray RL_QUADS, 0, map.TotalVertices
 
     glDisableClientState GL_TEXTURE_COORD_ARRAY
     glDisableClientState GL_VERTEX_ARRAY

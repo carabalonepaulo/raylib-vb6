@@ -37,10 +37,18 @@ Option Explicit
 '   rlEnd
 ' ============================================================================
 
-' --- Modos de primitiva (valores iguais aos da raylib) ---------------------
+' --- Modos de primitiva ----------------------------------------------------
+'
+' Os valores sao iguais aos enums do OpenGL (GL_POINTS..GL_QUADS), entao podem
+' ser passados direto para glDrawArrays/glDrawElements em desenhos crus.
 
+Public Const RL_POINTS As Long = &H0
 Public Const RL_LINES As Long = &H1
+Public Const RL_LINE_LOOP As Long = &H2
+Public Const RL_LINE_STRIP As Long = &H3
 Public Const RL_TRIANGLES As Long = &H4
+Public Const RL_TRIANGLE_STRIP As Long = &H5
+Public Const RL_TRIANGLE_FAN As Long = &H6
 Public Const RL_QUADS As Long = &H7
 
 ' --- Modos de matriz -------------------------------------------------------
@@ -90,7 +98,8 @@ End Type
 
 Private mBatch As rlRenderBatch
 Private mMaxVertices As Long
-Private mInitialized As Boolean
+Private mLineWidth As Single
+Private mPointSize As Single
 
 Private mCurrentMode As Long
 Private mInBeginEnd As Boolean
@@ -111,23 +120,17 @@ Private mProjection As rlMatrix
 Private mCurrentMatrixMode As Long
 Private mModelviewStack(0 To MATRIX_STACK_MAX - 1) As rlMatrix
 Private mProjectionStack(0 To MATRIX_STACK_MAX - 1) As rlMatrix
-Private mStackTop As Long
+Private mModelviewStackTop As Long
+Private mProjectionStackTop As Long
 
 ' ============================================================================
 ' Ciclo de vida
 ' ============================================================================
 
+' Inicializa o lote. Chamado UMA vez, junto do init da raylib (InitWindow);
+' as demais entradas assumem que o estado ja existe.
 Public Sub rlglInit()
-    If mInitialized Then Exit Sub
     rlLoadRenderBatch 1, DEFAULT_MAX_VERTICES
-End Sub
-
-' Chamado no inicio de toda funcao publica que mexe em estado. rlglInit zera
-' matrizes/cores/textura, entao ele PRECISA rodar antes de o usuario configurar
-' qualquer coisa (ex.: antes de rlOrtho). Sem isso, o primeiro rlBegin
-' apagaria a projecao ja configurada.
-Private Sub EnsureInit()
-    If mInitialized = False Then rlglInit
 End Sub
 
 ' Aloca numBuffers buffers de maxVertices vertices cada. Na pratica usamos um
@@ -158,20 +161,19 @@ Public Sub rlLoadRenderBatch(ByVal numBuffers As Long, ByVal maxVertices As Long
     mModelview = MatrixIdentity()
     mProjection = MatrixIdentity()
     mCurrentMatrixMode = RL_MODELVIEW
-    mStackTop = 0
+    mModelviewStackTop = 0
+    mProjectionStackTop = 0
 
     mCurrentTextureId = 0
     mInBeginEnd = False
     mColorR = 255: mColorG = 255: mColorB = 255: mColorA = 255
     mTexU = 0!: mTexV = 0!
     mNormalX = 0!: mNormalY = 0!: mNormalZ = 1!
-
-    mInitialized = True
+    mLineWidth = 1!: mPointSize = 1!
 End Sub
 
 Public Sub rlUnloadRenderBatch()
     mBatch.drawCounter = 0
-    mInitialized = False
 End Sub
 
 ' ============================================================================
@@ -179,7 +181,6 @@ End Sub
 ' ============================================================================
 
 Public Sub rlBegin(ByVal mode As Long)
-    EnsureInit
     mCurrentMode = mode
     mInBeginEnd = True
 End Sub
@@ -202,7 +203,6 @@ Public Sub rlVertex3f(ByVal x As Single, ByVal y As Single, ByVal z As Single)
     Dim dc As Long
     Dim tx As Single, ty As Single, tz As Single
 
-    EnsureInit
     If mInBeginEnd = False Then Exit Sub
 
     ' garante espaco (pode disparar um flush se o buffer estiver cheio)
@@ -242,7 +242,6 @@ End Sub
 ' --- Estado por vertice ----------------------------------------------------
 
 Public Sub rlColor4f(ByVal r As Single, ByVal g As Single, ByVal b As Single, ByVal a As Single)
-    EnsureInit
     mColorR = ToByte(r)
     mColorG = ToByte(g)
     mColorB = ToByte(b)
@@ -254,39 +253,32 @@ Public Sub rlColor3f(ByVal r As Single, ByVal g As Single, ByVal b As Single)
 End Sub
 
 Public Sub rlColor4ub(ByVal r As Byte, ByVal g As Byte, ByVal b As Byte, ByVal a As Byte)
-    EnsureInit
     mColorR = r: mColorG = g: mColorB = b: mColorA = a
 End Sub
 
 Public Sub rlTexCoord2f(ByVal u As Single, ByVal v As Single)
-    EnsureInit
     mTexU = u: mTexV = v
 End Sub
 
 Public Sub rlTexCoord2i(ByVal u As Long, ByVal v As Long)
-    EnsureInit
     mTexU = CSng(u): mTexV = CSng(v)
 End Sub
 
 Public Sub rlNormal3f(ByVal x As Single, ByVal y As Single, ByVal z As Single)
-    EnsureInit
     mNormalX = x: mNormalY = y: mNormalZ = z
 End Sub
 
 ' --- Textura do lote -------------------------------------------------------
 
 Public Sub rlSetTexture(ByVal id As Long)
-    EnsureInit
     mCurrentTextureId = id
 End Sub
 
 Public Sub rlEnableTexture(ByVal id As Long)
-    EnsureInit
     mCurrentTextureId = id
 End Sub
 
 Public Sub rlDisableTexture()
-    EnsureInit
     mCurrentTextureId = 0
 End Sub
 
@@ -299,34 +291,37 @@ End Function
 ' ============================================================================
 
 Public Sub rlMatrixMode(ByVal mode As Long)
-    EnsureInit
     If mode = RL_MODELVIEW Or mode = RL_PROJECTION Then mCurrentMatrixMode = mode
 End Sub
 
+' Pilha por modo, igual ao OpenGL: glPushMatrix/glPopMatrix tem profundidades
+' independentes para GL_MODELVIEW e GL_PROJECTION. (Empilhar os dois modos na
+' mesma pilha baguncaria a ordem do pop.)
 Public Sub rlPushMatrix()
-    EnsureInit
-    If mStackTop >= MATRIX_STACK_MAX Then Exit Sub
     If mCurrentMatrixMode = RL_PROJECTION Then
-        mProjectionStack(mStackTop) = mProjection
+        If mProjectionStackTop >= MATRIX_STACK_MAX Then Exit Sub
+        mProjectionStack(mProjectionStackTop) = mProjection
+        mProjectionStackTop = mProjectionStackTop + 1
     Else
-        mModelviewStack(mStackTop) = mModelview
+        If mModelviewStackTop >= MATRIX_STACK_MAX Then Exit Sub
+        mModelviewStack(mModelviewStackTop) = mModelview
+        mModelviewStackTop = mModelviewStackTop + 1
     End If
-    mStackTop = mStackTop + 1
 End Sub
 
 Public Sub rlPopMatrix()
-    EnsureInit
-    If mStackTop <= 0 Then Exit Sub
-    mStackTop = mStackTop - 1
     If mCurrentMatrixMode = RL_PROJECTION Then
-        mProjection = mProjectionStack(mStackTop)
+        If mProjectionStackTop <= 0 Then Exit Sub
+        mProjectionStackTop = mProjectionStackTop - 1
+        mProjection = mProjectionStack(mProjectionStackTop)
     Else
-        mModelview = mModelviewStack(mStackTop)
+        If mModelviewStackTop <= 0 Then Exit Sub
+        mModelviewStackTop = mModelviewStackTop - 1
+        mModelview = mModelviewStack(mModelviewStackTop)
     End If
 End Sub
 
 Public Sub rlLoadIdentity()
-    EnsureInit
     If mCurrentMatrixMode = RL_PROJECTION Then
         mProjection = MatrixIdentity()
     Else
@@ -336,42 +331,35 @@ End Sub
 
 Public Sub rlTranslatef(ByVal x As Single, ByVal y As Single, ByVal z As Single)
     Dim t As rlMatrix
-    EnsureInit
     t = MatrixTranslate(x, y, z)
     ApplyMatrix t
 End Sub
 
 Public Sub rlRotatef(ByVal angle As Single, ByVal x As Single, ByVal y As Single, ByVal z As Single)
     Dim t As rlMatrix
-    EnsureInit
     t = MatrixRotate(angle, x, y, z)
     ApplyMatrix t
 End Sub
 
 Public Sub rlScalef(ByVal x As Single, ByVal y As Single, ByVal z As Single)
     Dim t As rlMatrix
-    EnsureInit
     t = MatrixScale(x, y, z)
     ApplyMatrix t
 End Sub
 
 Public Sub rlMultMatrixf(ByRef mat As rlMatrix)
-    EnsureInit
     ApplyMatrix mat
 End Sub
 
 Public Sub rlOrtho(ByVal left As Double, ByVal right As Double, ByVal bottom As Double, ByVal top As Double, ByVal nearPlane As Double, ByVal farPlane As Double)
-    EnsureInit
     mProjection = MatrixOrtho(left, right, bottom, top, nearPlane, farPlane)
 End Sub
 
 Public Function rlGetMatrixModelview() As rlMatrix
-    EnsureInit
     rlGetMatrixModelview = mModelview
 End Function
 
 Public Function rlGetMatrixProjection() As rlMatrix
-    EnsureInit
     rlGetMatrixProjection = mProjection
 End Function
 
@@ -381,7 +369,6 @@ End Function
 
 ' Envia o lote acumulado para a GPU e reinicia os contadores.
 Public Sub rlDrawRenderBatchActive()
-    If mInitialized = False Then Exit Sub
     If mBatch.drawCounter = 0 Then Exit Sub
     FlushBatch
 End Sub
@@ -390,7 +377,6 @@ End Sub
 ' False (o chamador continua desenhando num lote novo).
 Public Function rlCheckRenderBatchLimit(ByVal vCount As Long) As Boolean
     Dim b As Long
-    EnsureInit
     b = mBatch.currentBuffer
     If mBatch.vertexBuffer(b).elementCount + vCount > mMaxVertices Then
         rlDrawRenderBatchActive
@@ -401,12 +387,10 @@ Public Function rlCheckRenderBatchLimit(ByVal vCount As Long) As Boolean
 End Function
 
 Public Function rlGetBatchVertexCount() As Long
-    If mInitialized = False Then Exit Function
     rlGetBatchVertexCount = mBatch.vertexBuffer(mBatch.currentBuffer).elementCount
 End Function
 
 Public Function rlGetBatchDrawCallCount() As Long
-    If mInitialized = False Then Exit Function
     rlGetBatchDrawCallCount = mBatch.drawCounter
 End Function
 
@@ -444,24 +428,42 @@ Public Sub rlDisable(ByVal state As Long)
     glDisable state
 End Sub
 
+' Largura de linha e tamanho de ponto sao estado de rasterizacao: valem para o
+' lote inteiro no momento do flush. Se o valor muda, o lote pendente precisa ser
+' desenhado antes, senao receberia a largura errada.
 Public Sub rlSetLineWidth(ByVal width As Single)
-    glLineWidth width
+    If width <> mLineWidth Then
+        rlDrawRenderBatchActive
+        mLineWidth = width
+        glLineWidth width
+    End If
 End Sub
 
 Public Sub rlSetPointSize(ByVal size As Single)
-    glPointSize size
+    If size <> mPointSize Then
+        rlDrawRenderBatchActive
+        mPointSize = size
+        glPointSize size
+    End If
 End Sub
 
-' Desenho cru: faz flush do lote e chama glDrawArrays com os arrays que voce
-' mesmo configurou (glVertexPointer etc).
+' Desenho cru: desenha a array que voce mesmo configurou (glVertexPointer etc).
+' NAO faz flush - o chamador deve chamar rlDrawRenderBatchActive ANTES de
+' configurar textura/arrays crus, senao o flush do lote sobrescreveria esse
+' estado. Como o flush deixa as matrizes do OpenGL em identity (os vertices do
+' lote ja vem transformados na CPU), aqui as matrizes da CPU sao enviadas para
+' a GPU e restauradas depois, para a array ser desenhada em espaco de objeto com
+' a camera/projecao atuais.
 Public Sub rlDrawVertexArray(ByVal mode As Long, ByVal first As Long, ByVal count As Long)
-    rlDrawRenderBatchActive
+    ApplyMatricesToGL
     glDrawArrays mode, first, count
+    ResetGLMatrices
 End Sub
 
 Public Sub rlDrawVertexArrayElements(ByVal mode As Long, ByVal count As Long, ByVal indices As Long)
-    rlDrawRenderBatchActive
+    ApplyMatricesToGL
     glDrawElements mode, count, GL_UNSIGNED_INT, indices
+    ResetGLMatrices
 End Sub
 
 ' ============================================================================
@@ -477,10 +479,7 @@ Private Sub FlushBatch()
     b = mBatch.currentBuffer
 
     ' Os vertices ja vem em espaco de recorte; zera as matrizes do OpenGL.
-    glMatrixMode GL_PROJECTION
-    glLoadIdentity
-    glMatrixMode GL_MODELVIEW
-    glLoadIdentity
+    ResetGLMatrices
 
     glEnableClientState GL_VERTEX_ARRAY
     glEnableClientState GL_COLOR_ARRAY
@@ -521,6 +520,24 @@ Private Sub FlushBatch()
 
     mBatch.vertexBuffer(b).elementCount = 0
     mBatch.drawCounter = 0
+End Sub
+
+' Envia as matrizes da CPU (mProjection/mModelview) para as matrizes do OpenGL.
+' Necessario para desenhos crus em espaco de objeto, como o mapa.
+Private Sub ApplyMatricesToGL()
+    glMatrixMode GL_PROJECTION
+    glLoadMatrixf mProjection.m(0)
+    glMatrixMode GL_MODELVIEW
+    glLoadMatrixf mModelview.m(0)
+End Sub
+
+' Zera as matrizes do OpenGL. O padrao entre flushes: os vertices do lote ja
+' chegam em espaco de recorte, entao nenhuma transformacao deve ser aplicada.
+Private Sub ResetGLMatrices()
+    glMatrixMode GL_PROJECTION
+    glLoadIdentity
+    glMatrixMode GL_MODELVIEW
+    glLoadIdentity
 End Sub
 
 ' Cria um novo draw call quando o modo ou a textura mudam; caso contrario

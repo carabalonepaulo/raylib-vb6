@@ -16,8 +16,9 @@ Conventions
         Run frmMain, 1280, 768, 60
     End Sub
 
-  Run loads the form, creates the GL context and calls Game_Load, then loops
-  Game_Update(dt) / Game_Draw(dt) each frame, and finally Game_Unload.
+  Run loads the form, calls InitWindow (creates the GL context and initializes
+  the rlgl layer), then calls Game_Load, loops Game_Update(dt) / Game_Draw(dt)
+  each frame, and finally Game_Unload.
 
 - Helpers to fill structs in one line:
 
@@ -32,14 +33,26 @@ Conventions
 
 Window / frame
 --------------
+Sub InitWindow(ByRef frmMain As Form, ByVal width As Long, ByVal height As Long)
 Sub Run(ByRef TargetForm As Form, ByVal ScreenW As Long, ByVal ScreenH As Long, ByVal TargetFPS As Long)
 Sub UpdateViewport(ByVal w As Long, ByVal h As Long)
+
+' InitWindow does NOT create a window: it receives the already-created form
+' (frmMain) and only initializes what is needed - pixel format, GL context,
+' viewport, blending, image loader, colors and the rlgl layer. Run calls it for
+' you; you normally call Run, not InitWindow.
 
 Drawing
 -------
 Sub BeginDrawing()
 Sub EndDrawing()
 Sub Clear(ByVal R As Single, ByVal G As Single, ByVal B As Single, ByVal A As Single)
+
+' BeginDrawing sets an ortho projection (0, w, h, 0) through rlgl and EndDrawing
+' flushes the rlgl batch and swaps buffers. All the Draw* functions below record
+' geometry into the rlgl batch instead of calling OpenGL directly. The map
+' (modGame.DrawMap) is the exception: it uses its own world-space vertex array,
+' so it flushes the batch and draws with rlDrawVertexArray.
 
 Timing
 ------
@@ -143,6 +156,9 @@ Sub EndTextureMode()
 ' screen: the texture is flipped into the framebuffer and DrawTexture flips
 ' it back on display, so no draw code has to change.
 ' RenderTexture2D.Texture is drawn with DrawTexture/DrawTextureRec/DrawTexturePro.
+' BeginTextureMode flushes the pending batch before switching framebuffer, and
+' EndTextureMode flushes what was drawn into the target; both save and restore
+' the projection, modelview and viewport.
 
 
 ================================================================================
