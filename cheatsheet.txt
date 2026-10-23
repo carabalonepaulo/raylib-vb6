@@ -1,71 +1,340 @@
-Function LoadImage(ByVal filePath As String) As Image
-Function ImageGetPixel(ByRef img As Image, ByVal X As Long, ByVal Y As Long) As ColorRGBA
-Sub ImageSetPixel(ByRef img As Image, ByVal X As Long, ByVal Y As Long, ByRef col As ColorRGBA)
-Sub ImageClear(ByRef img As Image, ByRef col As ColorRGBA)
-Sub ImageDrawRect(ByRef img As Image, ByRef Rect As Rectangle, ByRef col As ColorRGBA)
-Sub ImageDrawImage(ByRef imgDst As Image, ByRef Rect As Rectangle, ByRef imgSrc As Image, ByRef col As ColorRGBA)
+================================================================================
+ raylib for VB6 - cheatsheet
+================================================================================
 
-Function LoadTextureFromImage(ByRef img As Image) As Texture2D
-Function LoadTexture(ByVal filePath As String) As Texture2D
-Sub UnloadTexture(ByVal textureID As Long)
-Function LoadImageFont(ByVal filePath As String, ByVal charList As String) As ImageFont
+Conventions
+-----------
+- Coordinates are in pixels, Y grows downward (same as raylib).
+- Colors are ColorRGBA with Single components in the 0.0 .. 1.0 range.
+- Text uses ImageFont (bitmap font). There is no TTF/font loading.
+- Everything is drawn between BeginDrawing() and EndDrawing().
+- Typical entry point:
 
+    Sub Main()
+        Run frmMain, 1280, 768, 60
+    End Sub
+
+  Run loads the form, creates the GL context and calls Game_Load, then loops
+  Game_Update(dt) / Game_Draw(dt) each frame, and finally Game_Unload.
+
+- Helpers to fill structs in one line:
+
+    Vec  v, x, y
+    Rect r, x, y, w, h
+    Color c, r, g, b, a
+
+
+================================================================================
+ Core
+================================================================================
+
+Window / frame
+--------------
+Sub Run(ByRef TargetForm As Form, ByVal ScreenW As Long, ByVal ScreenH As Long, ByVal TargetFPS As Long)
+Sub UpdateViewport(ByVal w As Long, ByVal h As Long)
+
+Drawing
+-------
 Sub BeginDrawing()
-Sub Clear(ByVal r As Single, ByVal G As Single, ByVal B As Single, ByVal A As Single)
 Sub EndDrawing()
+Sub Clear(ByVal R As Single, ByVal G As Single, ByVal B As Single, ByVal A As Single)
 
-Sub DrawRectangle(ByVal X As Single, ByVal Y As Single, ByVal Width As Single, ByVal Height As Single, ByRef color As ColorRGBA)
-Sub DrawRectangleRec(ByRef r As Rectangle, ByRef color As ColorRGBA)
-Sub DrawRectanglePro(ByRef r As Rectangle, ByRef origin As Vector2, ByVal rot As Single, ByRef color As ColorRGBA)
-Sub DrawRectangleLines(ByVal X As Single, ByVal Y As Single, ByVal Width As Single, ByVal Height As Single, ByRef color As ColorRGBA)
-Sub DrawRectangleLinesEx(ByRef r As Rectangle, ByRef thick As Single, ByRef color As ColorRGBA)
-Sub DrawRectangleRounded(ByRef r As Rectangle, ByRef roundness As Single, ByVal segments As Long, ByRef color As ColorRGBA)
-Sub DrawRectangleRoundedLines(ByRef r As Rectangle, ByRef roundness As Single, ByVal segments As Long, ByRef color As ColorRGBA)
-Sub DrawRectangleRoundedLinesEx(ByRef r As Rectangle, ByRef roundness As Single, ByVal segments As Long, ByVal thick As Single, ByRef color As ColorRGBA)
+VSync (WGL_EXT_swap_control; no-op if the driver does not expose it)
+--------------------------------------------------------------------
+Function IsVSyncEnabled() As Boolean
+Sub SetVSync(ByVal enabled As Boolean)
+Sub ToggleVSync()
 
-Sub DrawCircle(ByVal centerX As Long, ByVal centerY As Long, ByVal radius As Single, ByRef color As ColorRGBA)
-Sub DrawCircleV(ByRef center As Vector2, ByVal radius As Single, ByRef color As ColorRGBA)
-Sub DrawCircleGradient(ByRef center As Vector2, ByVal radius As Single, ByRef inner As ColorRGBA, ByRef outer As ColorRGBA)
-Sub DrawCircleSector(ByRef center As Vector2, ByVal radius As Single, ByVal startAngle As Single, ByVal endAngle As Single, ByVal segments As Long, ByRef color As ColorRGBA)
-Sub DrawCircleSectorLines(ByRef center As Vector2, ByVal radius As Single, ByVal startAngle As Single, ByVal endAngle As Single, ByVal segments As Long, ByRef color As ColorRGBA)
-Sub DrawCircleSectorLinesEx(ByRef center As Vector2, ByVal radius As Single, ByVal startAngle As Single, ByVal endAngle As Single, ByVal segments As Long, ByVal thick As Single, ByRef color As ColorRGBA)
-Sub DrawCircleLines(ByVal centerX As Long, ByVal centerY As Long, ByVal radius As Single, ByRef color As ColorRGBA)
-Sub DrawCircleLinesV(ByRef center As Vector2, ByVal radius As Single, ByRef color As ColorRGBA)
-Sub DrawCircleLinesEx(ByRef center As Vector2, ByVal radius As Single, ByVal thick As Single, ByRef color As ColorRGBA)
+Utils
+-----
+Function GetFullPath(ByVal relativePath As String) As String
 
-Sub DrawTriangle(ByVal x1 As Single, ByVal y1 As Single, ByVal x2 As Single, ByVal y2 As Single, ByVal x3 As Single, ByVal y3 As Single, ByRef color As ColorRGBA)
-Sub DrawLine(ByVal x1 As Single, ByVal y1 As Single, ByVal x2 As Single, ByVal y2 As Single, ByRef color As ColorRGBA, ByVal thickness As Single)
+Globals
+-------
+shouldQuit  As Boolean   ' set True to leave Run
+fps         As Long      ' frames rendered in the last second
+screenWidth As Long
+screenHeight As Long
 
-Sub DrawTexture(ByRef tex As Texture2D, ByVal X As Single, ByVal Y As Single, ByVal Width As Single, ByVal Height As Single, ByRef tint As ColorRGBA)
-Sub DrawTextureRec(ByRef tex As Texture2D, ByRef sourceRec As Rectangle, ByRef pos As Vector2, ByRef tint As ColorRGBA)
-Sub DrawTexturePro(ByRef tex As Texture2D, ByRef sourceRec As Rectangle, ByRef dstrect As Rectangle, ByRef origin As Vector2, ByVal rot As Single, ByRef tint As ColorRGBA)
-Sub DrawTextureNPatch(ByRef tex As Texture2D, ByRef info As NPatchInfo, ByRef dstrect As Rectangle, ByRef origin As Vector2, ByVal rot As Single, ByRef color As ColorRGBA)
 
-Sub DrawText(ByRef font As ImageFont, ByVal text As String, ByVal X As Single, ByVal Y As Single, ByRef tint As ColorRGBA)
+================================================================================
+ 2D Camera mode
+================================================================================
 
-Sub PlaySound(ByVal path As String)
-Sub PlayMusic(ByVal path As String)
-Sub StopMusic()
+Sub BeginMode2D(ByRef camera As Camera2D)
+Sub EndMode2D()
+
+Function GetWorldToScreen2D(ByRef position As Vector2, ByRef camera As Camera2D) As Vector2
+Function GetScreenToWorld2D(ByRef position As Vector2, ByRef camera As Camera2D) As Vector2
+
+
+================================================================================
+ Render texture mode (framebuffer)
+================================================================================
+
+Function LoadRenderTexture(ByVal Width As Long, ByVal Height As Long) As RenderTexture2D
+Sub UnloadRenderTexture(ByRef target As RenderTexture2D)
+
+Sub BeginTextureMode(ByRef target As RenderTexture2D)
+Sub EndTextureMode()
+
+' Inside BeginTextureMode/EndTextureMode coordinates stay Y-down like the
+' screen: the texture is flipped into the framebuffer and DrawTexture flips
+' it back on display, so no draw code has to change.
+' RenderTexture2D.Texture is drawn with DrawTexture/DrawTextureRec/DrawTexturePro.
+
+
+================================================================================
+ Mouse
+================================================================================
+
+Sub UpdateMouse(ByVal targetHwnd As Long)
+
+Function IsMouseButtonPressed(ByVal button As MouseButton) As Boolean
+Function IsMouseButtonDown(ByVal button As MouseButton) As Boolean
+Function IsMouseButtonReleased(ByVal button As MouseButton) As Boolean
+Function IsMouseButtonUp(ByVal button As MouseButton) As Boolean
+
+Function GetMousePos() As Vector2
+Function GetMouseX() As Long
+Function GetMouseY() As Long
+Function GetMouseDeltaX() As Single
+Function GetMouseDeltaY() As Single
+
+Sub SetMouseWheel(ByVal value As Single)
+Function GetMouseWheelMove() As Single
+
+
+================================================================================
+ Keyboard
+================================================================================
+
+Sub UpdateInput()
 
 Function IsKeyPressed(ByVal key As KeyboardKey) As Boolean
 Function IsKeyPressedRepeat(ByVal key As KeyboardKey) As Boolean
 Function IsKeyDown(ByVal key As KeyboardKey) As Boolean
 Function IsKeyReleased(ByVal key As KeyboardKey) As Boolean
 Function IsKeyUp(ByVal key As KeyboardKey) As Boolean
+
 Function GetKeyPressed() As Long
 Function GetCharPressed() As Long
 Function GetKeyName(ByVal key As KeyboardKey) As String
 
-Function IsMouseButtonPressed(ByVal button As MouseButton) As Boolean
-Function IsMouseButtonDown(ByVal button As MouseButton) As Boolean
-Function IsMouseButtonReleased(ByVal button As MouseButton) As Boolean
-Function IsMouseButtonUp(ByVal button As MouseButton) As Boolean
-Function GetMouseX() As Long
-Function GetMouseY() As Long
-Function GetMouseDeltaX() As Single
-Function GetMouseDeltaY() As Single
-Function GetMouseWheelMove() As Single
-Sub SetMouseWheel(ByVal value As Single)
 
-Function GetWorldToScreen2D(ByRef position As Vector2, ByRef camera As Camera2D) As Vector2
-Function GetScreenToWorld2D(ByRef position As Vector2, ByRef camera As Camera2D) As Vector2
+================================================================================
+ Shapes
+================================================================================
+
+Rectangles
+----------
+Sub DrawRectangle(ByVal x As Single, ByVal y As Single, ByVal Width As Single, ByVal Height As Single, ByRef Color As ColorRGBA)
+Sub DrawRectangleRec(ByRef R As Rectangle, ByRef Color As ColorRGBA)
+Sub DrawRectanglePro(ByRef R As Rectangle, ByRef origin As Vector2, ByVal Rot As Single, ByRef Color As ColorRGBA)
+Sub DrawRectangleLines(ByVal x As Single, ByVal y As Single, ByVal Width As Single, ByVal Height As Single, ByRef Color As ColorRGBA)
+Sub DrawRectangleLinesEx(ByRef R As Rectangle, ByRef thick As Single, ByRef Color As ColorRGBA)
+Sub DrawRectangleRounded(ByRef R As Rectangle, ByRef roundness As Single, ByVal segments As Long, ByRef Color As ColorRGBA)
+Sub DrawRectangleRoundedLines(ByRef R As Rectangle, ByRef roundness As Single, ByVal segments As Long, ByRef Color As ColorRGBA)
+Sub DrawRectangleRoundedLinesEx(ByRef R As Rectangle, ByRef roundness As Single, ByVal segments As Long, ByVal thick As Single, ByRef Color As ColorRGBA)
+
+Circles
+-------
+Sub DrawCircle(ByVal centerX As Long, ByVal centerY As Long, ByVal radius As Single, ByRef Color As ColorRGBA)
+Sub DrawCircleV(ByRef center As Vector2, ByVal radius As Single, ByRef Color As ColorRGBA)
+Sub DrawCircleGradient(ByRef center As Vector2, ByVal radius As Single, ByRef inner As ColorRGBA, ByRef outer As ColorRGBA)
+Sub DrawCircleSector(ByRef center As Vector2, ByVal radius As Single, ByVal startAngle As Single, ByVal endAngle As Single, ByVal segments As Long, ByRef Color As ColorRGBA)
+Sub DrawCircleSectorLines(ByRef center As Vector2, ByVal radius As Single, ByVal startAngle As Single, ByVal endAngle As Single, ByVal segments As Long, ByRef Color As ColorRGBA)
+Sub DrawCircleSectorLinesEx(ByRef center As Vector2, ByVal radius As Single, ByVal startAngle As Single, ByVal endAngle As Single, ByVal segments As Long, ByVal thick As Single, ByRef Color As ColorRGBA)
+Sub DrawCircleLines(ByVal centerX As Long, ByVal centerY As Long, ByVal radius As Single, ByRef Color As ColorRGBA)
+Sub DrawCircleLinesV(ByRef center As Vector2, ByVal radius As Single, ByRef Color As ColorRGBA)
+Sub DrawCircleLinesEx(ByRef center As Vector2, ByVal radius As Single, ByVal thick As Single, ByRef Color As ColorRGBA)
+
+Triangles / lines
+-----------------
+Sub DrawTriangle(ByVal x1 As Single, ByVal y1 As Single, ByVal x2 As Single, ByVal y2 As Single, ByVal x3 As Single, ByVal y3 As Single, ByRef Color As ColorRGBA)
+Sub DrawLine(ByVal x1 As Single, ByVal y1 As Single, ByVal x2 As Single, ByVal y2 As Single, ByRef Color As ColorRGBA, ByVal thickness As Single)
+
+
+================================================================================
+ Textures
+================================================================================
+
+Loading
+-------
+Function LoadTexture(ByVal filePath As String) As Texture2D
+Function LoadTextureFromImage(ByRef img As Image) As Texture2D
+Sub UnloadTexture(ByVal textureID As Long)
+
+Drawing
+-------
+Sub DrawTexture(ByRef tex As Texture2D, ByVal x As Single, ByVal y As Single, ByVal Width As Single, ByVal Height As Single, ByRef tint As ColorRGBA)
+Sub DrawTextureRec(ByRef tex As Texture2D, ByRef sourceRec As Rectangle, ByRef pos As Vector2, ByRef tint As ColorRGBA)
+Sub DrawTexturePro(ByRef tex As Texture2D, ByRef sourceRec As Rectangle, ByRef dstrect As Rectangle, ByRef origin As Vector2, ByVal Rot As Single, ByRef tint As ColorRGBA)
+Sub DrawTextureNPatch(ByRef tex As Texture2D, ByRef info As NPatchInfo, ByRef dstrect As Rectangle, ByRef origin As Vector2, ByVal Rot As Single, ByRef Color As ColorRGBA)
+
+' Note: DrawTexture here takes explicit Width/Height (no separate tint-only
+' overload and no origin/rotation, use DrawTexturePro for those).
+
+
+================================================================================
+ Text (ImageFont)
+================================================================================
+
+Function LoadImageFont(ByVal filePath As String, ByVal CharList As String) As ImageFont
+Sub DrawText(ByRef font As ImageFont, ByVal text As String, ByVal x As Single, ByVal y As Single, ByRef tint As ColorRGBA)
+
+
+================================================================================
+ Images
+================================================================================
+
+Function LoadImage(ByVal filePath As String) As Image
+Function ImageGetPixel(ByRef img As Image, ByVal x As Long, ByVal y As Long) As ColorRGBA
+Sub ImageSetPixel(ByRef img As Image, ByVal x As Long, ByVal y As Long, ByRef col As ColorRGBA)
+Sub ImageClear(ByRef img As Image, ByRef col As ColorRGBA)
+Sub ImageDrawRect(ByRef img As Image, ByRef Rect As Rectangle, ByRef col As ColorRGBA)
+Sub ImageDrawImage(ByRef imgDst As Image, ByRef Rect As Rectangle, ByRef imgSrc As Image, ByRef col As ColorRGBA)
+
+
+================================================================================
+ Colors
+================================================================================
+
+Function ColorTint(ByRef Color As ColorRGBA, ByRef tint As ColorRGBA) As ColorRGBA
+Function ColorBrightness(ByRef Color As ColorRGBA, ByVal factor As Single) As ColorRGBA
+Function ColorContrast(ByRef Color As ColorRGBA, ByVal contrast As Single) As ColorRGBA
+Function ColorAlpha(ByRef Color As ColorRGBA, ByVal alpha As Single) As ColorRGBA
+Function ColorAlphaBlend(ByRef dst As ColorRGBA, ByRef src As ColorRGBA, ByRef tint As ColorRGBA) As ColorRGBA
+Function ColorLerp(ByRef color1 As ColorRGBA, ByRef color2 As ColorRGBA, ByVal factor As Single) As ColorRGBA
+Function ColorIsEqual(ByRef col1 As ColorRGBA, ByRef col2 As ColorRGBA) As Boolean
+Function ColorToInt(ByRef Color As ColorRGBA) As Long
+
+Predefined colors (filled at startup)
+-------------------------------------
+White, Black, Red, Green, Blue, Yellow, Gray, Blank
+
+
+================================================================================
+ Audio
+================================================================================
+
+Sub PlaySound(ByVal path As String)
+Sub PlayMusic(ByVal path As String)
+Sub StopMusic()
+
+
+================================================================================
+ Types
+================================================================================
+
+Type Vector2
+    x As Single
+    y As Single
+End Type
+
+Type Rectangle
+    x As Single
+    y As Single
+    Width As Single
+    Height As Single
+End Type
+
+Type ColorRGBA
+    R As Single
+    G As Single
+    B As Single
+    A As Single
+End Type
+
+Type Texture2D
+    Id As Long
+    Width As Long
+    Height As Long
+End Type
+
+Type RenderTexture2D
+    Id As Long
+    Texture As Texture2D      ' color attachment, use it for drawing
+    Depth As Texture2D        ' Depth.Id holds the depth renderbuffer
+End Type
+
+Type Image
+    Data() As Byte            ' RGBA, 8 bits per channel
+    Width As Long
+    Height As Long
+End Type
+
+Type ImageFont
+    Texture As Texture2D
+    Glyphs() As GlyphRect
+    CharList As String
+    Height As Long
+End Type
+
+Type GlyphRect
+    Left As Single
+    Width As Single
+End Type
+
+Type TexCoord2D
+    u As Single
+    v As Single
+End Type
+
+Type Camera2D
+    Offset As Vector2
+    Target As Vector2
+    Rot As Single
+    Zoom As Single
+End Type
+
+Type NPatchInfo
+    Source As Rectangle
+    Left As Long
+    Top As Long
+    Right As Long
+    Bottom As Long
+    Layout As NPatchMode
+End Type
+
+
+================================================================================
+ Enums
+================================================================================
+
+MouseButton
+-----------
+MOUSE_BUTTON_LEFT
+MOUSE_BUTTON_RIGHT
+MOUSE_BUTTON_MIDDLE
+
+NPatchMode
+----------
+NinePatch
+ThreePatchVertical
+ThreePatchHorizontal
+
+KeyboardKey
+-----------
+KEY_NULL
+
+' Printable
+KEY_APOSTROPHE  KEY_COMMA  KEY_MINUS  KEY_PERIOD  KEY_SLASH
+KEY_ZERO .. KEY_NINE
+KEY_SEMICOLON  KEY_EQUAL
+KEY_A .. KEY_Z
+KEY_LEFT_BRACKET  KEY_BACKSLASH  KEY_RIGHT_BRACKET  KEY_GRAVE
+
+' Control / navigation
+KEY_SPACE  KEY_ESCAPE  KEY_ENTER  KEY_TAB  KEY_BACKSPACE
+KEY_INSERT  KEY_DELETE
+KEY_RIGHT  KEY_LEFT  KEY_DOWN  KEY_UP
+KEY_PAGE_UP  KEY_PAGE_DOWN  KEY_HOME  KEY_END
+KEY_CAPS_LOCK  KEY_SCROLL_LOCK  KEY_NUM_LOCK  KEY_PRINT_SCREEN  KEY_PAUSE
+
+' Function keys
+KEY_F1 .. KEY_F12
+
+' Modifiers
+KEY_LEFT_SHIFT  KEY_LEFT_CONTROL  KEY_LEFT_ALT
+KEY_RIGHT_SHIFT  KEY_RIGHT_CONTROL  KEY_RIGHT_ALT
