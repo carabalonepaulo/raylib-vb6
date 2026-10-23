@@ -301,6 +301,7 @@ Private LastTime As Single
 
 Private m_hDC As Long
 Private m_hRC As Long
+Private mVSyncOn As Boolean
 
 Public screenWidth As Long
 Public screenHeight As Long
@@ -497,6 +498,31 @@ Private Sub DeinitOpenGL()
         wglMakeCurrent 0, 0
         wglDeleteContext m_hRC
         m_hRC = 0
+    End If
+End Sub
+
+' Vsync (WGL_EXT_swap_control). Se o driver nao expuser a extensao, as
+' chamadas viram no-op. Precisa de contexto corrente e double buffer.
+
+Public Function IsVSyncEnabled() As Boolean
+    IsVSyncEnabled = mVSyncOn
+End Function
+
+Public Sub SetVSync(ByVal enabled As Boolean)
+    If GLVSyncSupported() = False Then Exit Sub
+    mVSyncOn = enabled
+    If enabled Then
+        GLSetSwapInterval 1
+    Else
+        GLSetSwapInterval 0
+    End If
+End Sub
+
+Public Sub ToggleVSync()
+    If mVSyncOn Then
+        SetVSync False
+    Else
+        SetVSync True
     End If
 End Sub
 

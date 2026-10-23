@@ -21,8 +21,9 @@ Option Explicit
 '   4. Matrizes              9. Display lists
 '   5. Rasterizacao         10. Vertex arrays         13. Pixel format (GDI)
 '
-' A secao 14 carrega extensoes (FBO/RBO) em runtime. Shaders e VBO ficam para
-' depois, mas o mesmo mecanismo (GLLoadProc) ja serve para qualquer extensao.
+' A secao 14 carrega extensoes em runtime: FBO/RBO (render targets) e
+' WGL_EXT_swap_control (vsync). Shaders e VBO ficam para depois, mas o mesmo
+' mecanismo (GLLoadProc) ja serve para qualquer extensao.
 ' ============================================================================
 
 ' --- 1. WGL / contexto ------------------------------------------------------
@@ -1072,6 +1073,12 @@ Private mGenerateMipmap As Long
 Private mFboLoaded As Boolean
 Private mFboReady As Boolean
 
+' Ponteiros das extensoes WGL (swap control / vsync)
+Private mSwapIntervalEXT As Long
+Private mGetSwapIntervalEXT As Long
+Private mSwapControlLoaded As Boolean
+Private mSwapControlReady As Boolean
+
 Private Sub ArgsReset()
     mArgCount = 0
 End Sub
@@ -1284,5 +1291,46 @@ Public Sub glGenerateMipmapEXT(ByVal target As Long)
     ArgsReset
     ArgL target
     Invoke mGenerateMipmap, VT_EMPTY
+End Sub
+
+' --- WGL_EXT_swap_control (vsync) ------------------------------------------
+'
+' O vsync nao e uma extensao do gl* e sim do WGL: wglSwapIntervalEXT(0) desliga
+' e wglSwapIntervalEXT(1) sincroniza com um refresh do monitor. O intervalo so
+' tem efeito quando o contexto atual foi criado com double buffer (e o caso do
+' InitOpenGL). Deve ser chamado com o contexto corrente (wglMakeCurrent feito).
+
+Private Function LoadSwapControlExtensions() As Boolean
+    If mSwapControlLoaded Then
+        LoadSwapControlExtensions = mSwapControlReady
+        Exit Function
+    End If
+    mSwapControlLoaded = True
+
+    mSwapIntervalEXT = GLLoadProc("wglSwapIntervalEXT")
+    mGetSwapIntervalEXT = GLLoadProc("wglGetSwapIntervalEXT")
+
+    mSwapControlReady = (mSwapIntervalEXT <> 0)
+
+    LoadSwapControlExtensions = mSwapControlReady
+End Function
+
+Public Function GLVSyncSupported() As Boolean
+    GLVSyncSupported = LoadSwapControlExtensions()
+End Function
+
+' Intervalo atual de swap: 0 = sem vsync, 1 = vsync, >1 = a cada N refreshes.
+Public Function GLGetSwapInterval() As Long
+    If LoadSwapControlExtensions() = False Then Exit Function
+    If mGetSwapIntervalEXT = 0 Then Exit Function
+    ArgsReset
+    GLGetSwapInterval = Invoke(mGetSwapIntervalEXT, VT_I4)
+End Function
+
+Public Sub GLSetSwapInterval(ByVal interval As Long)
+    If LoadSwapControlExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL interval
+    Invoke mSwapIntervalEXT, VT_EMPTY
 End Sub
 
