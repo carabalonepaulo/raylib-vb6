@@ -17,7 +17,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
-    shouldQuit = True
+    CloseWindow
 End Sub
 
 Private Sub Form_Resize()

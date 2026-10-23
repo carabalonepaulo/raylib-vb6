@@ -28,7 +28,7 @@ Sub Game_Load()
     Vec dst, 0, 32#
     Rect dstrect, 300#, 100#, 32#, 48#
 
-    font = LoadImageFont("assets/font2.png", " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;':"",./<>?~`Á«·ÈÌÛ˙¡…Õ”⁄„ı√’‚ÍÙ¬ ‘‡ËÏÚ˘¿»Ã“Ÿ")
+    font = LoadImageFont("assets/font2.png", " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;':"",./<>?~`√ß√á√°√©√≠√≥√∫√Å√â√ç√ì√ö√£√µ√É√ï√¢√™√¥√Ç√ä√î√†√®√¨√≤√π√Ä√à√å√í√ô")
 
     cameraSpeed = 1000
     camera.Zoom = 2!
@@ -102,7 +102,7 @@ Sub Game_Draw(ByVal dt As Single)
     'DrawTexture sprite, 100, 100, sprite.Width, sprite.Height, White
     DrawTextureRec sprite, src, dst, White
     DrawTexturePro sprite, src, dstrect, origin, Rot, White
-    'DrawText font, "porra que sofrimento miser·vel", 0, 0, White
+    'DrawText font, "porra que sofrimento miser√°vel", 0, 0, White
     'DrawRectangleRounded src, 20#, 16, White
 
     'DrawArrayTest

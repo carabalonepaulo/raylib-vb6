@@ -267,8 +267,8 @@ End Type
 
 ' System
 
-Public shouldQuit As Boolean
-Public fps As Long
+Private mShouldQuit As Boolean
+Private mFps As Long
 
 ' Mouse
 
@@ -277,7 +277,13 @@ Private CurrentMouseX As Single
 Private CurrentMouseY As Single
 Private PrevMouseX As Single
 Private PrevMouseY As Single
-Private MouseWheelValue As Single
+Private mMouseWheelVX As Single
+Private mMouseWheelVY As Single
+Private mMouseOffsetX As Long
+Private mMouseOffsetY As Long
+Private mMouseScaleX As Single
+Private mMouseScaleY As Single
+Private mCursorHidden As Boolean
 
 ' Keyboard
 
@@ -302,6 +308,29 @@ Private LastTime As Single
 Private m_hDC As Long
 Private m_hRC As Long
 Private mVSyncOn As Boolean
+Private m_hWnd As Long
+
+Private mWindowReady As Boolean
+Private mWindowResized As Boolean
+Private mFullscreen As Boolean
+Private mConfigFlags As Long
+
+Private mMinSizeW As Long
+Private mMinSizeH As Long
+Private mSubclassed As Boolean
+Private mOldWndProc As Long
+Private mSavedStyle As Long
+Private mSavedExStyle As Long
+Private mSavedRect As RECT
+
+Private mTargetFPS As Long
+Private mFrameTime As Single
+Private mTime As Double
+
+Private mMonitors() As MONITORINFO
+Private mMonitorHandles() As Long
+Private mMonitorCount As Long
+Private mMonitorsReady As Boolean
 
 Public screenWidth As Long
 Public screenHeight As Long
@@ -324,6 +353,197 @@ Private mRenderFbo(0 To RENDER_STACK_MAX - 1) As Long
 Private mRenderW(0 To RENDER_STACK_MAX - 1) As Long
 Private mRenderH(0 To RENDER_STACK_MAX - 1) As Long
 Private mRenderTop As Long
+
+' Core: janela / monitor / clipboard / cursor (declaracoes Win32)
+
+Private Type RECT
+    Left As Long
+    Top As Long
+    Right As Long
+    Bottom As Long
+End Type
+
+Private Type MONITORINFO
+    cbSize As Long
+    rcMonitor As RECT
+    rcWork As RECT
+    dwFlags As Long
+End Type
+
+Private Type MINMAXINFO
+    ptReserved As POINTAPI
+    ptMaxSize As POINTAPI
+    ptMaxPosition As POINTAPI
+    ptMinTrackSize As POINTAPI
+    ptMaxTrackSize As POINTAPI
+End Type
+
+Private Type DEVMODE
+    dmDeviceName As String * 32
+    dmSpecVersion As Integer
+    dmDriverVersion As Integer
+    dmSize As Integer
+    dmDriverExtra As Integer
+    dmFields As Long
+    dmOrientation As Integer
+    dmPaperSize As Integer
+    dmPaperLength As Integer
+    dmPaperWidth As Integer
+    dmScale As Integer
+    dmCopies As Integer
+    dmDefaultSource As Integer
+    dmPrintQuality As Integer
+    dmColor As Integer
+    dmDuplex As Integer
+    dmYResolution As Integer
+    dmTTOption As Integer
+    dmCollate As Integer
+    dmFormName As String * 32
+    dmLogPixels As Integer
+    dmBitsPerPel As Long
+    dmPelsWidth As Long
+    dmPelsHeight As Long
+    dmDisplayFlags As Long
+    dmDisplayFrequency As Long
+    dmICMMethod As Long
+    dmICMIntent As Long
+    dmMediaType As Long
+    dmDitherType As Long
+    dmReserved1 As Long
+    dmReserved2 As Long
+    dmPanningWidth As Long
+    dmPanningHeight As Long
+End Type
+
+Private Type GUID
+    Data1 As Long
+    Data2 As Integer
+    Data3 As Integer
+    Data4(0 To 7) As Byte
+End Type
+
+' ConfigFlags (valores identicos aos da raylib)
+Public Const FLAG_VSYNC_HINT As Long = &H40&
+Public Const FLAG_FULLSCREEN_MODE As Long = &H2&
+Public Const FLAG_WINDOW_RESIZABLE As Long = &H4&
+Public Const FLAG_WINDOW_UNDECORATED As Long = &H8&
+Public Const FLAG_WINDOW_TRANSPARENT As Long = &H10&
+Public Const FLAG_MSAA_4X_HINT As Long = &H20&
+Public Const FLAG_WINDOW_HIDDEN As Long = &H80&
+Public Const FLAG_WINDOW_ALWAYS_RUN As Long = &H100&
+Public Const FLAG_WINDOW_MINIMIZED As Long = &H200&
+Public Const FLAG_WINDOW_MAXIMIZED As Long = &H400&
+Public Const FLAG_WINDOW_UNFOCUSED As Long = &H800&
+Public Const FLAG_WINDOW_TOPMOST As Long = &H1000&
+Public Const FLAG_WINDOW_HIGHDPI As Long = &H2000&
+Public Const FLAG_WINDOW_MOUSE_PASSTHROUGH As Long = &H4000&
+Public Const FLAG_BORDERLESS_WINDOWED_MODE As Long = &H8000&
+Public Const FLAG_INTERLACED_HINT As Long = &H10000
+
+Public Enum MouseCursor
+    MOUSE_CURSOR_DEFAULT = 0
+    MOUSE_CURSOR_ARROW = 1
+    MOUSE_CURSOR_IBEAM = 2
+    MOUSE_CURSOR_CROSSHAIR = 3
+    MOUSE_CURSOR_POINTING_HAND = 4
+    MOUSE_CURSOR_RESIZE_EW = 5
+    MOUSE_CURSOR_RESIZE_NS = 6
+    MOUSE_CURSOR_RESIZE_NWSE = 7
+    MOUSE_CURSOR_RESIZE_NESW = 8
+    MOUSE_CURSOR_RESIZE_ALL = 9
+    MOUSE_CURSOR_NOT_ALLOWED = 10
+End Enum
+
+Private Const GWL_STYLE As Long = -16
+Private Const GWL_EXSTYLE As Long = -20
+Private Const GWL_WNDPROC As Long = -4
+
+Private Const WS_CAPTION As Long = &HC00000
+Private Const WS_THICKFRAME As Long = &H40000
+Private Const WS_EX_LAYERED As Long = &H80000
+Private Const WS_EX_TRANSPARENT As Long = &H20
+Private Const WS_EX_TOPMOST As Long = &H8
+
+Private Const HWND_TOPMOST As Long = -1
+Private Const HWND_NOTOPMOST As Long = -2
+
+Private Const SWP_NOSIZE As Long = &H1
+Private Const SWP_NOMOVE As Long = &H2
+Private Const SWP_NOZORDER As Long = &H4
+Private Const SWP_FRAMECHANGED As Long = &H20
+
+Private Const SW_HIDE As Long = 0
+Private Const SW_SHOW As Long = 5
+Private Const SW_MINIMIZE As Long = 6
+Private Const SW_MAXIMIZE As Long = 3
+Private Const SW_RESTORE As Long = 9
+
+Private Const LWA_ALPHA As Long = &H2
+Private Const WM_GETMINMAXINFO As Long = &H24
+Private Const MONITOR_DEFAULTTONEAREST As Long = 2
+Private Const ENUM_CURRENT_SETTINGS As Long = -1
+Private Const LOGPIXELSX As Long = 88
+Private Const LOGPIXELSY As Long = 90
+
+Private Const CF_TEXT As Long = 1
+Private Const GMEM_MOVEABLE As Long = &H2
+Private Const GMEM_ZEROINIT As Long = &H40
+
+Private Const IDC_ARROW As Long = 32512
+Private Const IDC_IBEAM As Long = 32513
+Private Const IDC_WAIT As Long = 32514
+Private Const IDC_CROSS As Long = 32515
+Private Const IDC_SIZENWSE As Long = 32642
+Private Const IDC_SIZENESW As Long = 32643
+Private Const IDC_SIZEWE As Long = 32644
+Private Const IDC_SIZENS As Long = 32645
+Private Const IDC_SIZEALL As Long = 32646
+Private Const IDC_NO As Long = 32648
+Private Const IDC_HAND As Long = 32649
+
+Private Declare Sub CopyMemoryPtr Lib "kernel32" Alias "RtlMoveMemory" (ByVal Destination As Long, ByVal Source As Long, ByVal Length As Long)
+
+Private Declare Function SetWindowTextA Lib "user32" (ByVal hwnd As Long, ByVal lpString As String) As Long
+Private Declare Function SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal x As Long, ByVal y As Long, ByVal cx As Long, ByVal cy As Long, ByVal flags As Long) As Long
+Private Declare Function GetWindowLongA Lib "user32" (ByVal hwnd As Long, ByVal nIndex As Long) As Long
+Private Declare Function SetWindowLongA Lib "user32" (ByVal hwnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
+Private Declare Function CallWindowProcA Lib "user32" (ByVal lpPrevWndFunc As Long, ByVal hwnd As Long, ByVal msg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Private Declare Function ShowWindow Lib "user32" (ByVal hwnd As Long, ByVal nCmdShow As Long) As Long
+Private Declare Function GetForegroundWindow Lib "user32" () As Long
+Private Declare Function IsIconic Lib "user32" (ByVal hwnd As Long) As Long
+Private Declare Function IsZoomed Lib "user32" (ByVal hwnd As Long) As Long
+Private Declare Function GetClientRect Lib "user32" (ByVal hwnd As Long, lpRect As RECT) As Long
+Private Declare Function GetWindowRect Lib "user32" (ByVal hwnd As Long, lpRect As RECT) As Long
+Private Declare Function AdjustWindowRectEx Lib "user32" (lpRect As RECT, ByVal dwStyle As Long, ByVal bMenu As Long, ByVal dwExStyle As Long) As Long
+Private Declare Function SetLayeredWindowAttributes Lib "user32" (ByVal hwnd As Long, ByVal crKey As Long, ByVal bAlpha As Byte, ByVal dwFlags As Long) As Long
+Private Declare Function GetSystemMetrics Lib "user32" (ByVal nIndex As Long) As Long
+Private Declare Function GetDC Lib "user32" (ByVal hwnd As Long) As Long
+Private Declare Function ReleaseDC Lib "user32" (ByVal hwnd As Long, ByVal hdc As Long) As Long
+Private Declare Function GetDeviceCaps Lib "gdi32" (ByVal hdc As Long, ByVal nIndex As Long) As Long
+
+Private Declare Function EnumDisplayMonitors Lib "user32" (ByVal hdc As Long, ByVal lprcClip As Long, ByVal lpfnEnum As Long, ByVal dwData As Long) As Long
+Private Declare Function GetMonitorInfoA Lib "user32" (ByVal hMonitor As Long, lpmi As MONITORINFO) As Long
+Private Declare Function MonitorFromWindow Lib "user32" (ByVal hwnd As Long, ByVal dwFlags As Long) As Long
+Private Declare Function EnumDisplaySettingsA Lib "user32" (ByVal lpszDeviceName As Long, ByVal iModeNum As Long, lpDevMode As DEVMODE) As Long
+
+Private Declare Function OpenClipboard Lib "user32" (ByVal hwnd As Long) As Long
+Private Declare Function CloseClipboard Lib "user32" () As Long
+Private Declare Function EmptyClipboard Lib "user32" () As Long
+Private Declare Function GetClipboardData Lib "user32" (ByVal wFormat As Long) As Long
+Private Declare Function SetClipboardData Lib "user32" (ByVal wFormat As Long, ByVal hMem As Long) As Long
+Private Declare Function GlobalAlloc Lib "kernel32" (ByVal wFlags As Long, ByVal dwBytes As Long) As Long
+Private Declare Function GlobalLock Lib "kernel32" (ByVal hMem As Long) As Long
+Private Declare Function GlobalUnlock Lib "kernel32" (ByVal hMem As Long) As Long
+Private Declare Function lstrlenA Lib "kernel32" (ByVal lpString As Long) As Long
+
+Private Declare Function apiShowCursor Lib "user32" Alias "ShowCursor" (ByVal bShow As Long) As Long
+Private Declare Function apiSetCursor Lib "user32" Alias "SetCursor" (ByVal hCursor As Long) As Long
+Private Declare Function LoadCursorA Lib "user32" (ByVal hInstance As Long, ByVal lpCursorName As Long) As Long
+Private Declare Function SetCursorPos Lib "user32" (ByVal x As Long, ByVal y As Long) As Long
+Private Declare Function ClientToScreen Lib "user32" (ByVal hwnd As Long, lpPoint As POINTAPI) As Long
+
+Private Declare Function GdipCreateBitmapFromScan0 Lib "gdiplus" (ByVal Width As Long, ByVal Height As Long, ByVal stride As Long, ByVal PixelFormat As Long, ByVal scan0 As Long, Bitmap As Long) As Long
+Private Declare Function GdipSaveImageToFile Lib "gdiplus" (ByVal Image As Long, ByVal filename As Long, ByRef clsidEncoder As GUID, ByVal encoderParams As Long) As Long
 
 ' Utils
 
@@ -508,21 +728,15 @@ Public Function IsVSyncEnabled() As Boolean
     IsVSyncEnabled = mVSyncOn
 End Function
 
-Public Sub SetVSync(ByVal enabled As Boolean)
+' Interno: usado por SetConfigFlags/SetWindowState (FLAG_VSYNC_HINT). Se o
+' driver nao expuser WGL_EXT_swap_control, a chamada vira no-op.
+Private Sub SetVSyncInternal(ByVal enabled As Boolean)
     If GLVSyncSupported() = False Then Exit Sub
     mVSyncOn = enabled
     If enabled Then
         GLSetSwapInterval 1
     Else
         GLSetSwapInterval 0
-    End If
-End Sub
-
-Public Sub ToggleVSync()
-    If mVSyncOn Then
-        SetVSync False
-    Else
-        SetVSync True
     End If
 End Sub
 
@@ -539,14 +753,18 @@ Public Sub Run(ByRef TargetForm As Form, ByVal ScreenW As Long, ByVal ScreenH As
     TargetForm.Show
     DoEvents
 
+    m_hWnd = TargetForm.hwnd
+
     If InitOpenGL(TargetForm.hDC, TargetForm.ScaleWidth, TargetForm.ScaleHeight) = False Then
         MsgBox "Failed to init OpenGL!", vbCritical
         Unload TargetForm
         Exit Sub
     End If
 
-    Dim targetFrameTime As Single
-    targetFrameTime = 1# / CSng(TargetFPS)
+    ResetCoreState
+    SetTargetFPS TargetFPS
+    mWindowReady = True
+    ApplyConfigFlags
 
     Dim freq As Currency
     Dim counterStart As Currency
@@ -560,50 +778,611 @@ Public Sub Run(ByRef TargetForm As Form, ByVal ScreenW As Long, ByVal ScreenH As
 
     Game_Load
 
-    Do While shouldQuit = False
+    Do While mShouldQuit = False
         QueryPerformanceCounter counterEnd
         dt = CSng(counterEnd - counterStart) / CSng(freq)
 
-        If dt < targetFrameTime Then
-            Do
-                QueryPerformanceCounter counterEnd
-                dt = CSng(counterEnd - counterStart) / CSng(freq)
-                DoEvents
-            Loop While dt < targetFrameTime
+        If mTargetFPS > 0 Then
+            Dim targetFrameTime As Single
+            targetFrameTime = 1# / CSng(mTargetFPS)
+            If dt < targetFrameTime Then
+                Do
+                    QueryPerformanceCounter counterEnd
+                    dt = CSng(counterEnd - counterStart) / CSng(freq)
+                    DoEvents
+                Loop While dt < targetFrameTime
+            End If
+        Else
+            DoEvents
         End If
 
         counterStart = counterEnd
         If dt > 0.25 Then dt = 0.25
 
+        mFrameTime = dt
+        mTime = mTime + dt
+
         fpsTimer = fpsTimer + dt
         frameCount = frameCount + 1
 
         If fpsTimer >= 1# Then
-            fps = frameCount
+            mFps = frameCount
             frameCount = 0
             fpsTimer = fpsTimer - 1#
         End If
 
         UpdateInput
-        UpdateMouse TargetForm.hwnd
+        UpdateMouse m_hWnd
 
         Game_Update (dt)
         Game_Draw (dt)
 
+        mWindowResized = False
         DoEvents
     Loop
 
+    DeinitWindowState
     Game_Unload
     Unload TargetForm
     StopMusic
     DeinitOpenGL
+    mWindowReady = False
     Exit Sub
 
 ErrorHandler:
+    DeinitWindowState
     StopMusic
     DeinitOpenGL
+    mWindowReady = False
     MsgBox "Error: " & Err.Description, vbCritical
     End
+End Sub
+
+' ============================================================================
+' Core: timing / estado / janela / monitor / clipboard / cursor
+' ============================================================================
+
+Private Sub ResetCoreState()
+    mMouseScaleX = 1!
+    mMouseScaleY = 1!
+    mMouseOffsetX = 0
+    mMouseOffsetY = 0
+    mMouseWheelVX = 0!
+    mMouseWheelVY = 0!
+    mCursorHidden = False
+    mFullscreen = False
+    mShouldQuit = False
+    mMinSizeW = 0
+    mMinSizeH = 0
+    mFrameTime = 0!
+    mTime = 0#
+    mFps = 0
+    mWindowResized = False
+End Sub
+
+' --- Timing ----------------------------------------------------------------
+
+Public Sub SetTargetFPS(ByVal target As Long)
+    If target < 0 Then target = 0
+    mTargetFPS = target
+End Sub
+
+Public Function GetFPS() As Long
+    GetFPS = mFps
+End Function
+
+Public Function GetFrameTime() As Single
+    GetFrameTime = mFrameTime
+End Function
+
+Public Function GetTime() As Double
+    GetTime = mTime
+End Function
+
+' Pausa a execucao por N segundos mantendo a fila de mensagens viva.
+Public Sub WaitTime(ByVal seconds As Double)
+    Dim freq As Currency, start As Currency, now As Currency
+    If seconds <= 0# Then Exit Sub
+    QueryPerformanceFrequency freq
+    QueryPerformanceCounter start
+    Do
+        QueryPerformanceCounter now
+        DoEvents
+    Loop While (CSng(now - start) / CSng(freq)) < seconds
+End Sub
+
+' --- Estado da janela ------------------------------------------------------
+
+Public Function WindowShouldClose() As Boolean
+    WindowShouldClose = mShouldQuit
+End Function
+
+Public Sub CloseWindow()
+    mShouldQuit = True
+End Sub
+
+Public Function IsWindowReady() As Boolean
+    IsWindowReady = mWindowReady
+End Function
+
+Public Function IsWindowFocused() As Boolean
+    If m_hWnd = 0 Then Exit Function
+    IsWindowFocused = (GetForegroundWindow() = m_hWnd)
+End Function
+
+Public Function IsWindowResized() As Boolean
+    IsWindowResized = mWindowResized
+End Function
+
+Public Function IsWindowFullscreen() As Boolean
+    IsWindowFullscreen = mFullscreen
+End Function
+
+Public Function IsWindowMinimized() As Boolean
+    If m_hWnd = 0 Then Exit Function
+    IsWindowMinimized = (IsIconic(m_hWnd) <> 0)
+End Function
+
+Public Function IsWindowMaximized() As Boolean
+    If m_hWnd = 0 Then Exit Function
+    IsWindowMaximized = (IsZoomed(m_hWnd) <> 0)
+End Function
+
+' --- Janela (setters) ------------------------------------------------------
+
+Public Sub SetWindowTitle(ByVal title As String)
+    If m_hWnd = 0 Then Exit Sub
+    SetWindowTextA m_hWnd, title
+End Sub
+
+Public Sub SetWindowSize(ByVal width As Long, ByVal height As Long)
+    Dim r As RECT
+    If m_hWnd = 0 Then Exit Sub
+    If width <= 0 Or height <= 0 Then Exit Sub
+
+    r.Left = 0: r.Top = 0: r.Right = width: r.Bottom = height
+    AdjustWindowRectEx r, GetWindowLongA(m_hWnd, GWL_STYLE), 0, GetWindowLongA(m_hWnd, GWL_EXSTYLE)
+    SetWindowPos m_hWnd, 0, 0, 0, r.Right - r.Left, r.Bottom - r.Top, SWP_NOMOVE Or SWP_NOZORDER
+    UpdateViewport width, height
+End Sub
+
+Public Sub SetWindowPosition(ByVal x As Long, ByVal y As Long)
+    If m_hWnd = 0 Then Exit Sub
+    SetWindowPos m_hWnd, 0, x, y, 0, 0, SWP_NOSIZE Or SWP_NOZORDER
+End Sub
+
+' Minimo de tamanho via subclass do WndProc (WM_GETMINMAXINFO).
+Public Sub SetWindowMinSize(ByVal width As Long, ByVal height As Long)
+    mMinSizeW = width
+    mMinSizeH = height
+    If m_hWnd <> 0 Then EnsureSubclass
+End Sub
+
+Public Sub SetWindowOpacity(ByVal opacity As Single)
+    If m_hWnd = 0 Then Exit Sub
+    If opacity < 0! Then opacity = 0!
+    If opacity > 1! Then opacity = 1!
+    SetWindowLongA m_hWnd, GWL_EXSTYLE, GetWindowLongA(m_hWnd, GWL_EXSTYLE) Or WS_EX_LAYERED
+    SetLayeredWindowAttributes m_hWnd, 0, CByte(opacity * 255!), LWA_ALPHA
+End Sub
+
+Public Sub ToggleFullscreen()
+    If mFullscreen Then
+        LeaveFullscreen
+    Else
+        EnterFullscreen
+    End If
+End Sub
+
+Public Sub MaximizeWindow()
+    If m_hWnd <> 0 Then ShowWindow m_hWnd, SW_MAXIMIZE
+End Sub
+
+Public Sub MinimizeWindow()
+    If m_hWnd <> 0 Then ShowWindow m_hWnd, SW_MINIMIZE
+End Sub
+
+Public Sub RestoreWindow()
+    If m_hWnd <> 0 Then ShowWindow m_hWnd, SW_RESTORE
+End Sub
+
+' --- ConfigFlags / estados -------------------------------------------------
+
+Public Sub SetConfigFlags(ByVal flags As Long)
+    mConfigFlags = flags
+    ApplyConfigFlags
+End Sub
+
+Public Sub SetWindowState(ByVal flags As Long)
+    mConfigFlags = mConfigFlags Or flags
+    If m_hWnd = 0 Then Exit Sub
+    If (flags And FLAG_VSYNC_HINT) <> 0 Then SetVSyncInternal True
+    If (flags And FLAG_FULLSCREEN_MODE) <> 0 Then EnterFullscreen
+    If (flags And FLAG_WINDOW_TOPMOST) <> 0 Then SetTopmost True
+    If (flags And FLAG_WINDOW_UNDECORATED) <> 0 Then SetUndecorated True
+    If (flags And FLAG_WINDOW_TRANSPARENT) <> 0 Then SetTransparent True
+    If (flags And FLAG_WINDOW_HIDDEN) <> 0 Then ShowWindow m_hWnd, SW_HIDE
+    If (flags And FLAG_WINDOW_MINIMIZED) <> 0 Then ShowWindow m_hWnd, SW_MINIMIZE
+    If (flags And FLAG_WINDOW_MAXIMIZED) <> 0 Then ShowWindow m_hWnd, SW_MAXIMIZE
+End Sub
+
+Public Sub ClearWindowState(ByVal flags As Long)
+    mConfigFlags = mConfigFlags And Not flags
+    If m_hWnd = 0 Then Exit Sub
+    If (flags And FLAG_VSYNC_HINT) <> 0 Then SetVSyncInternal False
+    If (flags And FLAG_FULLSCREEN_MODE) <> 0 Then LeaveFullscreen
+    If (flags And FLAG_WINDOW_TOPMOST) <> 0 Then SetTopmost False
+    If (flags And FLAG_WINDOW_UNDECORATED) <> 0 Then SetUndecorated False
+    If (flags And FLAG_WINDOW_TRANSPARENT) <> 0 Then SetTransparent False
+    If (flags And FLAG_WINDOW_HIDDEN) <> 0 Then ShowWindow m_hWnd, SW_SHOW
+    If (flags And FLAG_WINDOW_MINIMIZED) <> 0 Then ShowWindow m_hWnd, SW_RESTORE
+    If (flags And FLAG_WINDOW_MAXIMIZED) <> 0 Then ShowWindow m_hWnd, SW_RESTORE
+End Sub
+
+Private Sub ApplyConfigFlags()
+    If m_hWnd = 0 Then Exit Sub
+    If (mConfigFlags And FLAG_VSYNC_HINT) <> 0 Then SetVSyncInternal True
+    If (mConfigFlags And FLAG_FULLSCREEN_MODE) <> 0 Then EnterFullscreen
+    If (mConfigFlags And FLAG_WINDOW_TOPMOST) <> 0 Then SetTopmost True
+    If (mConfigFlags And FLAG_WINDOW_UNDECORATED) <> 0 Then SetUndecorated True
+    If (mConfigFlags And FLAG_WINDOW_TRANSPARENT) <> 0 Then SetTransparent True
+    If (mConfigFlags And FLAG_WINDOW_HIDDEN) <> 0 Then ShowWindow m_hWnd, SW_HIDE
+    If (mConfigFlags And FLAG_WINDOW_MINIMIZED) <> 0 Then ShowWindow m_hWnd, SW_MINIMIZE
+    If (mConfigFlags And FLAG_WINDOW_MAXIMIZED) <> 0 Then ShowWindow m_hWnd, SW_MAXIMIZE
+End Sub
+
+Private Sub SetTopmost(ByVal enable As Boolean)
+    If m_hWnd = 0 Then Exit Sub
+    If enable Then
+        SetWindowPos m_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
+    Else
+        SetWindowPos m_hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
+    End If
+End Sub
+
+Private Sub SetUndecorated(ByVal enable As Boolean)
+    Dim style As Long
+    If m_hWnd = 0 Then Exit Sub
+    style = GetWindowLongA(m_hWnd, GWL_STYLE)
+    If enable Then
+        style = style And Not (WS_CAPTION Or WS_THICKFRAME)
+    Else
+        style = style Or WS_CAPTION Or WS_THICKFRAME
+    End If
+    SetWindowLongA m_hWnd, GWL_STYLE, style
+    SetWindowPos m_hWnd, 0, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE Or SWP_NOZORDER Or SWP_FRAMECHANGED
+End Sub
+
+Private Sub SetTransparent(ByVal enable As Boolean)
+    Dim exStyle As Long
+    If m_hWnd = 0 Then Exit Sub
+    exStyle = GetWindowLongA(m_hWnd, GWL_EXSTYLE)
+    If enable Then
+        exStyle = exStyle Or WS_EX_LAYERED Or WS_EX_TRANSPARENT
+    Else
+        exStyle = exStyle And Not WS_EX_TRANSPARENT
+    End If
+    SetWindowLongA m_hWnd, GWL_EXSTYLE, exStyle
+End Sub
+
+' --- Fullscreen ------------------------------------------------------------
+
+Private Sub EnterFullscreen()
+    Dim mi As MONITORINFO
+    If m_hWnd = 0 Then Exit Sub
+    If mFullscreen Then Exit Sub
+
+    mSavedStyle = GetWindowLongA(m_hWnd, GWL_STYLE)
+    mSavedExStyle = GetWindowLongA(m_hWnd, GWL_EXSTYLE)
+    GetWindowRect m_hWnd, mSavedRect
+
+    mi.cbSize = Len(mi)
+    If GetMonitorInfoA(MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST), mi) = 0 Then Exit Sub
+
+    SetWindowLongA m_hWnd, GWL_STYLE, mSavedStyle And Not (WS_CAPTION Or WS_THICKFRAME)
+    SetWindowPos m_hWnd, 0, mi.rcMonitor.Left, mi.rcMonitor.Top, _
+        mi.rcMonitor.Right - mi.rcMonitor.Left, mi.rcMonitor.Bottom - mi.rcMonitor.Top, _
+        SWP_FRAMECHANGED Or SWP_NOZORDER
+
+    mFullscreen = True
+End Sub
+
+Private Sub LeaveFullscreen()
+    If m_hWnd = 0 Then Exit Sub
+    If mFullscreen = False Then Exit Sub
+
+    SetWindowLongA m_hWnd, GWL_STYLE, mSavedStyle
+    SetWindowLongA m_hWnd, GWL_EXSTYLE, mSavedExStyle
+    SetWindowPos m_hWnd, 0, mSavedRect.Left, mSavedRect.Top, _
+        mSavedRect.Right - mSavedRect.Left, mSavedRect.Bottom - mSavedRect.Top, _
+        SWP_FRAMECHANGED Or SWP_NOZORDER
+
+    mFullscreen = False
+End Sub
+
+' --- Subclass (min size) ---------------------------------------------------
+
+Private Sub EnsureSubclass()
+    If mSubclassed Then Exit Sub
+    If m_hWnd = 0 Then Exit Sub
+    mOldWndProc = SetWindowLongA(m_hWnd, GWL_WNDPROC, AddressOf WindowProc)
+    mSubclassed = True
+End Sub
+
+Private Sub RemoveSubclass()
+    If mSubclassed = False Then Exit Sub
+    If m_hWnd <> 0 Then SetWindowLongA m_hWnd, GWL_WNDPROC, mOldWndProc
+    mSubclassed = False
+End Sub
+
+Private Function WindowProc(ByVal hwnd As Long, ByVal msg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+    If msg = WM_GETMINMAXINFO Then
+        Dim mmi As MINMAXINFO
+        CopyMemoryPtr VarPtr(mmi), lParam, Len(mmi)
+        If mMinSizeW > 0 Then mmi.ptMinTrackSize.x = mMinSizeW
+        If mMinSizeH > 0 Then mmi.ptMinTrackSize.y = mMinSizeH
+        CopyMemoryPtr lParam, VarPtr(mmi), Len(mmi)
+        WindowProc = 0
+        Exit Function
+    End If
+    WindowProc = CallWindowProcA(mOldWndProc, hwnd, msg, wParam, lParam)
+End Function
+
+Private Sub DeinitWindowState()
+    RemoveSubclass
+    If mFullscreen Then LeaveFullscreen
+    m_hWnd = 0
+End Sub
+
+' --- Monitor ---------------------------------------------------------------
+
+Private Sub EnsureMonitors()
+    If mMonitorsReady Then Exit Sub
+    mMonitorsReady = True
+    mMonitorCount = 0
+    ReDim mMonitors(0 To 15)
+    ReDim mMonitorHandles(0 To 15)
+    EnumDisplayMonitors 0, 0, AddressOf EnumMonitorsProc, 0
+
+    ' o monitor primario (0,0) vai para o indice 0, como na raylib
+    Dim i As Long
+    Dim tmp As MONITORINFO
+    Dim tmpH As Long
+    For i = 1 To mMonitorCount - 1
+        If mMonitors(i).rcMonitor.Left = 0 And mMonitors(i).rcMonitor.Top = 0 Then
+            tmp = mMonitors(0)
+            mMonitors(0) = mMonitors(i)
+            mMonitors(i) = tmp
+            tmpH = mMonitorHandles(0)
+            mMonitorHandles(0) = mMonitorHandles(i)
+            mMonitorHandles(i) = tmpH
+            Exit For
+        End If
+    Next i
+End Sub
+
+Private Function EnumMonitorsProc(ByVal hMonitor As Long, ByVal hdc As Long, ByRef lprc As RECT, ByVal dwData As Long) As Long
+    If mMonitorCount <= UBound(mMonitors) Then
+        Dim mi As MONITORINFO
+        mi.cbSize = Len(mi)
+        If GetMonitorInfoA(hMonitor, mi) <> 0 Then
+            mMonitors(mMonitorCount) = mi
+            mMonitorHandles(mMonitorCount) = hMonitor
+            mMonitorCount = mMonitorCount + 1
+        End If
+    End If
+    EnumMonitorsProc = 1
+End Function
+
+Public Function GetMonitorCount() As Long
+    EnsureMonitors
+    GetMonitorCount = mMonitorCount
+End Function
+
+Public Function GetMonitorWidth(ByVal monitor As Long) As Long
+    EnsureMonitors
+    If mMonitorCount = 0 Then Exit Function
+    If monitor < 0 Or monitor >= mMonitorCount Then monitor = 0
+    GetMonitorWidth = mMonitors(monitor).rcMonitor.Right - mMonitors(monitor).rcMonitor.Left
+End Function
+
+Public Function GetMonitorHeight(ByVal monitor As Long) As Long
+    EnsureMonitors
+    If mMonitorCount = 0 Then Exit Function
+    If monitor < 0 Or monitor >= mMonitorCount Then monitor = 0
+    GetMonitorHeight = mMonitors(monitor).rcMonitor.Bottom - mMonitors(monitor).rcMonitor.Top
+End Function
+
+' Taxa de atualizacao do monitor atual (usa o dispositivo primario).
+Public Function GetMonitorRefreshRate(ByVal monitor As Long) As Long
+    Dim dm As DEVMODE
+    dm.dmSize = Len(dm)
+    If EnumDisplaySettingsA(0, ENUM_CURRENT_SETTINGS, dm) <> 0 Then
+        GetMonitorRefreshRate = dm.dmDisplayFrequency
+    End If
+End Function
+
+Public Function GetCurrentMonitor() As Long
+    Dim hMon As Long, i As Long
+    If m_hWnd = 0 Then Exit Function
+    EnsureMonitors
+    hMon = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST)
+    For i = 0 To mMonitorCount - 1
+        If mMonitorHandles(i) = hMon Then
+            GetCurrentMonitor = i
+            Exit Function
+        End If
+    Next i
+End Function
+
+Public Function GetWindowScaleDPI() As Vector2
+    Dim v As Vector2
+    Dim hdc As Long
+    v.x = 1!: v.y = 1!
+    hdc = GetDC(0)
+    If hdc <> 0 Then
+        v.x = CSng(GetDeviceCaps(hdc, LOGPIXELSX)) / 96!
+        v.y = CSng(GetDeviceCaps(hdc, LOGPIXELSY)) / 96!
+        ReleaseDC 0, hdc
+    End If
+    GetWindowScaleDPI = v
+End Function
+
+' --- Clipboard -------------------------------------------------------------
+
+Public Function GetClipboardText() As String
+    Dim hData As Long, p As Long, n As Long
+    Dim bytes() As Byte
+    If OpenClipboard(0) = 0 Then Exit Function
+    hData = GetClipboardData(CF_TEXT)
+    If hData <> 0 Then
+        p = GlobalLock(hData)
+        If p <> 0 Then
+            n = lstrlenA(p)
+            If n > 0 Then
+                ReDim bytes(0 To n - 1)
+                CopyMemoryPtr VarPtr(bytes(0)), p, n
+                GetClipboardText = StrConv(bytes, vbUnicode)
+            End If
+            GlobalUnlock hData
+        End If
+    End If
+    CloseClipboard
+End Function
+
+Public Sub SetClipboardText(ByVal text As String)
+    Dim hMem As Long, p As Long, n As Long
+    Dim bytes() As Byte
+    If OpenClipboard(0) = 0 Then Exit Sub
+    EmptyClipboard
+    If Len(text) > 0 Then
+        bytes = StrConv(text, vbFromUnicode)
+        n = UBound(bytes) - LBound(bytes) + 1
+    Else
+        n = 0
+    End If
+    hMem = GlobalAlloc(GMEM_MOVEABLE Or GMEM_ZEROINIT, n + 1)
+    If hMem <> 0 Then
+        p = GlobalLock(hMem)
+        If p <> 0 Then
+            If n > 0 Then CopyMemoryPtr p, VarPtr(bytes(0)), n
+            GlobalUnlock hMem
+            SetClipboardData CF_TEXT, hMem
+        End If
+    End If
+    CloseClipboard
+End Sub
+
+' --- Random ----------------------------------------------------------------
+
+Public Function GetRandomValue(ByVal min As Long, ByVal max As Long) As Long
+    Dim t As Long
+    If min > max Then
+        t = min: min = max: max = t
+    End If
+    GetRandomValue = min + Int(Rnd() * (max - min + 1))
+    If GetRandomValue > max Then GetRandomValue = max
+End Function
+
+Public Sub SetRandomSeed(ByVal seed As Long)
+    Randomize seed
+End Sub
+
+' --- Screenshot ------------------------------------------------------------
+
+' Le o framebuffer atual e grava um PNG em fileName.
+Public Sub TakeScreenshot(ByVal fileName As String)
+    Dim w As Long, h As Long
+    w = screenWidth
+    h = screenHeight
+    If w <= 0 Or h <= 0 Then Exit Sub
+
+    Dim pixels() As Byte
+    Dim flipped() As Byte
+    ReDim pixels(0 To (w * h * 4) - 1)
+    ReDim flipped(0 To (w * h * 4) - 1)
+
+    glReadPixels 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, ByVal VarPtr(pixels(0))
+
+    ' GL entrega de baixo para cima e em RGBA; GDI+ espera de cima para
+    ' baixo e BGRA. Invertemos as linhas e trocamos R<->B.
+    Dim rowBytes As Long
+    rowBytes = w * 4
+    Dim y As Long, x As Long
+    Dim srcRow As Long, dstRow As Long
+    For y = 0 To h - 1
+        srcRow = (h - 1 - y) * rowBytes
+        dstRow = y * rowBytes
+        For x = 0 To w - 1
+            flipped(dstRow + x * 4) = pixels(srcRow + x * 4 + 2)
+            flipped(dstRow + x * 4 + 1) = pixels(srcRow + x * 4 + 1)
+            flipped(dstRow + x * 4 + 2) = pixels(srcRow + x * 4)
+            flipped(dstRow + x * 4 + 3) = pixels(srcRow + x * 4 + 3)
+        Next x
+    Next y
+
+    SaveImageAsPng GetFullPath(fileName), flipped(), w, h
+End Sub
+
+Private Sub SaveImageAsPng(ByVal path As String, ByRef data() As Byte, ByVal w As Long, ByVal h As Long)
+    Dim bmp As Long
+    Dim clsid As GUID
+    If w <= 0 Or h <= 0 Then Exit Sub
+    If GdipCreateBitmapFromScan0(w, h, w * 4, PixelFormat32bppARGB, VarPtr(data(0)), bmp) <> 0 Then Exit Sub
+
+    ' CLSID do encoder PNG: {557CF406-1A04-11D3-9A73-0000F81EF32E}
+    clsid.Data1 = &H557CF406
+    clsid.Data2 = &H1A04
+    clsid.Data3 = &H11D3
+    clsid.Data4(0) = &H9A: clsid.Data4(1) = &H73
+    clsid.Data4(2) = &H0: clsid.Data4(3) = &H0
+    clsid.Data4(4) = &HF8: clsid.Data4(5) = &H1E
+    clsid.Data4(6) = &HF3: clsid.Data4(7) = &H2E
+
+    GdipSaveImageToFile bmp, StrPtr(path), clsid, 0
+    GdipDisposeImage bmp
+End Sub
+
+' --- Cursor ----------------------------------------------------------------
+
+Public Sub ShowCursor()
+    If mCursorHidden Then apiShowCursor True
+    mCursorHidden = False
+End Sub
+
+Public Sub HideCursor()
+    If mCursorHidden = False Then apiShowCursor False
+    mCursorHidden = True
+End Sub
+
+Public Function IsCursorHidden() As Boolean
+    IsCursorHidden = mCursorHidden
+End Function
+
+Public Sub EnableCursor()
+    ShowCursor
+End Sub
+
+Public Sub DisableCursor()
+    HideCursor
+    SetMousePosition screenWidth \ 2, screenHeight \ 2
+End Sub
+
+Public Sub SetMouseCursor(ByVal cursor As MouseCursor)
+    Dim id As Long
+    Select Case cursor
+        Case MOUSE_CURSOR_IBEAM: id = IDC_IBEAM
+        Case MOUSE_CURSOR_CROSSHAIR: id = IDC_CROSS
+        Case MOUSE_CURSOR_POINTING_HAND: id = IDC_HAND
+        Case MOUSE_CURSOR_RESIZE_EW: id = IDC_SIZEWE
+        Case MOUSE_CURSOR_RESIZE_NS: id = IDC_SIZENS
+        Case MOUSE_CURSOR_RESIZE_NWSE: id = IDC_SIZENWSE
+        Case MOUSE_CURSOR_RESIZE_NESW: id = IDC_SIZENESW
+        Case MOUSE_CURSOR_RESIZE_ALL: id = IDC_SIZEALL
+        Case MOUSE_CURSOR_NOT_ALLOWED: id = IDC_NO
+        Case Else: id = IDC_ARROW
+    End Select
+    apiSetCursor LoadCursorA(0, id)
 End Sub
 
 ' Audio
@@ -651,14 +1430,34 @@ Public Sub UpdateMouse(ByVal targetHwnd As Long)
 
     PrevMouseX = CurrentMouseX
     PrevMouseY = CurrentMouseY
-    CurrentMouseX = pt.x
-    CurrentMouseY = pt.y
+    CurrentMouseX = (pt.x * mMouseScaleX) + mMouseOffsetX
+    CurrentMouseY = (pt.y * mMouseScaleY) + mMouseOffsetY
 
     UpdateSingleButton 0, VK_LBUTTON
     UpdateSingleButton 1, VK_RBUTTON
     UpdateSingleButton 2, VK_MBUTTON
 
-    MouseWheelValue = 0
+    mMouseWheelVX = 0!
+    mMouseWheelVY = 0!
+End Sub
+
+Public Sub SetMousePosition(ByVal x As Long, ByVal y As Long)
+    Dim pt As POINTAPI
+    If m_hWnd = 0 Then Exit Sub
+    pt.x = x
+    pt.y = y
+    ClientToScreen m_hWnd, pt
+    SetCursorPos pt.x, pt.y
+End Sub
+
+Public Sub SetMouseOffset(ByVal offsetX As Long, ByVal offsetY As Long)
+    mMouseOffsetX = offsetX
+    mMouseOffsetY = offsetY
+End Sub
+
+Public Sub SetMouseScale(ByVal scaleX As Single, ByVal scaleY As Single)
+    mMouseScaleX = scaleX
+    mMouseScaleY = scaleY
 End Sub
 
 Private Sub UpdateSingleButton(ByVal index As Long, ByVal vk As Long)
@@ -718,11 +1517,18 @@ Public Function GetMouseDeltaY() As Single
 End Function
 
 Public Sub SetMouseWheel(ByVal value As Single)
-    MouseWheelValue = value
+    mMouseWheelVY = value
 End Sub
 
 Public Function GetMouseWheelMove() As Single
-    GetMouseWheelMove = MouseWheelValue
+    GetMouseWheelMove = mMouseWheelVY
+End Function
+
+Public Function GetMouseWheelMoveV() As Vector2
+    Dim v As Vector2
+    v.x = mMouseWheelVX
+    v.y = mMouseWheelVY
+    GetMouseWheelMoveV = v
 End Function
 
 ' Keyboard

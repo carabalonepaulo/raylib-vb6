@@ -39,21 +39,80 @@ Sub BeginDrawing()
 Sub EndDrawing()
 Sub Clear(ByVal R As Single, ByVal G As Single, ByVal B As Single, ByVal A As Single)
 
-VSync (WGL_EXT_swap_control; no-op if the driver does not expose it)
---------------------------------------------------------------------
+Timing
+------
+Sub SetTargetFPS(ByVal target As Long)
+Function GetFPS() As Long
+Function GetFrameTime() As Single
+Function GetTime() As Double
+Sub WaitTime(ByVal seconds As Double)
+
+Window state
+------------
+Function WindowShouldClose() As Boolean
+Sub CloseWindow()
+Function IsWindowReady() As Boolean
+Function IsWindowFocused() As Boolean
+Function IsWindowResized() As Boolean
+Function IsWindowFullscreen() As Boolean
+Function IsWindowMinimized() As Boolean
+Function IsWindowMaximized() As Boolean
+
+Window setters
+--------------
+Sub SetWindowTitle(ByVal title As String)
+Sub SetWindowSize(ByVal width As Long, ByVal height As Long)
+Sub SetWindowPosition(ByVal x As Long, ByVal y As Long)
+Sub SetWindowMinSize(ByVal width As Long, ByVal height As Long)
+Sub SetWindowOpacity(ByVal opacity As Single)
+Sub ToggleFullscreen()
+Sub MaximizeWindow()
+Sub MinimizeWindow()
+Sub RestoreWindow()
+
+ConfigFlags / states
+--------------------
+Sub SetConfigFlags(ByVal flags As Long)
+Sub SetWindowState(ByVal flags As Long)
+Sub ClearWindowState(ByVal flags As Long)
 Function IsVSyncEnabled() As Boolean
-Sub SetVSync(ByVal enabled As Boolean)
-Sub ToggleVSync()
+
+' FLAG_VSYNC_HINT, FLAG_FULLSCREEN_MODE, FLAG_WINDOW_RESIZABLE,
+' FLAG_WINDOW_UNDECORATED, FLAG_WINDOW_TRANSPARENT, FLAG_MSAA_4X_HINT,
+' FLAG_WINDOW_HIDDEN, FLAG_WINDOW_ALWAYS_RUN, FLAG_WINDOW_MINIMIZED,
+' FLAG_WINDOW_MAXIMIZED, FLAG_WINDOW_UNFOCUSED, FLAG_WINDOW_TOPMOST,
+' FLAG_WINDOW_HIGHDPI, FLAG_WINDOW_MOUSE_PASSTHROUGH,
+' FLAG_BORDERLESS_WINDOWED_MODE, FLAG_INTERLACED_HINT
+' SetConfigFlags may be called before Run (flags are applied at init) or
+' during Game_Load. FLAG_VSYNC_HINT replaces the old SetVSync/ToggleVSync.
+
+Monitor
+-------
+Function GetMonitorCount() As Long
+Function GetMonitorWidth(ByVal monitor As Long) As Long
+Function GetMonitorHeight(ByVal monitor As Long) As Long
+Function GetMonitorRefreshRate(ByVal monitor As Long) As Long
+Function GetCurrentMonitor() As Long
+Function GetWindowScaleDPI() As Vector2
+
+Clipboard
+---------
+Function GetClipboardText() As String
+Sub SetClipboardText(ByVal text As String)
+
+Random
+------
+Function GetRandomValue(ByVal min As Long, ByVal max As Long) As Long
+Sub SetRandomSeed(ByVal seed As Long)
 
 Utils
 -----
 Function GetFullPath(ByVal relativePath As String) As String
+Sub TakeScreenshot(ByVal fileName As String)
 
 Globals
 -------
-shouldQuit  As Boolean   ' set True to leave Run
-fps         As Long      ' frames rendered in the last second
-screenWidth As Long
+screenWidth  As Long
 screenHeight As Long
 
 
@@ -101,8 +160,25 @@ Function GetMouseY() As Long
 Function GetMouseDeltaX() As Single
 Function GetMouseDeltaY() As Single
 
+Sub SetMousePosition(ByVal x As Long, ByVal y As Long)
+Sub SetMouseOffset(ByVal offsetX As Long, ByVal offsetY As Long)
+Sub SetMouseScale(ByVal scaleX As Single, ByVal scaleY As Single)
+
 Sub SetMouseWheel(ByVal value As Single)
 Function GetMouseWheelMove() As Single
+Function GetMouseWheelMoveV() As Vector2
+
+
+================================================================================
+ Cursor
+================================================================================
+
+Sub ShowCursor()
+Sub HideCursor()
+Function IsCursorHidden() As Boolean
+Sub EnableCursor()
+Sub DisableCursor()
+Sub SetMouseCursor(ByVal cursor As MouseCursor)
 
 
 ================================================================================
@@ -307,6 +383,20 @@ MouseButton
 MOUSE_BUTTON_LEFT
 MOUSE_BUTTON_RIGHT
 MOUSE_BUTTON_MIDDLE
+
+MouseCursor
+-----------
+MOUSE_CURSOR_DEFAULT
+MOUSE_CURSOR_ARROW
+MOUSE_CURSOR_IBEAM
+MOUSE_CURSOR_CROSSHAIR
+MOUSE_CURSOR_POINTING_HAND
+MOUSE_CURSOR_RESIZE_EW
+MOUSE_CURSOR_RESIZE_NS
+MOUSE_CURSOR_RESIZE_NWSE
+MOUSE_CURSOR_RESIZE_NESW
+MOUSE_CURSOR_RESIZE_ALL
+MOUSE_CURSOR_NOT_ALLOWED
 
 NPatchMode
 ----------
