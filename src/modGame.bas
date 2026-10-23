@@ -19,7 +19,7 @@ Sub Main()
 End Sub
 
 Sub Game_Load()
-    SetVSync True
+    SetConfigFlags FLAG_VSYNC_HINT
     'PlayMusic "assets/BGM 5 - Feel.wav"
 
     Color mouseColor, 1, 0, 0, 0.3
@@ -123,7 +123,7 @@ Sub Game_Draw(ByVal dt As Single)
     DrawCircle worldPos.x, worldPos.y, 5#, mouseColor
     EndMode2D
 
-    DrawText font, "FPS: " & CStr(fps), 10, 10, White
+    DrawText font, "FPS: " & CStr(GetFPS()), 10, 10, White
     EndDrawing
 End Sub
 
@@ -172,20 +172,3 @@ Private Sub DrawMap(ByRef map As Tilemap)
     glDisableClientState GL_VERTEX_ARRAY
     glDisable GL_TEXTURE_2D
 End Sub
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
