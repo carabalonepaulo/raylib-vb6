@@ -283,11 +283,81 @@ Sub DrawText(ByRef font As ImageFont, ByVal text As String, ByVal x As Single, B
 ================================================================================
 
 Function LoadImage(ByVal filePath As String) As Image
-Function ImageGetPixel(ByRef img As Image, ByVal x As Long, ByVal y As Long) As ColorRGBA
-Sub ImageSetPixel(ByRef img As Image, ByVal x As Long, ByVal y As Long, ByRef col As ColorRGBA)
-Sub ImageClear(ByRef img As Image, ByRef col As ColorRGBA)
-Sub ImageDrawRect(ByRef img As Image, ByRef Rect As Rectangle, ByRef col As ColorRGBA)
-Sub ImageDrawImage(ByRef imgDst As Image, ByRef Rect As Rectangle, ByRef imgSrc As Image, ByRef col As ColorRGBA)
+Function IsImageReady(ByRef img As Image) As Boolean
+Sub UnloadImage(ByRef img As Image)
+
+Function GetImageColor(ByRef img As Image, ByVal x As Long, ByVal y As Long) As ColorRGBA
+Sub ImageDrawPixel(ByRef dst As Image, ByVal x As Long, ByVal y As Long, ByRef color As ColorRGBA)
+Sub ImageDrawPixelV(ByRef dst As Image, ByRef position As Vector2, ByRef color As ColorRGBA)
+Sub ImageClearBackground(ByRef dst As Image, ByRef color As ColorRGBA)
+Sub ImageDrawRectangle(ByRef dst As Image, ByVal posX As Long, ByVal posY As Long, ByVal width As Long, ByVal height As Long, ByRef color As ColorRGBA)
+Sub ImageDrawRectangleV(ByRef dst As Image, ByRef position As Vector2, ByRef size As Vector2, ByRef color As ColorRGBA)
+Sub ImageDrawRectangleRec(ByRef dst As Image, ByRef rec As Rectangle, ByRef color As ColorRGBA)
+Sub ImageDraw(ByRef dst As Image, ByRef src As Image, ByRef srcRec As Rectangle, ByRef dstRec As Rectangle, ByRef tint As ColorRGBA)
+
+Sub ImageDrawLine(ByRef dst As Image, ByVal startPosX As Long, ByVal startPosY As Long, ByVal endPosX As Long, ByVal endPosY As Long, ByRef color As ColorRGBA)
+Sub ImageDrawLineV(ByRef dst As Image, ByRef start As Vector2, ByRef finish As Vector2, ByRef color As ColorRGBA)
+Sub ImageDrawLineEx(ByRef dst As Image, ByRef start As Vector2, ByRef finish As Vector2, ByVal thick As Long, ByRef color As ColorRGBA)
+Sub ImageDrawCircle(ByRef dst As Image, ByVal centerX As Long, ByVal centerY As Long, ByVal radius As Long, ByRef color As ColorRGBA)
+Sub ImageDrawCircleV(ByRef dst As Image, ByRef center As Vector2, ByVal radius As Single, ByRef color As ColorRGBA)
+Sub ImageDrawCircleLines(ByRef dst As Image, ByVal centerX As Long, ByVal centerY As Long, ByVal radius As Long, ByRef color As ColorRGBA)
+Sub ImageDrawCircleLinesV(ByRef dst As Image, ByRef center As Vector2, ByVal radius As Single, ByRef color As ColorRGBA)
+Sub ImageDrawRectangleLines(ByRef dst As Image, ByRef rec As Rectangle, ByVal thick As Long, ByRef color As ColorRGBA)
+Sub ImageDrawTriangle(ByRef dst As Image, ByRef v1 As Vector2, ByRef v2 As Vector2, ByRef v3 As Vector2, ByRef color As ColorRGBA)
+Sub ImageDrawTriangleEx(ByRef dst As Image, ByRef v1 As Vector2, ByRef v2 As Vector2, ByRef v3 As Vector2, ByRef c1 As ColorRGBA, ByRef c2 As ColorRGBA, ByRef c3 As ColorRGBA)
+Sub ImageDrawTriangleLines(ByRef dst As Image, ByRef v1 As Vector2, ByRef v2 As Vector2, ByRef v3 As Vector2, ByRef color As ColorRGBA)
+Sub ImageDrawTriangleFan(ByRef dst As Image, ByRef points() As Vector2, ByVal pointCount As Long, ByRef color As ColorRGBA)
+Sub ImageDrawTriangleStrip(ByRef dst As Image, ByRef points() As Vector2, ByVal pointCount As Long, ByRef color As ColorRGBA)
+
+Function ImageCopy(ByRef image As Image) As Image
+Function ImageFromImage(ByRef image As Image, ByRef rec As Rectangle) As Image
+Sub ImageCrop(ByRef image As Image, ByRef crop As Rectangle)
+Sub ImageFlipVertical(ByRef image As Image)
+Sub ImageFlipHorizontal(ByRef image As Image)
+Sub ImageRotateCW(ByRef image As Image)
+Sub ImageRotateCCW(ByRef image As Image)
+Sub ImageRotate(ByRef image As Image, ByVal degrees As Long)
+Sub ImageResize(ByRef image As Image, ByVal newWidth As Long, ByVal newHeight As Long)
+Sub ImageResizeNN(ByRef image As Image, ByVal newWidth As Long, ByVal newHeight As Long)
+Sub ImageResizeCanvas(ByRef image As Image, ByVal newWidth As Long, ByVal newHeight As Long, ByVal offsetX As Long, ByVal offsetY As Long, ByRef fill As ColorRGBA)
+Sub ImageToPOT(ByRef image As Image, ByRef fill As ColorRGBA)
+
+Sub ImageColorTint(ByRef image As Image, ByRef color As ColorRGBA)
+Sub ImageColorInvert(ByRef image As Image)
+Sub ImageColorGrayscale(ByRef image As Image)
+Sub ImageColorContrast(ByRef image As Image, ByVal contrast As Single)
+Sub ImageColorBrightness(ByRef image As Image, ByVal brightness As Long)
+Sub ImageColorReplace(ByRef image As Image, ByRef color As ColorRGBA, ByRef replace As ColorRGBA)
+Sub ImageAlphaClear(ByRef image As Image, ByRef color As ColorRGBA, ByVal threshold As Single)
+Sub ImageAlphaMask(ByRef image As Image, ByRef alphaMask As Image)
+Sub ImageAlphaPremultiply(ByRef image As Image)
+Sub ImageFormat(ByRef image As Image, ByVal newFormat As Long)
+Sub ImageMipmaps(ByRef image As Image)
+Sub ImageBlurGaussian(ByRef image As Image, ByVal blurSize As Long)
+Sub ImageDither(ByRef image As Image, ByVal rBpp As Long, ByVal gBpp As Long, ByVal bBpp As Long, ByVal aBpp As Long)
+
+Function LoadImageFromScreen() As Image
+Function LoadImageFromTexture(ByRef texture As Texture2D) As Image
+Function ExportImage(ByRef image As Image, ByVal fileName As String) As Boolean
+Function ExportImageAsCode(ByRef image As Image, ByVal fileName As String) As Boolean
+Function GetImageAlphaBorder(ByRef image As Image, ByVal threshold As Single) As Rectangle
+Function LoadImageColors(ByRef image As Image) As ColorRGBA()
+Function LoadImagePalette(ByRef image As Image, ByVal maxPaletteSize As Long, ByRef colorCount As Long) As ColorRGBA()
+
+Function GenImageColor(ByVal width As Long, ByVal height As Long, ByRef color As ColorRGBA) As Image
+Function GenImageGradientLinear(ByVal width As Long, ByVal height As Long, ByVal direction As Long, ByRef startColor As ColorRGBA, ByRef endColor As ColorRGBA) As Image
+Function GenImageGradientRadial(ByVal width As Long, ByVal height As Long, ByVal density As Single, ByRef inner As ColorRGBA, ByRef outer As ColorRGBA) As Image
+Function GenImageGradientSquare(ByVal width As Long, ByVal height As Long, ByVal density As Single, ByRef inner As ColorRGBA, ByRef outer As ColorRGBA) As Image
+Function GenImageChecked(ByVal width As Long, ByVal height As Long, ByVal checksX As Long, ByVal checksY As Long, ByRef col1 As ColorRGBA, ByRef col2 As ColorRGBA) As Image
+Function GenImageWhiteNoise(ByVal width As Long, ByVal height As Long, ByVal factor As Single) As Image
+Function GenImagePerlinNoise(ByVal width As Long, ByVal height As Long, ByVal offsetX As Long, ByVal offsetY As Long, ByVal scaleFactor As Single) As Image
+Function GenImageCellular(ByVal width As Long, ByVal height As Long, ByVal tileSize As Long) As Image
+
+' Image.Data holds raw pixels in Image.Format (a PixelFormat value). The
+' uncompressed formats are supported: GRAYSCALE, GRAY_ALPHA, R5G6B5, R8G8B8,
+' R5G5B5A1, R4G4B4A4, R8G8B8A8 (R32 groups only define pixel size). LoadImage
+' produces PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 and Mipmaps = 1. All the drawing
+' and pixel functions below are format-aware.
 
 
 ================================================================================
@@ -353,9 +423,11 @@ Type RenderTexture2D
 End Type
 
 Type Image
-    Data() As Byte            ' RGBA, 8 bits per channel
+    Data() As Byte            ' raw pixels in the format given by Format
     Width As Long
     Height As Long
+    Mipmaps As Long           ' number of mipmap levels (1 = none)
+    Format As Long            ' a PixelFormat value
 End Type
 
 Type ImageFont
@@ -395,6 +467,16 @@ End Type
 ================================================================================
  Enums
 ================================================================================
+
+PixelFormat
+-----------
+PIXELFORMAT_UNCOMPRESSED_GRAYSCALE  PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA
+PIXELFORMAT_UNCOMPRESSED_R5G6B5     PIXELFORMAT_UNCOMPRESSED_R8G8B8
+PIXELFORMAT_UNCOMPRESSED_R5G5B5A1   PIXELFORMAT_UNCOMPRESSED_R4G4B4A4
+PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
+PIXELFORMAT_UNCOMPRESSED_R32        PIXELFORMAT_UNCOMPRESSED_R32G32B32
+PIXELFORMAT_UNCOMPRESSED_R32G32B32A32
+' compressed formats (DXT/ETC/PVRT/ASTC) are declared for compatibility only
 
 MouseButton
 -----------
