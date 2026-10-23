@@ -4,6 +4,7 @@ Form=src\fmrMain.frm
 Module=modGame; src\modGame.bas
 Module=modRaylib; src\modRaylib.bas
 Module=modOpenGL; src\modOpenGL.bas
+Module=modRLGL; src\modRLGL.bas
 Module=modIni; src\modIni.bas
 Module=modMap; src\modMap.bas
 Startup="Sub Main"

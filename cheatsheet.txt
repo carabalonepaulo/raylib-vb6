@@ -2,6 +2,8 @@
  raylib for VB6 - cheatsheet
 ================================================================================
 
+The low-level batching/GL-emulation layer has its own sheet: cheatsheet_rlgl.txt
+
 Conventions
 -----------
 - Coordinates are in pixels, Y grows downward (same as raylib).
