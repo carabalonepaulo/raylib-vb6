@@ -232,7 +232,7 @@ Public Sub rlVertex3f(ByVal x As Single, ByVal y As Single, ByVal z As Single)
     mBatch.vertexBuffer(b).elementCount = i + 1
 
     dc = mBatch.drawCounter - 1
-    If dc >= 0 Then mBatch.draws(dc).vertexCount = mBatch.draws(dc).vertexCount + 1
+    mBatch.draws(dc).vertexCount = mBatch.draws(dc).vertexCount + 1
 End Sub
 
 Public Sub rlVertex3i(ByVal x As Long, ByVal y As Long, ByVal z As Long)
@@ -577,28 +577,15 @@ Private Sub TransformVertex(ByVal x As Single, ByVal y As Single, ByVal z As Sin
 End Sub
 
 Private Sub ApplyMatrix(ByRef op As rlMatrix)
-    Dim cur As rlMatrix
     Dim res As rlMatrix
-    cur = MatrixGet()
-    MatrixMultiplyInto res, cur, op
-    MatrixSet res
-End Sub
-
-Private Sub MatrixSet(ByRef mat As rlMatrix)
     If mCurrentMatrixMode = RL_PROJECTION Then
-        mProjection = mat
+        MatrixMultiplyInto res, mProjection, op
+        mProjection = res
     Else
-        mModelview = mat
+        MatrixMultiplyInto res, mModelview, op
+        mModelview = res
     End If
 End Sub
-
-Private Function MatrixGet() As rlMatrix
-    If mCurrentMatrixMode = RL_PROJECTION Then
-        MatrixGet = mProjection
-    Else
-        MatrixGet = mModelview
-    End If
-End Function
 
 Private Function ToByte(ByVal v As Single) As Byte
     If v <= 0! Then

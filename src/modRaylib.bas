@@ -1974,7 +1974,7 @@ Private Function ColorToByte(ByVal v As Single) As Byte
     ElseIf v >= 1! Then
         ColorToByte = 255
     Else
-        ColorToByte = CByte(Int(CDbl(v) * 255# + 0.5))
+        ColorToByte = CByte(Int(v * 255# + 0.5))
     End If
 End Function
 
@@ -1992,7 +1992,6 @@ Private Sub ReadPixelBytes(ByRef img As Image, ByVal x As Long, ByVal y As Long,
 
     r = 0: g = 0: b = 0: a = 255
 
-    If img.Width <= 0 Or img.Height <= 0 Then Exit Sub
     If x < 0 Or x >= img.Width Or y < 0 Or y >= img.Height Then Exit Sub
 
     idx = (y * img.Width + x) * GetPixelDataSize(img.Format)
@@ -2032,7 +2031,6 @@ Private Sub WritePixelBytes(ByRef img As Image, ByVal x As Long, ByVal y As Long
     Dim idx As Long
     Dim v As Long
 
-    If img.Width <= 0 Or img.Height <= 0 Then Exit Sub
     If x < 0 Or x >= img.Width Or y < 0 Or y >= img.Height Then Exit Sub
 
     idx = (y * img.Width + x) * GetPixelDataSize(img.Format)
@@ -2098,14 +2096,6 @@ Public Function IsImageReady(ByRef img As Image) As Boolean
     IsImageReady = (img.Width > 0) And (img.Height > 0) And (GetPixelDataSize(img.Format) > 0)
 End Function
 
-Public Sub UnloadImage(ByRef img As Image)
-    Erase img.Data
-    img.Width = 0
-    img.Height = 0
-    img.Mipmaps = 1
-    img.Format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
-End Sub
-
 Public Function GetImageColor(ByRef img As Image, ByVal x As Long, ByVal y As Long) As ColorRGBA
     Dim r As Byte, g As Byte, b As Byte, a As Byte
     Dim col As ColorRGBA
@@ -2152,9 +2142,10 @@ Public Sub ImageDrawRectangleRec(ByRef dst As Image, ByRef rec As Rectangle, ByR
     ImageDrawRectangle dst, CLng(rec.x), CLng(rec.y), CLng(rec.Width), CLng(rec.Height), color
 End Sub
 
-' Mapeia srcRec de src em dstRec de dst, com blend e tint (igual a raylib).
 Public Sub ImageDraw(ByRef dst As Image, ByRef src As Image, ByRef srcRec As Rectangle, ByRef dstRec As Rectangle, ByRef tint As ColorRGBA)
-    Dim scaleX As Single, scaleY As Single
+    Dim scaleX As Double, scaleY As Double
+    Dim srcBaseX As Double, srcBaseY As Double
+    Dim outBaseX As Long, outBaseY As Long
     Dim dstX As Long, dstY As Long
     Dim srcX As Long, srcY As Long
     Dim outX As Long, outY As Long
@@ -2165,15 +2156,19 @@ Public Sub ImageDraw(ByRef dst As Image, ByRef src As Image, ByRef srcRec As Rec
     If srcRec.Width <= 0! Or srcRec.Height <= 0! Or dstRec.Width <= 0! Or dstRec.Height <= 0! Then Exit Sub
     If IsImageReady(src) = False Then Exit Sub
 
-    scaleX = srcRec.Width / dstRec.Width
-    scaleY = srcRec.Height / dstRec.Height
+    scaleX = CDbl(srcRec.Width) / CDbl(dstRec.Width)
+    scaleY = CDbl(srcRec.Height) / CDbl(dstRec.Height)
+    srcBaseX = CDbl(srcRec.x)
+    srcBaseY = CDbl(srcRec.y)
+    outBaseX = CLng(Int(dstRec.x))
+    outBaseY = CLng(Int(dstRec.y))
 
     For dstY = 0 To CLng(dstRec.Height) - 1
+        srcY = CLng(Int(srcBaseY + dstY * scaleY))
+        outY = outBaseY + dstY
         For dstX = 0 To CLng(dstRec.Width) - 1
-            srcX = CLng(Int(CDbl(srcRec.x) + CDbl(dstX) * CDbl(scaleX)))
-            srcY = CLng(Int(CDbl(srcRec.y) + CDbl(dstY) * CDbl(scaleY)))
-            outX = CLng(Int(dstRec.x)) + dstX
-            outY = CLng(Int(dstRec.y)) + dstY
+            srcX = CLng(Int(srcBaseX + dstX * scaleX))
+            outX = outBaseX + dstX
 
             srcCol = GetImageColor(src, srcX, srcY)
             dstCol = GetImageColor(dst, outX, outY)
@@ -2184,10 +2179,8 @@ Public Sub ImageDraw(ByRef dst As Image, ByRef src As Image, ByRef srcRec As Rec
 End Sub
 
 ' --- Desenho 2D direto nos pixels -----------------------------------------
-
-' Trunca em direcao ao zero (equivalente ao cast (int) do C).
 Private Function Trunc(ByVal v As Single) As Long
-    Trunc = CLng(Fix(CDbl(v)))
+    Trunc = CLng(Fix(v))
 End Function
 
 Private Function MinF3(ByVal a As Single, ByVal b As Single, ByVal c As Single) As Single
@@ -2762,7 +2755,7 @@ Private Function FloatToByte(ByVal v As Double) As Byte
 End Function
 
 Private Function MulByte(ByVal v As Byte, ByVal f As Single) As Byte
-    MulByte = ClampByteL(CLng(Int(CDbl(v) * CDbl(f))))
+    MulByte = ClampByteL(CLng(Int(v * f)))
 End Function
 
 ' Trunca os bits baixos de acordo com o num. de bits por canal.
@@ -2841,9 +2834,9 @@ Public Sub ImageColorContrast(ByRef image As Image, ByVal contrast As Single)
         For x = 0 To image.Width - 1
             ReadPixelBytes image, x, y, r, g, b, a
             WritePixelBytes image, x, y, _
-                FloatToByte((CDbl(r) / 255# - 0.5) * c + 0.5), _
-                FloatToByte((CDbl(g) / 255# - 0.5) * c + 0.5), _
-                FloatToByte((CDbl(b) / 255# - 0.5) * c + 0.5), _
+                FloatToByte((r / 255# - 0.5) * c + 0.5), _
+                FloatToByte((g / 255# - 0.5) * c + 0.5), _
+                FloatToByte((b / 255# - 0.5) * c + 0.5), _
                 a
         Next x
     Next y
@@ -2898,7 +2891,7 @@ Public Sub ImageAlphaClear(ByRef image As Image, ByRef color As ColorRGBA, ByVal
     If IsImageReady(image) = False Then Exit Sub
     cr = ColorToByte(color.r): cg = ColorToByte(color.g)
     cb = ColorToByte(color.b): ca = ColorToByte(color.a)
-    thr = CLng(Int(CDbl(threshold) * 255#))
+    thr = CLng(Int(threshold * 255#))
 
     For y = 0 To image.Height - 1
         For x = 0 To image.Width - 1
@@ -2930,7 +2923,7 @@ Public Sub ImageAlphaMask(ByRef image As Image, ByRef alphaMask As Image)
             srcX = Trunc(CSng(x) * scaleX)
             srcY = Trunc(CSng(y) * scaleY)
             mc = GetImageColor(alphaMask, srcX, srcY)
-            gray = CLng((CDbl(mc.r) * 0.299 + CDbl(mc.g) * 0.587 + CDbl(mc.b) * 0.114) * 255#)
+            gray = CLng((mc.r * 0.299 + mc.g * 0.587 + mc.b * 0.114) * 255#)
             ReadPixelBytes image, x, y, r, g, b, a
             WritePixelBytes image, x, y, r, g, b, CByte((CLng(a) * gray) \ 255&)
         Next x
@@ -3155,10 +3148,10 @@ Public Sub ImageDither(ByRef image As Image, ByVal rBpp As Long, ByVal gBpp As L
         For x = 0 To w - 1
             cur = GetImageColor(image, x, y)
             i = y * w + x
-            R(i) = CLng(Int(CDbl(cur.r) * 255# + 0.5))
-            G(i) = CLng(Int(CDbl(cur.g) * 255# + 0.5))
-            B(i) = CLng(Int(CDbl(cur.b) * 255# + 0.5))
-            A(i) = CLng(Int(CDbl(cur.a) * 255# + 0.5))
+            R(i) = CLng(Int(cur.r * 255# + 0.5))
+            G(i) = CLng(Int(cur.g * 255# + 0.5))
+            B(i) = CLng(Int(cur.b * 255# + 0.5))
+            A(i) = CLng(Int(cur.a * 255# + 0.5))
         Next x
     Next y
 
@@ -3553,6 +3546,7 @@ Public Function GenImageGradientRadial(ByVal width As Long, ByVal height As Long
     Dim x As Long, y As Long
     Dim cx As Single, cy As Single
     Dim radius As Single
+    Dim dx As Single, dy As Single
     Dim dist As Single
     Dim factor As Single
     Dim rd As Single, gd As Single, bd As Single, ad As Single
@@ -3571,7 +3565,9 @@ Public Function GenImageGradientRadial(ByVal width As Long, ByVal height As Long
 
     For y = 0 To height - 1
         For x = 0 To width - 1
-            dist = Sqr((CSng(x) - cx) * (CSng(x) - cx) + (CSng(y) - cy) * (CSng(y) - cy))
+            dx = CSng(x) - cx
+            dy = CSng(y) - cy
+            dist = Sqr(dx * dx + dy * dy)
             factor = dist / radius
             If density <> 1! And factor > 0! Then factor = CSng(factor ^ density)
             If factor > 1! Then factor = 1!
@@ -3658,7 +3654,7 @@ Public Function GenImageWhiteNoise(ByVal width As Long, ByVal height As Long, By
     img = NewImageLike(width, height, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8)
     For y = 0 To height - 1
         For x = 0 To width - 1
-            gray = ClampByteD(CDbl(GetRandomValue(0, 255)) * CDbl(factor))
+            gray = ClampByteD(GetRandomValue(0, 255) * factor)
             ImageDrawPixel img, x, y, MakeGray(gray)
         Next x
     Next y
@@ -3715,15 +3711,18 @@ End Function
 
 Private Function Perlin2D(ByVal x As Single, ByVal y As Single) As Single
     Dim xi As Long, yi As Long
+    Dim xfl As Long, yfl As Long
     Dim xf As Single, yf As Single
     Dim u As Single, v As Single
     Dim aa As Long, ab As Long, ba As Long, bb As Long
     Dim x1 As Single, x2 As Single
 
-    xi = CLng(Int(CDbl(x))) And 255
-    yi = CLng(Int(CDbl(y))) And 255
-    xf = x - CSng(Int(CDbl(x)))
-    yf = y - CSng(Int(CDbl(y)))
+    xfl = CLng(Int(CDbl(x)))
+    yfl = CLng(Int(CDbl(y)))
+    xi = xfl And 255
+    yi = yfl And 255
+    xf = x - xfl
+    yf = y - yfl
 
     u = PerlinFade(xf)
     v = PerlinFade(yf)
@@ -3744,17 +3743,18 @@ Public Function GenImagePerlinNoise(ByVal width As Long, ByVal height As Long, B
     Dim nx As Single, ny As Single
     Dim value As Single
     Dim gray As Byte
+    Dim fw As Single, fh As Single
 
     InitPerlin
     img = NewImageLike(width, height, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8)
 
-    If width <= 0 Then width = 1
-    If height <= 0 Then height = 1
+    fw = CSng(img.Width)
+    fh = CSng(img.Height)
 
     For y = 0 To img.Height - 1
         For x = 0 To img.Width - 1
-            nx = CSng(x + offsetX) * scaleFactor / CSng(width)
-            ny = CSng(y + offsetY) * scaleFactor / CSng(height)
+            nx = CSng(x + offsetX) * scaleFactor / fw
+            ny = CSng(y + offsetY) * scaleFactor / fh
             value = Perlin2D(nx, ny)
             gray = ClampByteD((CDbl(value) + 1#) * 127.5)
             ImageDrawPixel img, x, y, MakeGray(gray)
@@ -3771,6 +3771,7 @@ Public Function GenImageCellular(ByVal width As Long, ByVal height As Long, ByVa
     Dim seedsPerRow As Long, seedsPerCol As Long, seedCount As Long
     Dim sx() As Single, sy() As Single
     Dim minDist As Single
+    Dim fx As Single, fy As Single
     Dim dx As Single, dy As Single
     Dim dist As Single
     Dim value As Byte
@@ -3796,14 +3797,16 @@ Public Function GenImageCellular(ByVal width As Long, ByVal height As Long, ByVa
     maxDist = CSng(tileSize)
     For y = 0 To height - 1
         For x = 0 To width - 1
+            fx = CSng(x)
+            fy = CSng(y)
             minDist = 65536!
             For i = 0 To seedCount - 1
-                dx = CSng(x) - sx(i)
-                dy = CSng(y) - sy(i)
+                dx = fx - sx(i)
+                dy = fy - sy(i)
                 dist = dx * dx + dy * dy
                 If dist < minDist Then minDist = dist
             Next i
-            value = ClampByteD(255# * (1# - CDbl(Sqr(minDist)) / CDbl(maxDist)))
+            value = ClampByteD(255# * (1# - Sqr(minDist) / CDbl(maxDist)))
             ImageDrawPixel img, x, y, MakeGray(value)
         Next x
     Next y
