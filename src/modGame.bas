@@ -20,7 +20,6 @@ End Sub
 
 Sub Game_Load()
     SetConfigFlags FLAG_VSYNC_HINT
-    'PlayMusic "assets/BGM 5 - Feel.wav"
 
     Color mouseColor, 1, 0, 0, 0.3
     sprite = LoadTexture("assets/001-Fighter01.png")
@@ -102,14 +101,8 @@ Sub Game_Draw(ByVal dt As Single)
 
     BeginMode2D camera
 
-    'DrawRectangle 0#, 0#, 32#, 32#, White
-    'DrawTexture sprite, 100, 100, sprite.Width, sprite.Height, White
     DrawTextureRec sprite, src, dst, White
     DrawTexturePro sprite, src, dstrect, origin, Rot, White
-    'DrawText font, "porra que sofrimento miserável", 0, 0, White
-    'DrawRectangleRounded src, 20#, 16, White
-
-    'DrawArrayTest
 
     DrawMap map
 
@@ -129,8 +122,6 @@ Sub Game_Draw(ByVal dt As Single)
 
     DrawText font, "FPS: " & CStr(GetFPS()), 10, 10, White
 
-    ' Diagnostic overlay: drawn by the user, who owns the font, right before
-    ' EndDrawing flushes the batch.
     DebugDrawOverlay
     EndDrawing
 End Sub
@@ -163,10 +154,6 @@ Private Sub DrawMap(ByRef map As Tilemap)
     If map.TotalVertices <= 0 Then Exit Sub
     If map.Tileset.Id = 0 Then Exit Sub
 
-    ' O mapa usa uma array propria em espaco de mundo. O flush do lote precisa
-    ' vir ANTES de configurar textura/arrays crus: se viesse depois, o lote
-    ' sobrescreveria esse estado. rlDrawVertexArray entao envia as matrizes da
-    ' CPU (camera/projecao) para o OpenGL, desenha e restaura.
     rlDrawRenderBatchActive
 
     glEnable GL_TEXTURE_2D

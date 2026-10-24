@@ -1,32 +1,7 @@
 Attribute VB_Name = "modOpenGL"
 Option Explicit
 
-' ============================================================================
-' OpenGL 1.1 - bindings estaticas (opengl32.dll)
-'
-' Convencoes impostas pelo VB6:
-'   GLenum / GLbitfield / GLint / GLsizei / GLuint -> Long
-'   GLboolean                                       -> Byte
-'   GLfloat / GLclampf                              -> Single
-'   GLdouble / GLclampd                             -> Double
-'   GLvoid*                                         -> ByVal Long
-'                                                      chamar: ByVal VarPtr(dados(0))
-'   Vetores (GLfloat*, GLint*, GLdouble*...)         -> ByRef <tipo>
-'                                                      chamar: dados(0)
-'
-' Ordem das secoes:
-'   1. WGL / contexto        6. Texturas           11. Consultas de estado
-'   2. Estado geral          7. Pixel ops          12. Pipeline obsoleto (GL 1.1)
-'   3. Primitivas            8. Iluminacao/fog
-'   4. Matrizes              9. Display lists
-'   5. Rasterizacao         10. Vertex arrays         13. Pixel format (GDI)
-'
-' A secao 14 carrega extensoes em runtime: FBO/RBO (render targets) e
-' WGL_EXT_swap_control (vsync). Shaders e VBO ficam para depois, mas o mesmo
-' mecanismo (GLLoadProc) ja serve para qualquer extensao.
-' ============================================================================
-
-' --- 1. WGL / contexto ------------------------------------------------------
+' 1. WGL / context
 
 Public Declare Function wglCreateContext Lib "opengl32" (ByVal hDC As Long) As Long
 Public Declare Function wglMakeCurrent Lib "opengl32" (ByVal hDC As Long, ByVal hRC As Long) As Long
@@ -34,10 +9,9 @@ Public Declare Function wglDeleteContext Lib "opengl32" (ByVal hRC As Long) As L
 Public Declare Function wglGetCurrentContext Lib "opengl32" () As Long
 Public Declare Function wglGetCurrentDC Lib "opengl32" () As Long
 Public Declare Function wglShareLists Lib "opengl32" (ByVal hrc1 As Long, ByVal hrc2 As Long) As Long
-' Reservado para a etapa de extensoes: carrega glGenFramebuffers, glCreateShader, etc.
 Public Declare Function wglGetProcAddress Lib "opengl32" (ByVal lpszProc As String) As Long
 
-' --- 2. Estado geral --------------------------------------------------------
+' 2. General state
 
 Public Declare Sub glEnable Lib "opengl32" (ByVal cap As Long)
 Public Declare Sub glDisable Lib "opengl32" (ByVal cap As Long)
@@ -52,7 +26,7 @@ Public Declare Sub glPopAttrib Lib "opengl32" ()
 Public Declare Sub glPushClientAttrib Lib "opengl32" (ByVal mask As Long)
 Public Declare Sub glPopClientAttrib Lib "opengl32" ()
 
-' --- 3. Primitivas ----------------------------------------------------------
+' 3. Primitives
 
 Public Declare Sub glBegin Lib "opengl32" (ByVal mode As Long)
 Public Declare Sub glEnd Lib "opengl32" ()
@@ -96,7 +70,7 @@ Public Declare Sub glRecti Lib "opengl32" (ByVal x1 As Long, ByVal y1 As Long, B
 Public Declare Sub glRects Lib "opengl32" (ByVal x1 As Integer, ByVal y1 As Integer, ByVal x2 As Integer, ByVal y2 As Integer)
 Public Declare Sub glRectd Lib "opengl32" (ByVal x1 As Double, ByVal y1 As Double, ByVal x2 As Double, ByVal y2 As Double)
 
-' --- 4. Matrizes / transformacoes -------------------------------------------
+' 4. Matrices / transforms
 
 Public Declare Sub glMatrixMode Lib "opengl32" (ByVal mode As Long)
 Public Declare Sub glLoadIdentity Lib "opengl32" ()
@@ -115,7 +89,7 @@ Public Declare Sub glScaled Lib "opengl32" (ByVal x As Double, ByVal y As Double
 Public Declare Sub glPushMatrix Lib "opengl32" ()
 Public Declare Sub glPopMatrix Lib "opengl32" ()
 
-' --- 5. Rasterizacao / estado fixo ------------------------------------------
+' 5. Rasterization / fixed state
 
 Public Declare Sub glViewport Lib "opengl32" (ByVal x As Long, ByVal y As Long, ByVal Width As Long, ByVal Height As Long)
 Public Declare Sub glScissor Lib "opengl32" (ByVal x As Long, ByVal y As Long, ByVal Width As Long, ByVal Height As Long)
@@ -148,7 +122,7 @@ Public Declare Sub glLineWidth Lib "opengl32" (ByVal Width As Single)
 Public Declare Sub glLineStipple Lib "opengl32" (ByVal factor As Long, ByVal pattern As Integer)
 Public Declare Sub glPointSize Lib "opengl32" (ByVal size As Single)
 
-' --- 6. Vertex arrays / client state ----------------------------------------
+' 6. Vertex arrays / client state
 
 Public Declare Sub glEnableClientState Lib "opengl32" (ByVal cap As Long)
 Public Declare Sub glDisableClientState Lib "opengl32" (ByVal cap As Long)
@@ -164,7 +138,7 @@ Public Declare Sub glDrawArrays Lib "opengl32" (ByVal mode As Long, ByVal first 
 Public Declare Sub glDrawElements Lib "opengl32" (ByVal mode As Long, ByVal count As Long, ByVal ty As Long, ByVal indices As Long)
 Public Declare Sub glGetPointerv Lib "opengl32" (ByVal pname As Long, ByRef params As Long)
 
-' --- 7. Texturas ------------------------------------------------------------
+' 7. Textures
 
 Public Declare Sub glGenTextures Lib "opengl32" (ByVal n As Long, ByRef textures As Long)
 Public Declare Sub glDeleteTextures Lib "opengl32" (ByVal n As Long, ByRef textures As Long)
@@ -209,7 +183,7 @@ Public Declare Sub glGetTexGendv Lib "opengl32" (ByVal coord As Long, ByVal pnam
 Public Declare Sub glGetTexGenfv Lib "opengl32" (ByVal coord As Long, ByVal pname As Long, ByRef params As Single)
 Public Declare Sub glGetTexGeniv Lib "opengl32" (ByVal coord As Long, ByVal pname As Long, ByRef params As Long)
 
-' --- 8. Pixel ops -----------------------------------------------------------
+' 8. Pixel ops
 
 Public Declare Sub glPixelStoref Lib "opengl32" (ByVal pname As Long, ByVal param As Single)
 Public Declare Sub glPixelStorei Lib "opengl32" (ByVal pname As Long, ByVal param As Long)
@@ -241,7 +215,7 @@ Public Declare Sub glRasterPos4f Lib "opengl32" (ByVal x As Single, ByVal y As S
 Public Declare Sub glRasterPos4i Lib "opengl32" (ByVal x As Long, ByVal y As Long, ByVal z As Long, ByVal w As Long)
 Public Declare Sub glRasterPos4s Lib "opengl32" (ByVal x As Integer, ByVal y As Integer, ByVal z As Integer, ByVal w As Integer)
 
-' --- 9. Iluminacao / material / fog / clip ----------------------------------
+' 9. Lighting / material / fog / clip
 
 Public Declare Sub glLightModelf Lib "opengl32" (ByVal pname As Long, ByVal param As Single)
 Public Declare Sub glLightModeli Lib "opengl32" (ByVal pname As Long, ByVal param As Long)
@@ -267,7 +241,7 @@ Public Declare Sub glFogiv Lib "opengl32" (ByVal pname As Long, ByRef params As 
 Public Declare Sub glClipPlane Lib "opengl32" (ByVal plane As Long, ByRef equation As Double)
 Public Declare Sub glGetClipPlane Lib "opengl32" (ByVal plane As Long, ByRef equation As Double)
 
-' --- 10. Display lists ------------------------------------------------------
+' 10. Display lists
 
 Public Declare Sub glNewList Lib "opengl32" (ByVal list As Long, ByVal mode As Long)
 Public Declare Sub glEndList Lib "opengl32" ()
@@ -278,20 +252,20 @@ Public Declare Sub glDeleteLists Lib "opengl32" (ByVal list As Long, ByVal range
 Public Declare Sub glListBase Lib "opengl32" (ByVal base As Long)
 Public Declare Function glIsList Lib "opengl32" (ByVal list As Long) As Byte
 
-' --- 11. Consultas de estado ------------------------------------------------
+' 11. State queries
 
 Public Declare Sub glGetBooleanv Lib "opengl32" (ByVal pname As Long, ByRef params As Byte)
 Public Declare Sub glGetDoublev Lib "opengl32" (ByVal pname As Long, ByRef params As Double)
 Public Declare Sub glGetFloatv Lib "opengl32" (ByVal pname As Long, ByRef params As Single)
 Public Declare Sub glGetIntegerv Lib "opengl32" (ByVal pname As Long, ByRef params As Long)
 
-' --- 12. Pipeline obsoleto da GL 1.1 (mantido por completude) ---------------
+' 12. Obsolete GL 1.1 pipeline
 
-' Acumulacao
+' Accumulation
 Public Declare Sub glAccum Lib "opengl32" (ByVal op As Long, ByVal value As Single)
 Public Declare Sub glClearAccum Lib "opengl32" (ByVal Red As Single, ByVal Green As Single, ByVal Blue As Single, ByVal alpha As Single)
 
-' Modo indice de cor
+' Color index mode
 Public Declare Sub glIndexd Lib "opengl32" (ByVal c As Double)
 Public Declare Sub glIndexf Lib "opengl32" (ByVal c As Single)
 Public Declare Sub glIndexi Lib "opengl32" (ByVal c As Long)
@@ -339,11 +313,9 @@ Public Declare Sub glPopName Lib "opengl32" ()
 Public Declare Sub glLoadName Lib "opengl32" (ByVal nameValue As Long)
 Public Declare Sub glPassThrough Lib "opengl32" (ByVal token As Single)
 
-' ============================================================================
-' Constantes - agrupadas na mesma ordem das funcoes
-' ============================================================================
+' Constants
 
-' --- Booleanos / valores neutros --------------------------------------------
+' Booleans / neutral values
 Public Const GL_FALSE As Long = &H0&
 Public Const GL_TRUE As Long = &H1&
 Public Const GL_NONE As Long = &H0&
@@ -351,13 +323,13 @@ Public Const GL_ZERO As Long = &H0&
 Public Const GL_ONE As Long = &H1&
 Public Const GL_NO_ERROR As Long = &H0&
 
-' --- Buffers para glClear ----------------------------------------------
+' glClear buffers
 Public Const GL_COLOR_BUFFER_BIT As Long = &H4000&
 Public Const GL_DEPTH_BUFFER_BIT As Long = &H100&
 Public Const GL_STENCIL_BUFFER_BIT As Long = &H400&
 Public Const GL_ACCUM_BUFFER_BIT As Long = &H200&
 
-' --- Primitivas -------------------------------------------------------------
+' Primitives
 Public Const GL_POINTS As Long = &H0&
 Public Const GL_LINES As Long = &H1&
 Public Const GL_LINE_LOOP As Long = &H2&
@@ -369,7 +341,7 @@ Public Const GL_QUADS As Long = &H7&
 Public Const GL_QUAD_STRIP As Long = &H8&
 Public Const GL_POLYGON As Long = &H9&
 
-' --- Erros (glGetError) -----------------------------------------------------
+' Errors
 Public Const GL_INVALID_ENUM As Long = &H500&
 Public Const GL_INVALID_VALUE As Long = &H501&
 Public Const GL_INVALID_OPERATION As Long = &H502&
@@ -377,7 +349,7 @@ Public Const GL_STACK_OVERFLOW As Long = &H503&
 Public Const GL_STACK_UNDERFLOW As Long = &H504&
 Public Const GL_OUT_OF_MEMORY As Long = &H505&
 
-' --- Tipos de dados ---------------------------------------------------------
+' Data types
 Public Const GL_BYTE As Long = &H1400&
 Public Const GL_UNSIGNED_BYTE As Long = &H1401&
 Public Const GL_SHORT As Long = &H1402&
@@ -390,7 +362,7 @@ Public Const GL_2_BYTES As Long = &H1407&
 Public Const GL_3_BYTES As Long = &H1408&
 Public Const GL_4_BYTES As Long = &H1409&
 
-' --- Funcoes de comparacao (depth/stencil/alpha) ----------------------------
+' Comparison funcs
 Public Const GL_NEVER As Long = &H200&
 Public Const GL_LESS As Long = &H201&
 Public Const GL_EQUAL As Long = &H202&
@@ -400,7 +372,7 @@ Public Const GL_NOTEQUAL As Long = &H205&
 Public Const GL_GEQUAL As Long = &H206&
 Public Const GL_ALWAYS As Long = &H207&
 
-' --- Blend ------------------------------------------------------------------
+' Blend
 Public Const GL_BLEND As Long = &HBE2&
 Public Const GL_BLEND_SRC As Long = &HBE1&
 Public Const GL_BLEND_DST As Long = &HBE0&
@@ -414,7 +386,7 @@ Public Const GL_DST_COLOR As Long = &H306&
 Public Const GL_ONE_MINUS_DST_COLOR As Long = &H307&
 Public Const GL_SRC_ALPHA_SATURATE As Long = &H308&
 
-' --- Operacoes logicas ------------------------------------------------------
+' Logic ops
 Public Const GL_LOGIC_OP As Long = &HBF1&
 Public Const GL_LOGIC_OP_MODE As Long = &HBF0&
 Public Const GL_CLEAR As Long = &H1500&
@@ -434,7 +406,7 @@ Public Const GL_OR_INVERTED As Long = &H150D&
 Public Const GL_NAND As Long = &H150E&
 Public Const GL_SET As Long = &H150F&
 
-' --- Depth buffer -----------------------------------------------------------
+' Depth buffer
 Public Const GL_DEPTH_TEST As Long = &HB71&
 Public Const GL_DEPTH_FUNC As Long = &HB74&
 Public Const GL_DEPTH_RANGE As Long = &HB70&
@@ -442,7 +414,7 @@ Public Const GL_DEPTH_WRITEMASK As Long = &HB72&
 Public Const GL_DEPTH_CLEAR_VALUE As Long = &HB73&
 Public Const GL_DEPTH_BITS As Long = &HD56&
 
-' --- Stencil ----------------------------------------------------------------
+' Stencil
 Public Const GL_STENCIL_TEST As Long = &HB90&
 Public Const GL_STENCIL_FUNC As Long = &HB92&
 Public Const GL_STENCIL_VALUE_MASK As Long = &HB93&
@@ -457,7 +429,7 @@ Public Const GL_REPLACE As Long = &H1E01&
 Public Const GL_INCR As Long = &H1E02&
 Public Const GL_DECR As Long = &H1E03&
 
-' --- Alpha test / shade / faces ---------------------------------------------
+' Alpha test / shade / faces
 Public Const GL_ALPHA_TEST As Long = &HBC0&
 Public Const GL_ALPHA_TEST_FUNC As Long = &HBC1&
 Public Const GL_ALPHA_TEST_REF As Long = &HBC2&
@@ -473,7 +445,7 @@ Public Const GL_CULL_FACE As Long = &HB44&
 Public Const GL_CULL_FACE_MODE As Long = &HB45&
 Public Const GL_FRONT_FACE As Long = &HB46&
 
-' --- Rasterizacao / pontos / linhas / poligonos -----------------------------
+' Rasterization / points / lines / polygons
 Public Const GL_POINT_SIZE As Long = &HB11&
 Public Const GL_POINT_SIZE_RANGE As Long = &HB12&
 Public Const GL_POINT_SIZE_GRANULARITY As Long = &HB13&
@@ -497,7 +469,7 @@ Public Const GL_POINT As Long = &HB00&
 Public Const GL_LINE As Long = &HB01&
 Public Const GL_FILL As Long = &HB02&
 
-' --- Scissor / viewport / mascaras ------------------------------------------
+' Scissor / viewport / masks
 Public Const GL_SCISSOR_TEST As Long = &HC11&
 Public Const GL_SCISSOR_BOX As Long = &HC10&
 Public Const GL_VIEWPORT As Long = &HBA2&
@@ -505,7 +477,7 @@ Public Const GL_COLOR_CLEAR_VALUE As Long = &HC22&
 Public Const GL_COLOR_WRITEMASK As Long = &HC23&
 Public Const GL_DITHER As Long = &HBD0&
 
-' --- Hints ------------------------------------------------------------------
+' Hints
 Public Const GL_PERSPECTIVE_CORRECTION_HINT As Long = &HC50&
 Public Const GL_POINT_SMOOTH_HINT As Long = &HC51&
 Public Const GL_LINE_SMOOTH_HINT As Long = &HC52&
@@ -515,7 +487,7 @@ Public Const GL_DONT_CARE As Long = &H1100&
 Public Const GL_FASTEST As Long = &H1101&
 Public Const GL_NICEST As Long = &H1102&
 
-' --- Pixel store / transfer ------------------------------------------------
+' Pixel store / transfer
 Public Const GL_UNPACK_SWAP_BYTES As Long = &HCF0&
 Public Const GL_UNPACK_LSB_FIRST As Long = &HCF1&
 Public Const GL_UNPACK_ROW_LENGTH As Long = &HCF2&
@@ -545,7 +517,7 @@ Public Const GL_DEPTH_BIAS As Long = &HD1F&
 Public Const GL_ZOOM_X As Long = &HD16&
 Public Const GL_ZOOM_Y As Long = &HD17&
 
-' --- Pixel maps -------------------------------------------------------------
+' Pixel maps
 Public Const GL_PIXEL_MAP_I_TO_I As Long = &HC70&
 Public Const GL_PIXEL_MAP_S_TO_S As Long = &HC71&
 Public Const GL_PIXEL_MAP_I_TO_R As Long = &HC72&
@@ -557,7 +529,7 @@ Public Const GL_PIXEL_MAP_G_TO_G As Long = &HC77&
 Public Const GL_PIXEL_MAP_B_TO_B As Long = &HC78&
 Public Const GL_PIXEL_MAP_A_TO_A As Long = &HC79&
 
-' --- Formatos de pixel ------------------------------------------------------
+' Pixel formats
 Public Const GL_COLOR_INDEX As Long = &H1900&
 Public Const GL_STENCIL_INDEX As Long = &H1901&
 Public Const GL_DEPTH_COMPONENT As Long = &H1902&
@@ -572,7 +544,7 @@ Public Const GL_LUMINANCE_ALPHA As Long = &H190A&
 Public Const GL_BGR As Long = &H80E0&
 Public Const GL_BGRA As Long = &H80E1&
 
-' --- Texturas ---------------------------------------------------------------
+' Textures
 Public Const GL_TEXTURE_1D As Long = &HDE0&
 Public Const GL_TEXTURE_2D As Long = &HDE1&
 Public Const GL_TEXTURE_WIDTH As Long = &H1000&
@@ -624,7 +596,7 @@ Public Const GL_R As Long = &H2002&
 Public Const GL_Q As Long = &H2003&
 Public Const GL_MAX_TEXTURE_SIZE As Long = &HD33&
 
-' --- Matrizes ---------------------------------------------------------------
+' Matrices
 Public Const GL_MATRIX_MODE As Long = &HBA0&
 Public Const GL_MODELVIEW As Long = &H1700&
 Public Const GL_PROJECTION As Long = &H1701&
@@ -640,7 +612,7 @@ Public Const GL_MAX_MODELVIEW_STACK_DEPTH As Long = &HD36&
 Public Const GL_MAX_PROJECTION_STACK_DEPTH As Long = &HD38&
 Public Const GL_MAX_TEXTURE_STACK_DEPTH As Long = &HD39&
 
-' --- Buffers de destino -----------------------------------------------------
+' Destination buffers
 Public Const GL_DRAW_BUFFER As Long = &HC01&
 Public Const GL_READ_BUFFER As Long = &HC02&
 Public Const GL_AUX_BUFFERS As Long = &HC00&
@@ -650,7 +622,7 @@ Public Const GL_INDEX_MODE As Long = &HC30&
 Public Const GL_RGBA_MODE As Long = &HC31&
 Public Const GL_INDEX_WRITEMASK As Long = &HC21&
 
-' --- Iluminacao / materiais -------------------------------------------------
+' Lighting / materials
 Public Const GL_LIGHTING As Long = &HB50&
 Public Const GL_LIGHT0 As Long = &H4000&
 Public Const GL_LIGHT1 As Long = &H4001&
@@ -681,7 +653,7 @@ Public Const GL_SHININESS As Long = &H1601&
 Public Const GL_AMBIENT_AND_DIFFUSE As Long = &H1602&
 Public Const GL_MAX_LIGHTS As Long = &HD31&
 
-' --- Fog --------------------------------------------------------------------
+' Fog
 Public Const GL_FOG As Long = &HB60&
 Public Const GL_FOG_INDEX As Long = &HB61&
 Public Const GL_FOG_DENSITY As Long = &HB62&
@@ -692,7 +664,7 @@ Public Const GL_FOG_COLOR As Long = &HB66&
 Public Const GL_EXP As Long = &H800&
 Public Const GL_EXP2 As Long = &H801&
 
-' --- Planos de recorte ------------------------------------------------------
+' Clip planes
 Public Const GL_CLIP_PLANE0 As Long = &H3000&
 Public Const GL_CLIP_PLANE1 As Long = &H3001&
 Public Const GL_CLIP_PLANE2 As Long = &H3002&
@@ -701,7 +673,7 @@ Public Const GL_CLIP_PLANE4 As Long = &H3004&
 Public Const GL_CLIP_PLANE5 As Long = &H3005&
 Public Const GL_MAX_CLIP_PLANES As Long = &HD32&
 
-' --- Vertex arrays / client state -------------------------------------------
+' Vertex arrays / client state
 Public Const GL_VERTEX_ARRAY As Long = &H8074&
 Public Const GL_NORMAL_ARRAY As Long = &H8075&
 Public Const GL_COLOR_ARRAY As Long = &H8076&
@@ -742,7 +714,7 @@ Public Const GL_T2F_N3F_V3F As Long = &H2A2B&
 Public Const GL_T2F_C4F_N3F_V3F As Long = &H2A2C&
 Public Const GL_T4F_C4F_N3F_V4F As Long = &H2A2D&
 
-' --- Display lists ----------------------------------------------------------
+' Display lists
 Public Const GL_LIST_BASE As Long = &HB32&
 Public Const GL_LIST_INDEX As Long = &HB33&
 Public Const GL_LIST_MODE As Long = &HB30&
@@ -750,7 +722,7 @@ Public Const GL_COMPILE As Long = &H1300&
 Public Const GL_COMPILE_AND_EXECUTE As Long = &H1301&
 Public Const GL_MAX_LIST_NESTING As Long = &HB31&
 
-' --- Bits de glPushAttrib / glPushClientAttrib ------------------------------
+' glPushAttrib / glPushClientAttrib bits
 Public Const GL_CURRENT_BIT As Long = &H1&
 Public Const GL_POINT_BIT As Long = &H2&
 Public Const GL_LINE_BIT As Long = &H4&
@@ -772,7 +744,7 @@ Public Const GL_CLIENT_PIXEL_STORE_BIT As Long = &H1&
 Public Const GL_CLIENT_VERTEX_ARRAY_BIT As Long = &H2&
 Public Const GL_CLIENT_ALL_ATTRIB_BITS As Long = -1&
 
-' --- Consultas gerais -------------------------------------------------------
+' General queries
 Public Const GL_SUBPIXEL_BITS As Long = &HD50&
 Public Const GL_INDEX_BITS As Long = &HD51&
 Public Const GL_RED_BITS As Long = &HD52&
@@ -805,7 +777,7 @@ Public Const GL_RENDERER As Long = &H1F01&
 Public Const GL_VERSION As Long = &H1F02&
 Public Const GL_EXTENSIONS As Long = &H1F03&
 
-' --- Acumulacao -------------------------------------------------------------
+' Accumulation
 Public Const GL_ACCUM As Long = &H100&
 Public Const GL_LOAD As Long = &H101&
 Public Const GL_RETURN As Long = &H102&
@@ -813,7 +785,7 @@ Public Const GL_MULT As Long = &H103&
 Public Const GL_ADD As Long = &H104&
 Public Const GL_ACCUM_CLEAR_VALUE As Long = &HB80&
 
-' --- Evaluators -------------------------------------------------------------
+' Evaluators
 Public Const GL_AUTO_NORMAL As Long = &HD80&
 Public Const GL_COEFF As Long = &HA00&
 Public Const GL_ORDER As Long = &HA01&
@@ -841,7 +813,7 @@ Public Const GL_MAP1_GRID_SEGMENTS As Long = &HDD1&
 Public Const GL_MAP2_GRID_DOMAIN As Long = &HDD2&
 Public Const GL_MAP2_GRID_SEGMENTS As Long = &HDD3&
 
-' --- Selection / feedback ---------------------------------------------------
+' Selection / feedback
 Public Const GL_RENDER As Long = &H1C00&
 Public Const GL_SELECT As Long = &H1C01&
 Public Const GL_FEEDBACK As Long = &H1C02&
@@ -865,7 +837,7 @@ Public Const GL_DRAW_PIXEL_TOKEN As Long = &H705&
 Public Const GL_COPY_PIXEL_TOKEN As Long = &H706&
 Public Const GL_LINE_RESET_TOKEN As Long = &H707&
 
-' --- 13. Pixel format / bootstrap de contexto (GDI) -----------------------
+' 13. Pixel format / context bootstrap (GDI)
 
 Public Declare Function ChoosePixelFormat Lib "gdi32" (ByVal hDC As Long, pPixelFormatDescriptor As PIXELFORMATDESCRIPTOR) As Long
 Public Declare Function SetPixelFormat Lib "gdi32" (ByVal hDC As Long, ByVal PixelFormat As Long, pPixelFormatDescriptor As PIXELFORMATDESCRIPTOR) As Long
@@ -905,24 +877,9 @@ Public Const PFD_FLAG_DUAL_BUFFERED As Long = &H1
 Public Const PFD_FLAG_DRAW_TO_WINDOW As Long = &H4
 Public Const PFD_FLAG_SUPPORT_OPENGL As Long = &H20
 
-' ============================================================================
-' 14. Extensoes OpenGL (carregamento dinamico)
-'
-' O VB6 nao tem ponteiros de funcao. As extensoes (FBO/RBO, e futuramente
-' shaders/VBO) sao resolvidas em runtime com wglGetProcAddress e chamadas por
-' ponteiro via DispCallFunc (oleaut32).
-'
-' DispCallFunc recebe em prgpvarg um array de PONTEIROS para VARIANT (um por
-' argumento) e em prgvt o VarType de cada um. O endereco da funcao vai em oVft
-' com pvInstance = 0 e cc = CC_STDCALL.
-'
-' Uso tipico:
-'   Dim fbo As Long
-'   glGenFramebuffersEXT 1, fbo
-'   glBindFramebufferEXT GL_FRAMEBUFFER, fbo
-' ============================================================================
+' 14. OpenGL extensions (dynamic loading)
 
-' --- Chamada de ponteiro de funcao -----------------------------------------
+' Function pointer call
 
 Private Declare Function DispCallFunc Lib "oleaut32" Alias "DispCallFunc" ( _
     ByVal pvInstance As Long, ByVal oVft As Long, ByVal cc As Long, _
@@ -936,7 +893,7 @@ Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Desti
 
 Private Const CC_STDCALL As Long = 4
 
-' VARTYPEs usados como tipo de argumento/retorno
+' VARTYPEs
 Private Const VT_EMPTY As Integer = 0
 Private Const VT_I2 As Integer = 2
 Private Const VT_I4 As Integer = 3
@@ -944,9 +901,7 @@ Private Const VT_R4 As Integer = 4
 Private Const VT_R8 As Integer = 5
 Private Const VT_UI1 As Integer = 17
 
-' --- Constantes FBO/RBO ----------------------------------------------------
-' Os valores sao identicos entre EXT/ARB/core; os dois nomes sao fornecidos
-' para que o codigo funcione com qualquer estilo de nomenclatura.
+' FBO/RBO constants
 
 ' Framebuffer / renderbuffer
 Public Const GL_FRAMEBUFFER As Long = &H8D40&
@@ -962,7 +917,7 @@ Public Const GL_FRAMEBUFFER_BINDING_EXT As Long = &H8CA6&
 Public Const GL_RENDERBUFFER_BINDING As Long = &H8CA7&
 Public Const GL_RENDERBUFFER_BINDING_EXT As Long = &H8CA7&
 
-' Anexos (attachments)
+' Attachments
 Public Const GL_COLOR_ATTACHMENT0 As Long = &H8CE0&
 Public Const GL_COLOR_ATTACHMENT0_EXT As Long = &H8CE0&
 Public Const GL_COLOR_ATTACHMENT1 As Long = &H8CE1&
@@ -987,7 +942,7 @@ Public Const GL_STENCIL_ATTACHMENT_EXT As Long = &H8D20&
 Public Const GL_DEPTH_STENCIL_ATTACHMENT As Long = &H821A&
 Public Const GL_DEPTH_STENCIL_ATTACHMENT_EXT As Long = &H821A&
 
-' Status do framebuffer
+' Framebuffer status
 Public Const GL_FRAMEBUFFER_COMPLETE As Long = &H8CD5&
 Public Const GL_FRAMEBUFFER_COMPLETE_EXT As Long = &H8CD5&
 Public Const GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT As Long = &H8CD6&
@@ -1005,7 +960,7 @@ Public Const GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_EXT As Long = &H8D56&
 Public Const GL_INVALID_FRAMEBUFFER_OPERATION As Long = &H506&
 Public Const GL_INVALID_FRAMEBUFFER_OPERATION_EXT As Long = &H506&
 
-' Consultas de framebuffer/attachment
+' Framebuffer/attachment queries
 Public Const GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE As Long = &H8CD0&
 Public Const GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME As Long = &H8CD1&
 Public Const GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL As Long = &H8CD2&
@@ -1018,7 +973,7 @@ Public Const GL_MAX_RENDERBUFFER_SIZE_EXT As Long = &H84E8&
 Public Const GL_MAX_SAMPLES As Long = &H8D57&
 Public Const GL_MAX_SAMPLES_EXT As Long = &H8D57&
 
-' Consultas de renderbuffer
+' Renderbuffer queries
 Public Const GL_RENDERBUFFER_WIDTH As Long = &H8D42&
 Public Const GL_RENDERBUFFER_HEIGHT As Long = &H8D43&
 Public Const GL_RENDERBUFFER_INTERNAL_FORMAT As Long = &H8D44&
@@ -1029,7 +984,7 @@ Public Const GL_RENDERBUFFER_ALPHA_SIZE As Long = &H8D53&
 Public Const GL_RENDERBUFFER_DEPTH_SIZE As Long = &H8D54&
 Public Const GL_RENDERBUFFER_STENCIL_SIZE As Long = &H8D55&
 
-' Formatos internos usados como anexo de profundidade/estencil
+' Internal formats for depth/stencil attachments
 Public Const GL_DEPTH_COMPONENT16 As Long = &H81A5&
 Public Const GL_DEPTH_COMPONENT24 As Long = &H81A6&
 Public Const GL_DEPTH_COMPONENT32 As Long = &H81A7&
@@ -1040,24 +995,23 @@ Public Const GL_STENCIL_INDEX4 As Long = &H8D47&
 Public Const GL_STENCIL_INDEX8 As Long = &H8D48&
 Public Const GL_STENCIL_INDEX16 As Long = &H8D49&
 
-' --- Estado do carregador de extensoes --------------------------------------
-' (no VB6 as variaveis de modulo precisam vir antes da primeira Sub/Function)
+' Extension loader state
 
-' Buffer de argumentos (reutilizado entre chamadas; VB6 aqui e single-thread)
+' Argument buffer
 Private mArgType(0 To 15) As Integer
 Private mArgPtr(0 To 15) As Long
 Private mArgVal(0 To 15) As Variant
 Private mArgCount As Long
 Private mResult As Variant
 
-' Handle de opengl32.dll
+' opengl32.dll handle
 Private mGLModule As Long
 
-' Cache da lista de extensoes
+' Extension list cache
 Private mExtensions As String
 Private mExtensionsLoaded As Boolean
 
-' Ponteiros das extensoes FBO/RBO (carregados sob demanda)
+' FBO/RBO extension pointers
 Private mGenFramebuffers As Long
 Private mBindFramebuffer As Long
 Private mDeleteFramebuffers As Long
@@ -1073,7 +1027,7 @@ Private mGenerateMipmap As Long
 Private mFboLoaded As Boolean
 Private mFboReady As Boolean
 
-' Ponteiros das extensoes WGL (swap control / vsync)
+' WGL extension pointers
 Private mSwapIntervalEXT As Long
 Private mGetSwapIntervalEXT As Long
 Private mSwapControlLoaded As Boolean
@@ -1083,7 +1037,6 @@ Private Sub ArgsReset()
     mArgCount = 0
 End Sub
 
-' Empilha um argumento de 4 bytes (inteiro ou ponteiro).
 Private Sub ArgL(ByVal value As Long)
     mArgVal(mArgCount) = value
     mArgType(mArgCount) = VT_I4
@@ -1091,8 +1044,6 @@ Private Sub ArgL(ByVal value As Long)
     mArgCount = mArgCount + 1
 End Sub
 
-' Empilha um ponteiro (VarPtr/StrPtr). Mesma representacao de ArgL, mas deixa
-' a intencao explicita na leitura do codigo.
 Private Sub ArgPtr(ByVal address As Long)
     ArgL address
 End Sub
@@ -1114,22 +1065,18 @@ Private Function Invoke(ByVal pfn As Long, ByVal vtReturn As Integer) As Long
     End If
 End Function
 
-' --- Resolucao de enderecos de extensao ------------------------------------
+' Extension address resolution
 
-' Resolve uma extensao: tenta wglGetProcAddress e cai para GetProcAddress em
-' opengl32.dll (algumas funcoes ARB/core sao exportadas diretamente).
 Public Function GLLoadProc(ByVal procName As String) As Long
     Dim p As Long
     If mGLModule = 0 Then mGLModule = GetModuleHandleA("opengl32.dll")
     p = wglGetProcAddress(procName)
-    ' wglGetProcAddress retorna 1, 2, 3 ou -1 quando a funcao nao existe
     If p = 0 Or p = 1 Or p = 2 Or p = 3 Or p = -1 Then
         p = GetProcAddress(mGLModule, procName)
     End If
     GLLoadProc = p
 End Function
 
-' Tenta o nome EXT e depois o nome core (ex.: glGenFramebuffersEXT/glGenFramebuffers).
 Public Function GLLoadProc2(ByVal extName As String, ByVal coreName As String) As Long
     Dim p As Long
     p = GLLoadProc(extName)
@@ -1137,9 +1084,8 @@ Public Function GLLoadProc2(ByVal extName As String, ByVal coreName As String) A
     GLLoadProc2 = p
 End Function
 
-' --- Strings da GL ---------------------------------------------------------
+' GL strings
 
-' Copia uma string C (char*) para uma String do VB6 (ANSI -> Unicode).
 Private Function CStrFromPtr(ByVal p As Long) As String
     Dim n As Long
     Dim b() As Byte
@@ -1163,7 +1109,7 @@ Public Function GLExtensionSupported(ByVal extension As String) As Boolean
     GLExtensionSupported = (InStr(mExtensions, " " & extension & " ") > 0)
 End Function
 
-' --- Carregamento sob demanda das extensoes FBO/RBO -------------------------
+' FBO/RBO on-demand loading
 
 Private Function LoadFramebufferExtensions() As Boolean
     If mFboLoaded Then
@@ -1196,7 +1142,7 @@ Public Function GLFramebufferSupported() As Boolean
     GLFramebufferSupported = LoadFramebufferExtensions()
 End Function
 
-' --- Framebuffers ----------------------------------------------------------
+' Framebuffers
 
 Public Sub glGenFramebuffersEXT(ByVal n As Long, ByRef framebuffers As Long)
     If LoadFramebufferExtensions() = False Then Exit Sub
@@ -1250,7 +1196,7 @@ Public Function glCheckFramebufferStatusEXT(ByVal target As Long) As Long
     glCheckFramebufferStatusEXT = Invoke(mCheckFramebufferStatus, VT_I4)
 End Function
 
-' --- Renderbuffers ---------------------------------------------------------
+' Renderbuffers
 
 Public Sub glGenRenderbuffersEXT(ByVal n As Long, ByRef renderbuffers As Long)
     If LoadFramebufferExtensions() = False Then Exit Sub
@@ -1293,12 +1239,7 @@ Public Sub glGenerateMipmapEXT(ByVal target As Long)
     Invoke mGenerateMipmap, VT_EMPTY
 End Sub
 
-' --- WGL_EXT_swap_control (vsync) ------------------------------------------
-'
-' O vsync nao e uma extensao do gl* e sim do WGL: wglSwapIntervalEXT(0) desliga
-' e wglSwapIntervalEXT(1) sincroniza com um refresh do monitor. O intervalo so
-' tem efeito quando o contexto atual foi criado com double buffer (e o caso do
-' InitOpenGL). Deve ser chamado com o contexto corrente (wglMakeCurrent feito).
+' WGL_EXT_swap_control (vsync)
 
 Private Function LoadSwapControlExtensions() As Boolean
     If mSwapControlLoaded Then
@@ -1319,7 +1260,6 @@ Public Function GLVSyncSupported() As Boolean
     GLVSyncSupported = LoadSwapControlExtensions()
 End Function
 
-' Intervalo atual de swap: 0 = sem vsync, 1 = vsync, >1 = a cada N refreshes.
 Public Function GLGetSwapInterval() As Long
     If LoadSwapControlExtensions() = False Then Exit Function
     If mGetSwapIntervalEXT = 0 Then Exit Function
@@ -1333,4 +1273,3 @@ Public Sub GLSetSwapInterval(ByVal interval As Long)
     ArgL interval
     Invoke mSwapIntervalEXT, VT_EMPTY
 End Sub
-

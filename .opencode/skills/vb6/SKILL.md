@@ -108,6 +108,23 @@ Consequences that catch you off guard:
   the descriptor. For ANSI C-strings, use a `Byte` array + `StrConv`.
 - For `As Any` with a UDT, pass `ByRef` (not `ByVal`).
 
+### OpenGL / WGL bindings (modOpenGL conventions)
+
+When declaring GL/WGL functions, map the C types like this:
+
+```
+GLenum / GLbitfield / GLint / GLsizei / GLuint -> Long
+GLboolean                                       -> Byte
+GLfloat / GLclampf                              -> Single
+GLdouble / GLclampd                             -> Double
+GLvoid*                                         -> ByVal Long   (call: ByVal VarPtr(data(0)))
+vectors (GLfloat*, GLint*, GLdouble*, ...)      -> ByRef <type> (call: data(0))
+```
+
+- `wglSwapIntervalEXT` (vsync) only takes effect when the current context was
+  created with a double buffer, and it must be called with the context current
+  (`wglMakeCurrent` already done).
+
 ## Function pointers (DispCallFunc)
 
 VB6 has no function pointers. To call an address obtained from

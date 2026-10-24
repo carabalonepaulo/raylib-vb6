@@ -80,10 +80,8 @@ Public Function LoadTilemap(ByVal Id As Integer) As Tilemap
         Close #fileNum
     Next l
 
-    ' =========================================================================
-    ' PRÉ-PROCESSAMENTO: Alinhado 100% com o DrawTexturePro original
-    ' =========================================================================
-    
+    ' Pre-processing
+
     Dim texW As Single, texH As Single
     If map.Tileset.Id <> 0 Then
         texW = map.Tileset.Width
@@ -95,7 +93,7 @@ Public Function LoadTilemap(ByVal Id As Integer) As Tilemap
 
     Dim totalTilesValidos As Long
     totalTilesValidos = 0
-    
+
     Dim ll As Long, yy As Long, xx As Long
     For ll = 0 To CLng(map.Layers) - 1
         For yy = 0 To CLng(map.Height) - 1
@@ -106,67 +104,60 @@ Public Function LoadTilemap(ByVal Id As Integer) As Tilemap
             Next xx
         Next yy
     Next ll
-    
+
     map.TotalVertices = totalTilesValidos * 4
-    
+
     If map.TotalVertices > 0 Then
         ReDim map.Vertices(map.TotalVertices - 1)
         ReDim map.TexCoords(map.TotalVertices - 1)
-        
+
         Dim vIndex As Long
         vIndex = 0
-        
+
         Dim tileId As Long, tileX As Long, tileY As Long
         Dim srcX As Single, srcY As Single
         Dim dstX As Single, dstY As Single
         Dim tw As Single, th As Single
         tw = map.TileWidth
         th = map.TileHeight
-        
+
         Dim cols As Long
         cols = map.TilesetColumns
-        
+
         Dim u1 As Single, v1 As Single, u2 As Single, v2 As Single
-        
+
         For ll = 0 To CLng(map.Layers) - 1
             For yy = 0 To CLng(map.Height) - 1
                 For xx = 0 To CLng(map.Width) - 1
                     tileId = map.Data(ll, xx, yy)
-                    
+
                     If tileId <> -1 Then
                         tileX = tileId Mod cols
                         tileY = tileId \ cols
-                        
-                        ' Cálculo exato de src e dst do seu DrawTexturePro
+
                         srcX = tileX * tw
                         srcY = tileY * th
-                        
+
                         dstX = xx * tw
                         dstY = yy * th
-                        
-                        ' UVs calculadas idênticas ao DrawTexturePro
+
                         u1 = srcX / texW
                         v1 = srcY / texH
                         u2 = (srcX + tw) / texW
                         v2 = (srcY + th) / texH
-                        
-                        ' Vértices mapeados nas posições absolutas de tela (equivalente ao glTranslate + vertices do glBegin)
-                        ' Vértice 1: Top-Left
+
                         map.Vertices(vIndex).x = dstX:          map.Vertices(vIndex).y = dstY
                         map.TexCoords(vIndex).u = u1:         map.TexCoords(vIndex).v = v1
                         vIndex = vIndex + 1
-                        
-                        ' Vértice 2: Top-Right
+
                         map.Vertices(vIndex).x = dstX + tw:     map.Vertices(vIndex).y = dstY
                         map.TexCoords(vIndex).u = u2:         map.TexCoords(vIndex).v = v1
                         vIndex = vIndex + 1
-                        
-                        ' Vértice 3: Bottom-Right
+
                         map.Vertices(vIndex).x = dstX + tw:     map.Vertices(vIndex).y = dstY + th
                         map.TexCoords(vIndex).u = u2:         map.TexCoords(vIndex).v = v2
                         vIndex = vIndex + 1
-                        
-                        ' Vértice 4: Bottom-Left
+
                         map.Vertices(vIndex).x = dstX:          map.Vertices(vIndex).y = dstY + th
                         map.TexCoords(vIndex).u = u1:         map.TexCoords(vIndex).v = v2
                         vIndex = vIndex + 1
@@ -178,33 +169,3 @@ Public Function LoadTilemap(ByVal Id As Integer) As Tilemap
 
     LoadTilemap = map
 End Function
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

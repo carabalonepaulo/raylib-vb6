@@ -52,95 +52,95 @@ Private Declare Function GetKeyNameText Lib "user32" Alias "GetKeyNameTextA" (By
 Private Declare Function MapVirtualKey Lib "user32" Alias "MapVirtualKeyA" (ByVal uCode As Long, ByVal uMapType As Long) As Long
 
 Public Enum KeyboardKey
-    KEY_NULL = 0                ' Key pressed = 0, not used
+    KEY_NULL = 0
 
-    KEY_APOSTROPHE = 39         ' '
-    KEY_COMMA = 44              ' ,
-    KEY_MINUS = 45              ' -
-    KEY_PERIOD = 46             ' .
-    KEY_SLASH = 47              ' /
-    KEY_ZERO = 48               ' 0
-    KEY_ONE = 49                ' 1
-    KEY_TWO = 50                ' 2
-    KEY_THREE = 51              ' 3
-    KEY_FOUR = 52               ' 4
-    KEY_FIVE = 53               ' 5
-    KEY_SIX = 54                ' 6
-    KEY_SEVEN = 55              ' 7
-    KEY_EIGHT = 56              ' 8
-    KEY_NINE = 57               ' 9
-    KEY_SEMICOLON = 59          ' ;
-    KEY_EQUAL = 61              ' =
+    KEY_APOSTROPHE = 39
+    KEY_COMMA = 44
+    KEY_MINUS = 45
+    KEY_PERIOD = 46
+    KEY_SLASH = 47
+    KEY_ZERO = 48
+    KEY_ONE = 49
+    KEY_TWO = 50
+    KEY_THREE = 51
+    KEY_FOUR = 52
+    KEY_FIVE = 53
+    KEY_SIX = 54
+    KEY_SEVEN = 55
+    KEY_EIGHT = 56
+    KEY_NINE = 57
+    KEY_SEMICOLON = 59
+    KEY_EQUAL = 61
 
-    KEY_A = 65                  ' A
-    KEY_B = 66                  ' B
-    KEY_C = 67                  ' C
-    KEY_D = 68                  ' D
-    KEY_E = 69                  ' E
-    KEY_F = 70                  ' F
-    KEY_G = 71                  ' G
-    KEY_H = 72                  ' H
-    KEY_I = 73                  ' I
-    KEY_J = 74                  ' J
-    KEY_K = 75                  ' K
-    KEY_L = 76                  ' L
-    KEY_M = 77                  ' M
-    KEY_N = 78                  ' N
-    KEY_O = 79                  ' O
-    KEY_P = 80                  ' P
-    KEY_Q = 81                  ' Q
-    KEY_R = 82                  ' R
-    KEY_S = 83                  ' S
-    KEY_T = 84                  ' T
-    KEY_U = 85                  ' U
-    KEY_V = 86                  ' V
-    KEY_W = 87                  ' W
-    KEY_X = 88                  ' X
-    KEY_Y = 89                  ' Y
-    KEY_Z = 90                  ' Z
+    KEY_A = 65
+    KEY_B = 66
+    KEY_C = 67
+    KEY_D = 68
+    KEY_E = 69
+    KEY_F = 70
+    KEY_G = 71
+    KEY_H = 72
+    KEY_I = 73
+    KEY_J = 74
+    KEY_K = 75
+    KEY_L = 76
+    KEY_M = 77
+    KEY_N = 78
+    KEY_O = 79
+    KEY_P = 80
+    KEY_Q = 81
+    KEY_R = 82
+    KEY_S = 83
+    KEY_T = 84
+    KEY_U = 85
+    KEY_V = 86
+    KEY_W = 87
+    KEY_X = 88
+    KEY_Y = 89
+    KEY_Z = 90
 
-    KEY_LEFT_BRACKET = 91       ' [
-    KEY_BACKSLASH = 92          ' \
-    KEY_RIGHT_BRACKET = 93      ' ]
-    KEY_GRAVE = 96              ' `
+    KEY_LEFT_BRACKET = 91
+    KEY_BACKSLASH = 92
+    KEY_RIGHT_BRACKET = 93
+    KEY_GRAVE = 96
 
-    KEY_SPACE = 32              ' Space
-    KEY_ESCAPE = 27             ' Esc
-    KEY_ENTER = 13              ' Enter
-    KEY_TAB = 9                 ' Tab
-    KEY_BACKSPACE = 8           ' Backspace
-    KEY_INSERT = 45             ' Insert
-    KEY_DELETE = 46             ' Delete
-    KEY_RIGHT = 39              ' Right arrow
-    KEY_LEFT = 37               ' Left arrow
-    KEY_DOWN = 40               ' Down arrow
-    KEY_UP = 38                 ' Up arrow
-    KEY_PAGE_UP = 33            ' Page up
-    KEY_PAGE_DOWN = 34          ' Page down
-    KEY_HOME = 36               ' Home
-    KEY_END = 35                ' End
-    KEY_CAPS_LOCK = 20          ' Caps lock
-    KEY_SCROLL_LOCK = 145       ' Scroll lock
-    KEY_NUM_LOCK = 144          ' Num lock
-    KEY_PRINT_SCREEN = 44       ' Print screen
-    KEY_PAUSE = 19              ' Pause
+    KEY_SPACE = 32
+    KEY_ESCAPE = 27
+    KEY_ENTER = 13
+    KEY_TAB = 9
+    KEY_BACKSPACE = 8
+    KEY_INSERT = 45
+    KEY_DELETE = 46
+    KEY_RIGHT = 39
+    KEY_LEFT = 37
+    KEY_DOWN = 40
+    KEY_UP = 38
+    KEY_PAGE_UP = 33
+    KEY_PAGE_DOWN = 34
+    KEY_HOME = 36
+    KEY_END = 35
+    KEY_CAPS_LOCK = 20
+    KEY_SCROLL_LOCK = 145
+    KEY_NUM_LOCK = 144
+    KEY_PRINT_SCREEN = 44
+    KEY_PAUSE = 19
 
-    KEY_F1 = 112                ' F1
-    KEY_F2 = 113                ' F2
-    KEY_F3 = 114                ' F3
-    KEY_F4 = 115                ' F4
-    KEY_F5 = 116                ' F5
-    KEY_F6 = 117                ' F6
-    KEY_F7 = 118                ' F7
-    KEY_F8 = 119                ' F8
-    KEY_F9 = 120                ' F9
-    KEY_F10 = 121               ' F10
-    KEY_F11 = 122               ' F11
-    KEY_F12 = 123               ' F12
+    KEY_F1 = 112
+    KEY_F2 = 113
+    KEY_F3 = 114
+    KEY_F4 = 115
+    KEY_F5 = 116
+    KEY_F6 = 117
+    KEY_F7 = 118
+    KEY_F8 = 119
+    KEY_F9 = 120
+    KEY_F10 = 121
+    KEY_F11 = 122
+    KEY_F12 = 123
 
-    KEY_LEFT_SHIFT = 16         ' Shift esquerdo
-    KEY_LEFT_CONTROL = 17       ' Ctrl esquerdo
-    KEY_LEFT_ALT = 18           ' Alt esquerdo
+    KEY_LEFT_SHIFT = 16
+    KEY_LEFT_CONTROL = 17
+    KEY_LEFT_ALT = 18
     KEY_RIGHT_SHIFT = 16
     KEY_RIGHT_CONTROL = 17
     KEY_RIGHT_ALT = 18
@@ -153,7 +153,7 @@ Private Type KeyState
     FramesHeld As Long
 End Type
 
-' GDI+ (carregamento de imagens)
+' GDI+ (image loading)
 
 Private Type GsiStartupInput
     GdiplusVersion As Long
@@ -217,15 +217,14 @@ Public Type Texture2D
     Height As Long
 End Type
 
-' Render target (framebuffer). Texture guarda a cor; Depth.Id guarda o
-' renderbuffer de profundidade (Depth.Width/Height nao sao usados).
+' Render target type
 Public Type RenderTexture2D
     Id As Long
     texture As Texture2D
     depth As Texture2D
 End Type
 
-' Formato dos dados de uma Image (mesmos valores da raylib).
+' Image formats
 Public Enum PixelFormat
     PIXELFORMAT_UNCOMPRESSED_GRAYSCALE = 1
     PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA
@@ -251,11 +250,11 @@ Public Enum PixelFormat
 End Enum
 
 Public Type Image
-    Data() As Byte          ' pixels crus no formato indicado por Format
+    Data() As Byte
     Width As Long
     Height As Long
-    Mipmaps As Long         ' numero de niveis de mipmap (1 = nenhum)
-    Format As Long          ' um valor de PixelFormat
+    Mipmaps As Long
+    Format As Long
 End Type
 
 Public Type GlyphRect
@@ -359,7 +358,7 @@ Private mMonitorHandles() As Long
 Private mMonitorCount As Long
 Private mMonitorsReady As Boolean
 
-' Ruido de Perlin (tabela de permutacao deterministica)
+' Perlin noise
 Private mPerm(0 To 511) As Long
 Private mPermInit As Boolean
 
@@ -377,7 +376,7 @@ Public Yellow As ColorRGBA
 Public Gray As ColorRGBA
 Public Blank As ColorRGBA
 
-' Render target (pilha de framebuffers/viewport ativos)
+' Render target state
 
 Private Const RENDER_STACK_MAX As Long = 16
 Private mRenderFbo(0 To RENDER_STACK_MAX - 1) As Long
@@ -385,7 +384,7 @@ Private mRenderW(0 To RENDER_STACK_MAX - 1) As Long
 Private mRenderH(0 To RENDER_STACK_MAX - 1) As Long
 Private mRenderTop As Long
 
-' Core: janela / monitor / clipboard / cursor (declaracoes Win32)
+' Core declares (Win32)
 
 Private Type Rect
     left As Long
@@ -453,7 +452,7 @@ Private Type GUID
     Data4(0 To 7) As Byte
 End Type
 
-' ConfigFlags (valores identicos aos da raylib)
+' ConfigFlags
 Public Const FLAG_VSYNC_HINT As Long = &H40&
 Public Const FLAG_FULLSCREEN_MODE As Long = &H2&
 Public Const FLAG_WINDOW_RESIZABLE As Long = &H4&
@@ -678,7 +677,7 @@ Public Function GetScreenToWorld2D(ByRef position As Vector2, ByRef camera As Ca
     GetScreenToWorld2D = result
 End Function
 
-' Contexto OpenGL (todas as bindings ficam em modOpenGL)
+' OpenGL context
 
 Private Sub InitImageLoader()
     Dim token As Long
@@ -756,15 +755,10 @@ Private Sub DeinitOpenGL()
     End If
 End Sub
 
-' Vsync (WGL_EXT_swap_control). Se o driver nao expuser a extensao, as
-' chamadas viram no-op. Precisa de contexto corrente e double buffer.
-
 Public Function IsVSyncEnabled() As Boolean
     IsVSyncEnabled = mVSyncOn
 End Function
 
-' Interno: usado por SetConfigFlags/SetWindowState (FLAG_VSYNC_HINT). Se o
-' driver nao expuser WGL_EXT_swap_control, a chamada vira no-op.
 Private Sub SetVSyncInternal(ByVal enabled As Boolean)
     If GLVSyncSupported() = False Then Exit Sub
     mVSyncOn = enabled
@@ -877,9 +871,7 @@ ErrorHandler:
     End
 End Sub
 
-' ============================================================================
-' Core: timing / estado / janela / monitor / clipboard / cursor
-' ============================================================================
+' Core
 
 Private Sub ResetCoreState()
     mMouseScaleX = 1!
@@ -899,7 +891,7 @@ Private Sub ResetCoreState()
     mWindowResized = False
 End Sub
 
-' --- Timing ----------------------------------------------------------------
+' Timing
 
 Public Sub SetTargetFPS(ByVal target As Long)
     If target < 0 Then target = 0
@@ -918,7 +910,6 @@ Public Function GetTime() As Double
     GetTime = mTime
 End Function
 
-' Pausa a execucao por N segundos mantendo a fila de mensagens viva.
 Public Sub WaitTime(ByVal seconds As Double)
     Dim freq As Currency, start As Currency, now As Currency
     If seconds <= 0# Then Exit Sub
@@ -930,7 +921,7 @@ Public Sub WaitTime(ByVal seconds As Double)
     Loop While (CSng(now - start) / CSng(freq)) < seconds
 End Sub
 
-' --- Estado da janela ------------------------------------------------------
+' Window state
 
 Public Function WindowShouldClose() As Boolean
     WindowShouldClose = mShouldQuit
@@ -967,7 +958,7 @@ Public Function IsWindowMaximized() As Boolean
     IsWindowMaximized = (IsZoomed(m_hWnd) <> 0)
 End Function
 
-' --- Janela (setters) ------------------------------------------------------
+' Window (setters)
 
 Public Sub SetWindowTitle(ByVal title As String)
     If m_hWnd = 0 Then Exit Sub
@@ -990,7 +981,6 @@ Public Sub SetWindowPosition(ByVal x As Long, ByVal y As Long)
     SetWindowPos m_hWnd, 0, x, y, 0, 0, SWP_NOSIZE Or SWP_NOZORDER
 End Sub
 
-' Minimo de tamanho via subclass do WndProc (WM_GETMINMAXINFO).
 Public Sub SetWindowMinSize(ByVal Width As Long, ByVal Height As Long)
     mMinSizeW = Width
     mMinSizeH = Height
@@ -1025,7 +1015,7 @@ Public Sub RestoreWindow()
     If m_hWnd <> 0 Then ShowWindow m_hWnd, SW_RESTORE
 End Sub
 
-' --- ConfigFlags / estados -------------------------------------------------
+' ConfigFlags / states
 
 Public Sub SetConfigFlags(ByVal flags As Long)
     mConfigFlags = flags
@@ -1104,7 +1094,7 @@ Private Sub SetTransparent(ByVal enable As Boolean)
     SetWindowLongA m_hWnd, GWL_EXSTYLE, exStyle
 End Sub
 
-' --- Fullscreen ------------------------------------------------------------
+' Fullscreen
 
 Private Sub EnterFullscreen()
     Dim mi As MONITORINFO
@@ -1139,7 +1129,7 @@ Private Sub LeaveFullscreen()
     mFullscreen = False
 End Sub
 
-' --- Subclass (min size) ---------------------------------------------------
+' Subclass (min size)
 
 Private Sub EnsureSubclass()
     If mSubclassed Then Exit Sub
@@ -1173,7 +1163,7 @@ Private Sub DeinitWindowState()
     m_hWnd = 0
 End Sub
 
-' --- Monitor ---------------------------------------------------------------
+' Monitor
 
 Private Sub EnsureMonitors()
     If mMonitorsReady Then Exit Sub
@@ -1183,7 +1173,6 @@ Private Sub EnsureMonitors()
     ReDim mMonitorHandles(0 To 15)
     EnumDisplayMonitors 0, 0, AddressOf EnumMonitorsProc, 0
 
-    ' o monitor primario (0,0) vai para o indice 0, como na raylib
     Dim i As Long
     Dim tmp As MONITORINFO
     Dim tmpH As Long
@@ -1232,7 +1221,6 @@ Public Function GetMonitorHeight(ByVal monitor As Long) As Long
     GetMonitorHeight = mMonitors(monitor).rcMonitor.bottom - mMonitors(monitor).rcMonitor.top
 End Function
 
-' Taxa de atualizacao do monitor atual (usa o dispositivo primario).
 Public Function GetMonitorRefreshRate(ByVal monitor As Long) As Long
     Dim dm As DEVMODE
     dm.dmSize = Len(dm)
@@ -1267,7 +1255,7 @@ Public Function GetWindowScaleDPI() As Vector2
     GetWindowScaleDPI = v
 End Function
 
-' --- Clipboard -------------------------------------------------------------
+' Clipboard
 
 Public Function GetClipboardText() As String
     Dim hData As Long, p As Long, n As Long
@@ -1312,7 +1300,7 @@ Public Sub SetClipboardText(ByVal text As String)
     CloseClipboard
 End Sub
 
-' --- Random ----------------------------------------------------------------
+' Random
 
 Public Function GetRandomValue(ByVal min As Long, ByVal max As Long) As Long
     Dim t As Long
@@ -1327,9 +1315,8 @@ Public Sub SetRandomSeed(ByVal seed As Long)
     Randomize seed
 End Sub
 
-' --- Screenshot ------------------------------------------------------------
+' Screenshot
 
-' Le o framebuffer atual e grava um PNG em fileName.
 Public Sub TakeScreenshot(ByVal fileName As String)
     Dim w As Long, h As Long
     w = screenWidth
@@ -1341,13 +1328,10 @@ Public Sub TakeScreenshot(ByVal fileName As String)
     ReDim pixels(0 To (w * h * 4) - 1)
     ReDim flipped(0 To (w * h * 4) - 1)
 
-    ' Garante que tudo que foi acumulado no lote ja esta no framebuffer.
     rlDrawRenderBatchActive
 
     glReadPixels 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, ByVal VarPtr(pixels(0))
 
-    ' GL entrega de baixo para cima e em RGBA; GDI+ espera de cima para
-    ' baixo e BGRA. Invertemos as linhas e trocamos R<->B.
     Dim rowBytes As Long
     rowBytes = w * 4
     Dim y As Long, x As Long
@@ -1372,7 +1356,6 @@ Private Sub SaveImageAsPng(ByVal path As String, ByRef Data() As Byte, ByVal w A
     If w <= 0 Or h <= 0 Then Exit Sub
     If GdipCreateBitmapFromScan0(w, h, w * 4, PixelFormat32bppARGB, VarPtr(Data(0)), bmp) <> 0 Then Exit Sub
 
-    ' CLSID do encoder PNG: {557CF406-1A04-11D3-9A73-0000F81EF32E}
     clsid.Data1 = &H557CF406
     clsid.Data2 = &H1A04
     clsid.Data3 = &H11D3
@@ -1385,7 +1368,7 @@ Private Sub SaveImageAsPng(ByVal path As String, ByRef Data() As Byte, ByVal w A
     GdipDisposeImage bmp
 End Sub
 
-' --- Cursor ----------------------------------------------------------------
+' Cursor
 
 Public Sub ShowCursor()
     If mCursorHidden Then apiShowCursor True
@@ -1954,9 +1937,8 @@ Public Function LoadImage(ByVal filePath As String) As Image
     LoadImage = resultImage
 End Function
 
-' --- Acesso a pixel (ciente do formato) ------------------------------------
+' Pixel access (format-aware)
 
-' Bytes por pixel de um formato (0 = formato nao suportado).
 Private Function GetPixelDataSize(ByVal format As Long) As Long
     Select Case format
         Case PIXELFORMAT_UNCOMPRESSED_GRAYSCALE: GetPixelDataSize = 1
@@ -1973,7 +1955,6 @@ Private Function GetPixelDataSize(ByVal format As Long) As Long
     End Select
 End Function
 
-' Converte um componente 0..1 para byte, com clamp (evita overflow do CByte).
 Private Function ColorToByte(ByVal v As Single) As Byte
     If v <= 0! Then
         ColorToByte = 0
@@ -1991,7 +1972,6 @@ Private Function GrayFromRGB(ByVal r As Byte, ByVal g As Byte, ByVal b As Byte) 
     GrayFromRGB = CByte(v)
 End Function
 
-' Le um pixel como RGBA, independente do formato.
 Private Sub ReadPixelBytes(ByRef img As Image, ByVal x As Long, ByVal y As Long, ByRef r As Byte, ByRef g As Byte, ByRef b As Byte, ByRef a As Byte)
     Dim idx As Long
     Dim v As Long
@@ -2032,7 +2012,6 @@ Private Sub ReadPixelBytes(ByRef img As Image, ByVal x As Long, ByVal y As Long,
     End Select
 End Sub
 
-' Grava um pixel RGBA no formato da imagem.
 Private Sub WritePixelBytes(ByRef img As Image, ByVal x As Long, ByVal y As Long, ByVal r As Byte, ByVal g As Byte, ByVal b As Byte, ByVal a As Byte)
     Dim idx As Long
     Dim v As Long
@@ -2066,9 +2045,6 @@ Private Sub WritePixelBytes(ByRef img As Image, ByVal x As Long, ByVal y As Long
     End Select
 End Sub
 
-' Converte uma Image em um buffer RGBA8 (4 bytes/pixel), qualquer que seja o
-' formato de origem. A GL 1.1 so amostra RGB/RGBA, entao o upload de textura
-' (e ImageFormat) passa por aqui.
 Private Sub GetImageRGBA8(ByRef img As Image, ByRef out() As Byte)
     Dim x As Long, y As Long
     Dim r As Byte, g As Byte, b As Byte, a As Byte
@@ -2096,7 +2072,7 @@ Private Sub GetImageRGBA8(ByRef img As Image, ByRef out() As Byte)
     Next y
 End Sub
 
-' --- API publica de Image --------------------------------------------------
+' Image public API
 
 Public Function IsImageReady(ByRef img As Image) As Boolean
     IsImageReady = (img.Width > 0) And (img.Height > 0) And (GetPixelDataSize(img.Format) > 0)
@@ -2184,7 +2160,7 @@ Public Sub ImageDraw(ByRef dst As Image, ByRef src As Image, ByRef srcRec As Rec
     Next dstY
 End Sub
 
-' --- Desenho 2D direto nos pixels -----------------------------------------
+' Direct 2D pixel drawing
 Private Function Trunc(ByVal v As Single) As Long
     Trunc = CLng(Fix(v))
 End Function
@@ -2205,7 +2181,6 @@ Private Function MaxF3(ByVal a As Single, ByVal b As Single, ByVal c As Single) 
     MaxF3 = m
 End Function
 
-' Linha por Bresenham (igual a raylib).
 Public Sub ImageDrawLine(ByRef dst As Image, ByVal startPosX As Long, ByVal startPosY As Long, ByVal endPosX As Long, ByVal endPosY As Long, ByRef color As ColorRGBA)
     Dim x As Long, y As Long
     Dim dx As Long, dy As Long
@@ -2253,7 +2228,6 @@ Public Sub ImageDrawLineEx(ByRef dst As Image, ByRef start As Vector2, ByRef fin
         Exit Sub
     End If
 
-    ' deslocamento perpendicular de meia espessura
     ox = (dy / mag) * CSng(thick) / 2!
     oy = -(dx / mag) * CSng(thick) / 2!
 
@@ -2266,7 +2240,6 @@ Public Sub ImageDrawLineEx(ByRef dst As Image, ByRef start As Vector2, ByRef fin
     ImageDrawTriangle dst, p1, p3, p4, color
 End Sub
 
-' Triangulo preenchido por coordenadas baricentricas (independe do winding).
 Public Sub ImageDrawTriangle(ByRef dst As Image, ByRef v1 As Vector2, ByRef v2 As Vector2, ByRef v3 As Vector2, ByRef color As ColorRGBA)
     Dim minX As Long, maxX As Long, minY As Long, maxY As Long
     Dim x As Long, y As Long
@@ -2296,7 +2269,6 @@ Public Sub ImageDrawTriangle(ByRef dst As Image, ByRef v1 As Vector2, ByRef v2 A
     Next y
 End Sub
 
-' Triangulo com interpolacao bilinear de cores nos vertices.
 Public Sub ImageDrawTriangleEx(ByRef dst As Image, ByRef v1 As Vector2, ByRef v2 As Vector2, ByRef v3 As Vector2, ByRef c1 As ColorRGBA, ByRef c2 As ColorRGBA, ByRef c3 As ColorRGBA)
     Dim minX As Long, maxX As Long, minY As Long, maxY As Long
     Dim x As Long, y As Long
@@ -2337,7 +2309,6 @@ Public Sub ImageDrawTriangleLines(ByRef dst As Image, ByRef v1 As Vector2, ByRef
     ImageDrawLineV dst, v3, v1, color
 End Sub
 
-' Triangulos em leque: points(0) e o centro.
 Public Sub ImageDrawTriangleFan(ByRef dst As Image, ByRef points() As Vector2, ByVal pointCount As Long, ByRef color As ColorRGBA)
     Dim i As Long
     If pointCount < 3 Then Exit Sub
@@ -2346,7 +2317,6 @@ Public Sub ImageDrawTriangleFan(ByRef dst As Image, ByRef points() As Vector2, B
     Next i
 End Sub
 
-' Triangulos em tira, com winding alternado.
 Public Sub ImageDrawTriangleStrip(ByRef dst As Image, ByRef points() As Vector2, ByVal pointCount As Long, ByRef color As ColorRGBA)
     Dim i As Long
     If pointCount < 3 Then Exit Sub
@@ -2359,7 +2329,6 @@ Public Sub ImageDrawTriangleStrip(ByRef dst As Image, ByRef points() As Vector2,
     Next i
 End Sub
 
-' Circulo preenchido (varredura horizontal do algoritmo de Bresenham).
 Public Sub ImageDrawCircle(ByRef dst As Image, ByVal centerX As Long, ByVal centerY As Long, ByVal radius As Long, ByRef color As ColorRGBA)
     Dim x As Long, y As Long, de As Long
     x = 0
@@ -2385,7 +2354,6 @@ Public Sub ImageDrawCircleV(ByRef dst As Image, ByRef center As Vector2, ByVal r
     ImageDrawCircle dst, Trunc(center.x), Trunc(center.y), Trunc(radius), color
 End Sub
 
-' Contorno de circulo (8 pontos simetricos).
 Public Sub ImageDrawCircleLines(ByRef dst As Image, ByVal centerX As Long, ByVal centerY As Long, ByVal radius As Long, ByRef color As ColorRGBA)
     Dim x As Long, y As Long, de As Long
     x = 0
@@ -2415,7 +2383,6 @@ Public Sub ImageDrawCircleLinesV(ByRef dst As Image, ByRef center As Vector2, By
     ImageDrawCircleLines dst, Trunc(center.x), Trunc(center.y), Trunc(radius), color
 End Sub
 
-' Contorno de retangulo com espessura.
 Public Sub ImageDrawRectangleLines(ByRef dst As Image, ByRef rec As Rectangle, ByVal thick As Long, ByRef color As ColorRGBA)
     ImageDrawRectangle dst, Trunc(rec.x), Trunc(rec.y), Trunc(rec.Width), thick, color
     ImageDrawRectangle dst, Trunc(rec.x), Trunc(rec.y + rec.Height) - thick, Trunc(rec.Width), thick, color
@@ -2423,7 +2390,7 @@ Public Sub ImageDrawRectangleLines(ByRef dst As Image, ByRef rec As Rectangle, B
     ImageDrawRectangle dst, Trunc(rec.x + rec.Width) - thick, Trunc(rec.y), thick, Trunc(rec.Height), color
 End Sub
 
-' --- Copia, recorte, redimensionamento e transformacoes -------------------
+' Copy, crop, resize, transforms
 
 Private Function NewImageLike(ByVal w As Long, ByVal h As Long, ByVal fmt As Long) As Image
     Dim img As Image
@@ -2452,7 +2419,6 @@ Private Function NextPOT(ByVal v As Long) As Long
     NextPOT = p
 End Function
 
-' Copia profunda (dados crus, mesmo formato).
 Public Function ImageCopy(ByRef image As Image) As Image
     Dim out As Image
     out = NewImageLike(image.Width, image.Height, image.Format)
@@ -2593,7 +2559,6 @@ Public Sub ImageRotateCCW(ByRef image As Image)
     CopyMemory image.Data(0), out(0), newW * newH * bpp
 End Sub
 
-' Rotaciona em multiplos de 90 graus (como a raylib).
 Public Sub ImageRotate(ByRef image As Image, ByVal degrees As Long)
     Dim d As Long
     d = degrees Mod 360
@@ -2601,7 +2566,6 @@ Public Sub ImageRotate(ByRef image As Image, ByVal degrees As Long)
 
     Select Case d
         Case 0
-            ' nada a fazer
         Case 90
             ImageRotateCW image
         Case 180
@@ -2612,7 +2576,6 @@ Public Sub ImageRotate(ByRef image As Image, ByVal degrees As Long)
     End Select
 End Sub
 
-' Redimensiona por vizinho mais proximo (fixed-point 16.16, como a raylib).
 Public Sub ImageResizeNN(ByRef image As Image, ByVal newWidth As Long, ByVal newHeight As Long)
     Dim oldW As Long, oldH As Long
     Dim xRatio As Long, yRatio As Long
@@ -2642,7 +2605,6 @@ Public Sub ImageResizeNN(ByRef image As Image, ByVal newWidth As Long, ByVal new
     image = tmp
 End Sub
 
-' Redimensiona com interpolacao bilinear.
 Public Sub ImageResize(ByRef image As Image, ByVal newWidth As Long, ByVal newHeight As Long)
     Dim oldW As Long, oldH As Long
     Dim scaleX As Double, scaleY As Double
@@ -2700,7 +2662,6 @@ Public Sub ImageResize(ByRef image As Image, ByVal newWidth As Long, ByVal newHe
     image = tmp
 End Sub
 
-' Redimensiona a tela (canvas), preenchendo o que sobra e deslocando a imagem.
 Public Sub ImageResizeCanvas(ByRef image As Image, ByVal newWidth As Long, ByVal newHeight As Long, ByVal offsetX As Long, ByVal offsetY As Long, ByRef fill As ColorRGBA)
     Dim oldW As Long, oldH As Long
     Dim x As Long, y As Long
@@ -2724,7 +2685,6 @@ Public Sub ImageResizeCanvas(ByRef image As Image, ByVal newWidth As Long, ByVal
     image = tmp
 End Sub
 
-' Arredonda largura/altura para a proxima potencia de dois.
 Public Sub ImageToPOT(ByRef image As Image, ByRef fill As ColorRGBA)
     Dim potW As Long, potH As Long
     If IsImageReady(image) = False Then Exit Sub
@@ -2737,7 +2697,7 @@ Public Sub ImageToPOT(ByRef image As Image, ByRef fill As ColorRGBA)
     End If
 End Sub
 
-' --- Operacoes de cor, alpha e formato ------------------------------------
+' Color, alpha and format ops
 
 Private Function ClampByteL(ByVal v As Long) As Byte
     If v < 0 Then
@@ -2755,7 +2715,6 @@ Private Function ClampByteD(ByVal v As Double) As Byte
     ClampByteD = ClampByteL(n)
 End Function
 
-' v em 0..1 -> byte, truncando (como o cast do C).
 Private Function FloatToByte(ByVal v As Double) As Byte
     FloatToByte = ClampByteL(CLng(Int(v * 255#)))
 End Function
@@ -2764,7 +2723,6 @@ Private Function MulByte(ByVal v As Byte, ByVal f As Single) As Byte
     MulByte = ClampByteL(CLng(Int(v * f)))
 End Function
 
-' Trunca os bits baixos de acordo com o num. de bits por canal.
 Private Function QuantBits(ByVal v As Long, ByVal bpp As Long) As Long
     Dim shift As Long
     Dim step As Long
@@ -2825,7 +2783,6 @@ Public Sub ImageColorGrayscale(ByRef image As Image)
     Next y
 End Sub
 
-' contrast varia de -100 a 100.
 Public Sub ImageColorContrast(ByRef image As Image, ByVal contrast As Single)
     Dim x As Long, y As Long
     Dim r As Byte, g As Byte, b As Byte, a As Byte
@@ -2848,7 +2805,6 @@ Public Sub ImageColorContrast(ByRef image As Image, ByVal contrast As Single)
     Next y
 End Sub
 
-' brightness varia de -255 a 255.
 Public Sub ImageColorBrightness(ByRef image As Image, ByVal brightness As Long)
     Dim x As Long, y As Long
     Dim r As Byte, g As Byte, b As Byte, a As Byte
@@ -2887,7 +2843,6 @@ Public Sub ImageColorReplace(ByRef image As Image, ByRef color As ColorRGBA, ByR
     Next y
 End Sub
 
-' Zera (com a cor dada) os pixels com alpha abaixo do limiar.
 Public Sub ImageAlphaClear(ByRef image As Image, ByRef color As ColorRGBA, ByVal threshold As Single)
     Dim x As Long, y As Long
     Dim r As Byte, g As Byte, b As Byte, a As Byte
@@ -2909,7 +2864,6 @@ Public Sub ImageAlphaClear(ByRef image As Image, ByRef color As ColorRGBA, ByVal
     Next y
 End Sub
 
-' Aplica uma mascara de alpha (escalada para o tamanho da imagem).
 Public Sub ImageAlphaMask(ByRef image As Image, ByRef alphaMask As Image)
     Dim x As Long, y As Long
     Dim r As Byte, g As Byte, b As Byte, a As Byte
@@ -2936,7 +2890,6 @@ Public Sub ImageAlphaMask(ByRef image As Image, ByRef alphaMask As Image)
     Next y
 End Sub
 
-' Multiplica RGB por alpha (pre-multiplicacao).
 Public Sub ImageAlphaPremultiply(ByRef image As Image)
     Dim x As Long, y As Long
     Dim r As Byte, g As Byte, b As Byte, a As Byte
@@ -2953,7 +2906,6 @@ Public Sub ImageAlphaPremultiply(ByRef image As Image)
     Next y
 End Sub
 
-' Converte para outro PixelFormat (via RGBA8).
 Public Sub ImageFormat(ByRef image As Image, ByVal newFormat As Long)
     Dim tmp As Image
     Dim x As Long, y As Long
@@ -2972,7 +2924,6 @@ Public Sub ImageFormat(ByRef image As Image, ByVal newFormat As Long)
     image = tmp
 End Sub
 
-' Reduz a metade por media 2x2 (usado na cadeia de mipmaps).
 Private Function DownscaleHalf(ByRef src As Image) As Image
     Dim nw As Long, nh As Long
     Dim dst As Image
@@ -3007,7 +2958,6 @@ Private Function DownscaleHalf(ByRef src As Image) As Image
     DownscaleHalf = dst
 End Function
 
-' Gera a cadeia de mipmaps, concatenada em Data (nivel 0 primeiro).
 Public Sub ImageMipmaps(ByRef image As Image)
     Dim levels As Long
     Dim bpp As Long
@@ -3053,7 +3003,6 @@ Public Sub ImageMipmaps(ByRef image As Image)
     image.Mipmaps = levels
 End Sub
 
-' Desfoque gaussiano separavel (raio = blurSize).
 Public Sub ImageBlurGaussian(ByRef image As Image, ByVal blurSize As Long)
     Dim radius As Long, ksz As Long
     Dim sigma As Double
@@ -3092,7 +3041,6 @@ Public Sub ImageBlurGaussian(ByRef image As Image, ByVal blurSize As Long)
     ReDim hb(0 To w * h - 1)
     ReDim ha(0 To w * h - 1)
 
-    ' passada horizontal
     For y = 0 To h - 1
         For x = 0 To w - 1
             accR = 0#: accG = 0#: accB = 0#: accA = 0#
@@ -3114,7 +3062,6 @@ Public Sub ImageBlurGaussian(ByRef image As Image, ByVal blurSize As Long)
         Next x
     Next y
 
-    ' passada vertical
     For y = 0 To h - 1
         For x = 0 To w - 1
             accR = 0#: accG = 0#: accB = 0#: accA = 0#
@@ -3133,7 +3080,6 @@ Public Sub ImageBlurGaussian(ByRef image As Image, ByVal blurSize As Long)
     Next y
 End Sub
 
-' Dithering de Floyd-Steinberg reduzindo os bits por canal.
 Public Sub ImageDither(ByRef image As Image, ByVal rBpp As Long, ByVal gBpp As Long, ByVal bBpp As Long, ByVal aBpp As Long)
     Dim w As Long, h As Long
     Dim x As Long, y As Long, i As Long
@@ -3209,7 +3155,7 @@ Public Sub ImageDither(ByRef image As Image, ByVal rBpp As Long, ByVal gBpp As L
     Next y
 End Sub
 
-' --- Carregamento da tela/textura, exportacao -----------------------------
+' Screen/texture loading, export
 
 Private Sub FlipRGBAVertical(ByRef data() As Byte, ByVal w As Long, ByVal h As Long)
     Dim rowBytes As Long
@@ -3227,7 +3173,6 @@ Private Sub FlipRGBAVertical(ByRef data() As Byte, ByVal w As Long, ByVal h As L
     Next y
 End Sub
 
-' Captura o framebuffer atual (o GL le de baixo para cima; viramos as linhas).
 Public Function LoadImageFromScreen() As Image
     Dim img As Image
 
@@ -3249,8 +3194,6 @@ Public Function LoadImageFromScreen() As Image
     LoadImageFromScreen = img
 End Function
 
-' Le os pixels de uma textura (glGetTexImage). O GL devolve as linhas na mesma
-' ordem em que foram enviadas (de cima para baixo), entao nao ha inversao.
 Public Function LoadImageFromTexture(ByRef texture As Texture2D) As Image
     Dim img As Image
 
@@ -3272,7 +3215,6 @@ Public Function LoadImageFromTexture(ByRef texture As Texture2D) As Image
     LoadImageFromTexture = img
 End Function
 
-' Troca R<->B em um buffer RGBA8 (o GDI+ guarda 32bppARGB como B,G,R,A).
 Private Sub SwapRgbaToBgra(ByRef data() As Byte)
     Dim i As Long
     Dim t As Byte
@@ -3283,7 +3225,6 @@ Private Sub SwapRgbaToBgra(ByRef data() As Byte)
     Next i
 End Sub
 
-' Exporta a imagem como PNG (via GDI+).
 Public Function ExportImage(ByRef image As Image, ByVal fileName As String) As Boolean
     Dim px() As Byte
     If IsImageReady(image) = False Then Exit Function
@@ -3337,7 +3278,6 @@ Private Function ByteArrayToCode(ByRef data() As Byte) As String
     ByteArrayToCode = out
 End Function
 
-' Exporta os pixels crus como um cabecalho C com array de bytes.
 Public Function ExportImageAsCode(ByRef image As Image, ByVal fileName As String) As Boolean
     Dim f As Integer
     Dim id As String
@@ -3367,7 +3307,6 @@ Public Function ExportImageAsCode(ByRef image As Image, ByVal fileName As String
     ExportImageAsCode = True
 End Function
 
-' Retangulo que delimita os pixels com alpha acima do limiar.
 Public Function GetImageAlphaBorder(ByRef image As Image, ByVal threshold As Single) As Rectangle
     Dim x As Long, y As Long
     Dim r As Byte, g As Byte, b As Byte, a As Byte
@@ -3401,7 +3340,7 @@ Public Function GetImageAlphaBorder(ByRef image As Image, ByVal threshold As Sin
     GetImageAlphaBorder = rect
 End Function
 
-' --- Cores e paleta --------------------------------------------------------
+' Colors and palette
 
 Private Function SameColor(ByRef a As ColorRGBA, ByRef b As ColorRGBA) As Boolean
     SameColor = (ColorToByte(a.r) = ColorToByte(b.r)) And _
@@ -3410,8 +3349,6 @@ Private Function SameColor(ByRef a As ColorRGBA, ByRef b As ColorRGBA) As Boolea
                 (ColorToByte(a.a) = ColorToByte(b.a))
 End Function
 
-' Devolve um array de cores (a raylib devolve Color*; aqui o array dispensa
-' o UnloadImageColors).
 Public Function LoadImageColors(ByRef image As Image) As ColorRGBA()
     Dim out() As ColorRGBA
     Dim x As Long, y As Long
@@ -3434,7 +3371,6 @@ Public Function LoadImageColors(ByRef image As Image) As ColorRGBA()
     LoadImageColors = out
 End Function
 
-' Extrai as cores mais frequentes (ate maxPaletteSize).
 Public Function LoadImagePalette(ByRef image As Image, ByVal maxPaletteSize As Long, ByRef colorCount As Long) As ColorRGBA()
     Dim palette() As ColorRGBA
     Dim counts() As Long
@@ -3475,7 +3411,6 @@ Public Function LoadImagePalette(ByRef image As Image, ByVal maxPaletteSize As L
         Next x
     Next y
 
-    ' ordena por frequencia decrescente (bubble)
     For i = 0 To n - 2
         For j = 0 To n - 2 - i
             If counts(j) < counts(j + 1) Then
@@ -3498,7 +3433,7 @@ Public Function LoadImagePalette(ByRef image As Image, ByVal maxPaletteSize As L
     LoadImagePalette = out
 End Function
 
-' --- Geracao de imagens ----------------------------------------------------
+' Image generation
 
 Private Function MakeGray(ByVal gray As Byte) As ColorRGBA
     Dim c As ColorRGBA
@@ -3668,7 +3603,7 @@ Public Function GenImageWhiteNoise(ByVal width As Long, ByVal height As Long, By
     GenImageWhiteNoise = img
 End Function
 
-' --- Ruido (Perlin / cellular) --------------------------------------------
+' Noise (Perlin / cellular)
 
 Private Sub InitPerlin()
     Dim i As Long, j As Long, t As Long
@@ -3681,7 +3616,6 @@ Private Sub InitPerlin()
         p(i) = i
     Next i
 
-    ' embaralhamento deterministico (LCG com valores seguros para Long)
     s = 12345
     For i = 255 To 1 Step -1
         s = (s * 1103 + 12345) Mod 32749
@@ -3770,7 +3704,6 @@ Public Function GenImagePerlinNoise(ByVal width As Long, ByVal height As Long, B
     GenImagePerlinNoise = img
 End Function
 
-' Ruido cellular (Worley): pontos por celula, valor pela distancia ao mais proximo.
 Public Function GenImageCellular(ByVal width As Long, ByVal height As Long, ByVal tileSize As Long) As Image
     Dim img As Image
     Dim x As Long, y As Long, i As Long
@@ -3865,7 +3798,7 @@ Public Sub UnloadTexture(ByVal textureId As Long)
     End If
 End Sub
 
-' Render target (framebuffer object)
+' Render target
 
 Public Function LoadRenderTexture(ByVal Width As Long, ByVal Height As Long) As RenderTexture2D
     Dim rt As RenderTexture2D
@@ -3889,14 +3822,11 @@ Public Function LoadRenderTexture(ByVal Width As Long, ByVal Height As Long) As 
         Exit Function
     End If
 
-    ' guarda o framebuffer atual para restaurar no final
     glGetIntegerv GL_FRAMEBUFFER_BINDING, prevFbo
 
-    ' framebuffer
     glGenFramebuffersEXT 1, rt.Id
     glBindFramebufferEXT GL_FRAMEBUFFER, rt.Id
 
-    ' textura de cor
     glGenTextures 1, rt.texture.Id
     glBindTexture GL_TEXTURE_2D, rt.texture.Id
     glTexImage2D GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0
@@ -3906,7 +3836,6 @@ Public Function LoadRenderTexture(ByVal Width As Long, ByVal Height As Long) As 
     glTexParameteri GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE
     glFramebufferTexture2DEXT GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt.texture.Id, 0
 
-    ' renderbuffer de profundidade
     glGenRenderbuffersEXT 1, rt.depth.Id
     glBindRenderbufferEXT GL_RENDERBUFFER, rt.depth.Id
     glRenderbufferStorageEXT GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, Width, Height
@@ -3915,10 +3844,8 @@ Public Function LoadRenderTexture(ByVal Width As Long, ByVal Height As Long) As 
     rt.texture.Width = Width
     rt.texture.Height = Height
 
-    ' verifica enquanto o FBO ainda esta ligado
     status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER)
 
-    ' desliga e restaura o alvo anterior
     glBindFramebufferEXT GL_FRAMEBUFFER, prevFbo
     glBindTexture GL_TEXTURE_2D, 0
     glBindRenderbufferEXT GL_RENDERBUFFER, 0
@@ -4033,12 +3960,7 @@ Public Sub BeginDrawing()
     rlLoadIdentity
 End Sub
 
-' Render target: redireciona o desenho para um framebuffer.
-'
-' Dentro do BeginTextureMode as coordenadas continuam sendo y-para-baixo iguais
-' as da tela: a projecao usa rlOrtho(0, w, 0, h), que inverte a textura em
-' relacao ao framebuffer, e o DrawTexture inverte de volta ao exibir. O efeito
-' liquido e identidade, sem precisar mexer em nenhum codigo de desenho.
+' Render target mode
 Public Sub BeginTextureMode(ByRef target As RenderTexture2D)
     Dim prevFbo As Long
     Dim vp(0 To 3) As Long
@@ -4046,8 +3968,6 @@ Public Sub BeginTextureMode(ByRef target As RenderTexture2D)
     If mRenderTop >= RENDER_STACK_MAX Then Exit Sub
     If target.Id = 0 Then Exit Sub
 
-    ' O lote pendente pertence ao alvo anterior: precisa ser desenhado antes de
-    ' trocar o framebuffer.
     rlDrawRenderBatchActive
 
     glGetIntegerv GL_FRAMEBUFFER_BINDING, prevFbo
@@ -4074,8 +3994,6 @@ End Sub
 Public Sub EndTextureMode()
     If mRenderTop <= 0 Then Exit Sub
 
-    ' Desenha o que foi acumulado dentro do alvo antes de voltar ao framebuffer
-    ' anterior.
     rlDrawRenderBatchActive
 
     mRenderTop = mRenderTop - 1

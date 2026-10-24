@@ -1,28 +1,13 @@
 Attribute VB_Name = "modDebug"
 Option Explicit
 
-' --- Declares de baixo nivel (timer query da GPU) --------------------------
+' Low-level declares
 
 Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (Destination As Any, Source As Any, ByVal Length As Long)
 Private Declare Function lstrlenA Lib "kernel32" (ByVal lpString As Long) As Long
 Private Declare Function DispCallFunc Lib "oleaut32.dll" (ByVal pvInstance As Long, ByVal oVft As Long, ByVal cc As Long, ByVal vtReturn As Integer, ByVal cActuals As Long, ByVal prgvt As Long, ByVal prgpvarg As Long, ByVal pvargResult As Long) As Long
 
-' ============================================================================
-' modDebug - diagnostic overlay (rolling plot) for the game loop.
-'
-' Not part of the raylib API: it is a project convenience. Each frame it
-' collects frame time, CPU time spent in Game_Update and Game_Draw, GPU time
-' (via timer query, when the driver exposes it) and the rlgl statistics
-' (draw calls / vertices). The core calls the timing markers; the overlay is
-' drawn and toggled by the user, who owns the font.
-'
-' Usage:
-'   Game_Load:    DebugInit font
-'   Game_Update:  If IsKeyPressed(KEY_F1) Then DebugToggle
-'   Game_Draw:    DebugDrawOverlay   (before EndDrawing)
-' ============================================================================
-
-' Metricas disponiveis no plot (valores em milissegundos).
+' Metrics (values in milliseconds)
 Public Enum DebugMetric
     DEBUGM_FRAME = 0
     DEBUGM_UPDATE = 1
@@ -32,14 +17,12 @@ End Enum
 
 Private Const DEBUG_DEFAULT_SAMPLES As Long = 240
 
-' Constantes do timer query (ARB/EXT_timer_query). O sufixo & forca o literal
-' a Long: sem ele o VB6 interpreta hex com o bit alto ligado como Integer negativo.
 Private Const GL_EXTENSIONS As Long = &H1F03&
 Private Const GL_TIME_ELAPSED As Long = &H88BF&
 Private Const GL_QUERY_RESULT As Long = &H8866&
 Private Const GL_QUERY_RESULT_AVAILABLE As Long = &H8867&
 
-' --- Estado do modulo ------------------------------------------------------
+' Module state
 
 Private mCap As Long
 Private mCount As Long
@@ -48,7 +31,7 @@ Private mVisible As Boolean
 Private mFont As ImageFont
 Private mFontSet As Boolean
 
-' Ring buffers (um valor por frame; mCount <= mCap).
+' Ring buffers
 Private mFrameMs() As Single
 Private mUpdateMs() As Single
 Private mDrawMs() As Single
@@ -56,7 +39,7 @@ Private mGpuMs() As Single
 Private mDrawCalls() As Long
 Private mVertices() As Long
 
-' Valores do frame atual.
+' Current frame values
 Private mCurFrameMs As Single
 Private mCurUpdateMs As Single
 Private mCurDrawMs As Single
@@ -67,11 +50,11 @@ Private mCurVertices As Long
 Private mT0 As Currency
 Private mFreq As Currency
 
-' Overlay.
+' Overlay state
 Private mOverlayMs As Single
 Private mGpuAvailable As Boolean
 
-' Timer query da GPU (GL_ARB_timer_query / GL_EXT_timer_query).
+' GPU timer query state
 Private mGpuUse64 As Boolean
 Private mFnGpuGen As Long
 Private mFnGpuBegin As Long
@@ -84,12 +67,8 @@ Private mGpuQUsed As Long
 Private mGpuActive As Boolean
 Private mGpuStatus As String
 
-' ============================================================================
-' Ciclo de vida / controle
-' ============================================================================
+' Lifecycle
 
-' Guarda a fonte usada pelo overlay e aloca o historico. Chamar uma vez (ex. no
-' Game_Load). Sem a fonte o overlay nao tem como desenhar texto.
 Public Sub DebugInit(ByRef font As ImageFont, Optional ByVal maxSamples As Long = DEBUG_DEFAULT_SAMPLES)
     If maxSamples < 8 Then maxSamples = 8
     mCap = maxSamples
@@ -124,9 +103,7 @@ Private Function DebugReady() As Boolean
     DebugReady = (mCap > 0)
 End Function
 
-' ============================================================================
-' Marcadores do frame (chamados pelo Run)
-' ============================================================================
+' Frame markers
 
 Public Sub DebugBeginFrame()
     If DebugReady() = False Then Exit Sub
@@ -150,7 +127,6 @@ End Sub
 
 Public Sub DebugEndDraw()
     If DebugReady() = False Then Exit Sub
-    ' Desconta o custo do proprio overlay (ele roda dentro de Game_Draw).
     mCurDrawMs = ElapsedMs() - mOverlayMs
     If mCurDrawMs < 0! Then mCurDrawMs = 0!
 End Sub
@@ -162,7 +138,6 @@ Private Function ElapsedMs() As Single
     ElapsedMs = CSng(CDbl(t - mT0) * 1000# / CDbl(mFreq))
 End Function
 
-' Fecha o frame: registra o tempo de frame (wall clock) e empurra a amostra.
 Public Sub DebugEndFrame(ByVal frameDt As Single)
     If DebugReady() = False Then Exit Sub
 
@@ -182,9 +157,7 @@ Public Sub DebugEndFrame(ByVal frameDt As Single)
     If mCount < mCap Then mCount = mCount + 1
 End Sub
 
-' ============================================================================
-' Consulta (usado pelo overlay e por testes)
-' ============================================================================
+' Queries
 
 Public Function DebugGetCount() As Long
     DebugGetCount = mCount
@@ -217,8 +190,6 @@ Public Function DebugAverage(ByVal metric As DebugMetric) As Single
     DebugAverage = s / CSng(mCount)
 End Function
 
-' Media dos piores 1% dos frames ("1% low"), em ms. Usa selecao parcial, sem
-' ordenar o buffer inteiro (k e no maximo ~1% de mCap).
 Public Function DebugLow1(ByVal metric As DebugMetric) As Single
     Dim i As Long, j As Long, k As Long, s As Single
     Dim worst As Single
@@ -227,7 +198,6 @@ Public Function DebugLow1(ByVal metric As DebugMetric) As Single
     k = mCount \ 100
     If k < 1 Then k = 1
 
-    ' Acumula os k maiores por insercao num buffer local de tamanho k.
     Dim buf() As Single
     ReDim buf(0 To k - 1)
     Dim filled As Long
@@ -260,7 +230,6 @@ Public Function DebugLow1(ByVal metric As DebugMetric) As Single
     DebugLow1 = s / CSng(k)
 End Function
 
-' i = 0 devolve a amostra mais antiga do historico.
 Private Function MetricAt(ByVal metric As DebugMetric, ByVal i As Long) As Single
     Dim idx As Long
     If mCount < mCap Then
@@ -276,7 +245,6 @@ Private Function MetricAt(ByVal metric As DebugMetric, ByVal i As Long) As Singl
     End Select
 End Function
 
-' i = 0 devolve a amostra mais antiga (mais a esquerda no plot).
 Public Function DebugSample(ByVal metric As DebugMetric, ByVal i As Long) As Single
     If i < 0 Or i >= mCount Then Exit Function
     DebugSample = MetricAt(metric, i)
@@ -302,18 +270,8 @@ Public Function DebugVertexCount() As Long
     DebugVertexCount = mCurVertices
 End Function
 
-' ============================================================================
-' Timer query da GPU (GL_ARB_timer_query / GL_EXT_timer_query)
-'
-' OpenGL 1.1 nao tem query de tempo; usamos a extensao quando o driver expoe,
-' carregando os ponteiros via wglGetProcAddress e chamando-os pelo DispCallFunc.
-' Se a extensao nao existir, mGpuAvailable fica False e o overlay mostra "n/a".
-' ============================================================================
+' GPU timer query
 
-' Chamada generica stdcall de ate 3 argumentos Long (ponteiros entram como
-' ByVal Long). O DispCallFunc espera, para cada argumento, um ponteiro para um
-' VARIANT (nao o valor cru), e o pvargResult tem que apontar para um VARIANT
-' valido mesmo quando a funcao retorna void.
 Private Function CallGL3(ByVal addr As Long, ByVal a1 As Long, ByVal a2 As Long, ByVal a3 As Long, ByVal nargs As Long) As Long
     Dim vt(0 To 2) As Integer
     Dim av(0 To 2) As Long
@@ -326,7 +284,7 @@ Private Function CallGL3(ByVal addr As Long, ByVal a1 As Long, ByVal a2 As Long,
     If nargs > 2 Then vv(2) = a3
 
     For i = 0 To nargs - 1
-        vt(i) = 3                      ' VT_I4
+        vt(i) = 3
         av(i) = VarPtr(vv(i))
     Next i
 
@@ -407,7 +365,6 @@ Private Sub GpuInit()
     mGpuStatus = prefix & "-ok"
 End Sub
 
-' Inicia a query antes do flush do lote.
 Public Sub DebugGpuBegin()
     If mGpuAvailable = False Then Exit Sub
     mGpuActive = False
@@ -415,7 +372,6 @@ Public Sub DebugGpuBegin()
     mGpuActive = True
 End Sub
 
-' Termina a query depois do flush e le o resultado do frame anterior (sem stall).
 Public Sub DebugGpuEnd()
     Dim other As Long
     Dim avail As Long
@@ -450,9 +406,7 @@ Public Sub DebugGpuEnd()
     mGpuQIdx = other
 End Sub
 
-' ============================================================================
-' Overlay (drawn by the user, already in screen space)
-' ============================================================================
+' Overlay
 
 Public Sub DebugDrawOverlay()
     Dim t0 As Currency, t1 As Currency
@@ -494,15 +448,12 @@ Private Sub DebugPlot(ByVal x As Single, ByVal y As Single, ByVal w As Single, B
     rowH = (y + h - pad - topY) / 4!
     If rowH < fh + 6! Then rowH = fh + 6!
 
-    ' 1) paineis e rotulos
     For i = 0 To 3
         DebugRowPanel x + pad, topY + CSng(i) * rowH, w - pad * 2!, rowH, i
     Next i
 
-    ' 2) marcadores de 1 segundo
     DebugGrid x + pad, topY, w - pad * 2!, rowH * 4!
 
-    ' 3) linhas do plot
     For i = 0 To 3
         DebugRowLine x + pad, topY + CSng(i) * rowH, w - pad * 2!, rowH, i
     Next i
@@ -573,8 +524,6 @@ Private Sub DebugRowLine(ByVal x As Single, ByVal y As Single, ByVal w As Single
     PlotPolyline x, plotY, w, plotH, metric, mx, col
 End Sub
 
-' Polilinha usando o rlgl direto (1 vertice por amostra; bem mais barato que
-' DrawLine por segmento).
 Private Sub PlotPolyline(ByVal x As Single, ByVal y As Single, ByVal w As Single, ByVal h As Single, ByVal metric As DebugMetric, ByVal maxV As Single, ByRef col As ColorRGBA)
     Dim i As Long
     Dim n As Long
@@ -601,7 +550,6 @@ Private Sub PlotPolyline(ByVal x As Single, ByVal y As Single, ByVal w As Single
     rlEnd
 End Sub
 
-' Linhas verticais a cada 1 segundo de historico.
 Private Sub DebugGrid(ByVal x As Single, ByVal y As Single, ByVal w As Single, ByVal h As Single)
     Dim i As Long, n As Long
     Dim acc As Single, lastSec As Long
