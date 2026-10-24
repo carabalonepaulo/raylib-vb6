@@ -3914,8 +3914,6 @@ Public Function LoadImageFont(ByVal filePath As String, ByVal CharList As String
     Dim sepCol As ColorRGBA
     sepCol = GetImageColor(img, 0, 0)
 
-    ' Read the font size (height) encoded in the first column: a marker pixel
-    ' whose color differs from the separator color (magenta) at row = font size.
     Dim markerY As Long
     Dim yy As Long
     markerY = -1

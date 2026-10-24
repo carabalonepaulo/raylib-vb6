@@ -39,6 +39,9 @@ fall out of date with the code.
 
 - `src/*.bas` are read by VB6 as ANSI/28591: keep them purely ASCII, with
   comments without accents.
+- Do not add explanatory comments to source code. The only comments allowed in
+  `src/*.bas` are section separators, matching the existing style (e.g.
+  `' Texture`, `' Mouse`). No other comments, docstrings, or inline notes.
 - On-screen text uses only `ImageFont` (bitmap font); there is no TTF or font
   loading.
 - The low-level layer uses the `rl` prefix and only OpenGL 1.1.
