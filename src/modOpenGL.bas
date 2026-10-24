@@ -995,6 +995,29 @@ Public Const GL_STENCIL_INDEX4 As Long = &H8D47&
 Public Const GL_STENCIL_INDEX8 As Long = &H8D48&
 Public Const GL_STENCIL_INDEX16 As Long = &H8D49&
 
+' Shader objects
+
+Public Const GL_VERTEX_SHADER_ARB As Long = &H8B31&
+Public Const GL_FRAGMENT_SHADER_ARB As Long = &H8B30&
+Public Const GL_OBJECT_COMPILE_STATUS_ARB As Long = &H8B81&
+Public Const GL_OBJECT_LINK_STATUS_ARB As Long = &H8B82&
+Public Const GL_OBJECT_VALIDATE_STATUS_ARB As Long = &H8B83&
+Public Const GL_OBJECT_INFO_LOG_LENGTH_ARB As Long = &H8B84&
+Public Const GL_OBJECT_ACTIVE_UNIFORMS_ARB As Long = &H8B86&
+Public Const GL_OBJECT_ACTIVE_UNIFORM_MAX_LENGTH_ARB As Long = &H8B87&
+Public Const GL_MAX_VERTEX_ATTRIBS_ARB As Long = &H8869&
+Public Const GL_SHADING_LANGUAGE_VERSION_ARB As Long = &H8B8C&
+Public Const GL_CURRENT_PROGRAM As Long = &H8B8D&
+Public Const GL_VALIDATE_STATUS As Long = &H8B83&
+
+' Texture units
+
+Public Const GL_TEXTURE0_ARB As Long = &H84C0&
+Public Const GL_TEXTURE1_ARB As Long = &H84C1&
+Public Const GL_TEXTURE2_ARB As Long = &H84C2&
+Public Const GL_TEXTURE3_ARB As Long = &H84C3&
+Public Const GL_ACTIVE_TEXTURE_ARB As Long = &H84E0&
+
 ' Extension loader state
 
 ' Argument buffer
@@ -1033,6 +1056,44 @@ Private mGetSwapIntervalEXT As Long
 Private mSwapControlLoaded As Boolean
 Private mSwapControlReady As Boolean
 
+' Shader extension pointers
+Private mCreateShader As Long
+Private mDeleteShader As Long
+Private mShaderSource As Long
+Private mCompileShader As Long
+Private mGetShaderiv As Long
+Private mGetShaderInfoLog As Long
+Private mCreateProgram As Long
+Private mDeleteProgram As Long
+Private mAttachShader As Long
+Private mDetachShader As Long
+Private mLinkProgram As Long
+Private mUseProgram As Long
+Private mGetUniformLocation As Long
+Private mGetAttribLocation As Long
+Private mBindAttribLocation As Long
+Private mUniform1f As Long
+Private mUniform1i As Long
+Private mUniform2f As Long
+Private mUniform3f As Long
+Private mUniform4f As Long
+Private mUniform1fv As Long
+Private mUniform2fv As Long
+Private mUniform3fv As Long
+Private mUniform4fv As Long
+Private mUniform1iv As Long
+Private mUniform2iv As Long
+Private mUniform3iv As Long
+Private mUniform4iv As Long
+Private mUniformMatrix4fv As Long
+Private mVertexAttribPointer As Long
+Private mEnableVertexAttribArray As Long
+Private mDisableVertexAttribArray As Long
+Private mActiveTexture As Long
+
+Private mShaderLoaded As Boolean
+Private mShaderReady As Boolean
+
 Private Sub ArgsReset()
     mArgCount = 0
 End Sub
@@ -1040,6 +1101,13 @@ End Sub
 Private Sub ArgL(ByVal value As Long)
     mArgVal(mArgCount) = value
     mArgType(mArgCount) = VT_I4
+    mArgPtr(mArgCount) = VarPtr(mArgVal(mArgCount))
+    mArgCount = mArgCount + 1
+End Sub
+
+Private Sub ArgF(ByVal value As Single)
+    mArgVal(mArgCount) = value
+    mArgType(mArgCount) = VT_R4
     mArgPtr(mArgCount) = VarPtr(mArgVal(mArgCount))
     mArgCount = mArgCount + 1
 End Sub
@@ -1272,4 +1340,379 @@ Public Sub GLSetSwapInterval(ByVal interval As Long)
     ArgsReset
     ArgL interval
     Invoke mSwapIntervalEXT, VT_EMPTY
+End Sub
+' Shader objects on demand loading
+
+Private Function LoadShaderExtensions() As Boolean
+    If mShaderLoaded Then
+        LoadShaderExtensions = mShaderReady
+        Exit Function
+    End If
+    mShaderLoaded = True
+
+    mCreateShader = GLLoadProc2("glCreateShaderObjectARB", "glCreateShader")
+    mDeleteShader = GLLoadProc2("glDeleteObjectARB", "glDeleteShader")
+    mShaderSource = GLLoadProc2("glShaderSourceARB", "glShaderSource")
+    mCompileShader = GLLoadProc2("glCompileShaderARB", "glCompileShader")
+    mGetShaderiv = GLLoadProc2("glGetObjectParameterivARB", "glGetShaderiv")
+    mGetShaderInfoLog = GLLoadProc2("glGetInfoLogARB", "glGetShaderInfoLog")
+    mCreateProgram = GLLoadProc2("glCreateProgramObjectARB", "glCreateProgram")
+    mDeleteProgram = GLLoadProc2("glDeleteObjectARB", "glDeleteProgram")
+    mAttachShader = GLLoadProc2("glAttachObjectARB", "glAttachShader")
+    mDetachShader = GLLoadProc2("glDetachObjectARB", "glDetachShader")
+    mLinkProgram = GLLoadProc2("glLinkProgramARB", "glLinkProgram")
+    mUseProgram = GLLoadProc2("glUseProgramObjectARB", "glUseProgram")
+    mGetUniformLocation = GLLoadProc2("glGetUniformLocationARB", "glGetUniformLocation")
+    mGetAttribLocation = GLLoadProc2("glGetAttribLocationARB", "glGetAttribLocation")
+    mBindAttribLocation = GLLoadProc2("glBindAttribLocationARB", "glBindAttribLocation")
+    mUniform1f = GLLoadProc2("glUniform1fARB", "glUniform1f")
+    mUniform1i = GLLoadProc2("glUniform1iARB", "glUniform1i")
+    mUniform2f = GLLoadProc2("glUniform2fARB", "glUniform2f")
+    mUniform3f = GLLoadProc2("glUniform3fARB", "glUniform3f")
+    mUniform4f = GLLoadProc2("glUniform4fARB", "glUniform4f")
+    mUniform1fv = GLLoadProc2("glUniform1fvARB", "glUniform1fv")
+    mUniform2fv = GLLoadProc2("glUniform2fvARB", "glUniform2fv")
+    mUniform3fv = GLLoadProc2("glUniform3fvARB", "glUniform3fv")
+    mUniform4fv = GLLoadProc2("glUniform4fvARB", "glUniform4fv")
+    mUniform1iv = GLLoadProc2("glUniform1ivARB", "glUniform1iv")
+    mUniform2iv = GLLoadProc2("glUniform2ivARB", "glUniform2iv")
+    mUniform3iv = GLLoadProc2("glUniform3ivARB", "glUniform3iv")
+    mUniform4iv = GLLoadProc2("glUniform4ivARB", "glUniform4iv")
+    mUniformMatrix4fv = GLLoadProc2("glUniformMatrix4fvARB", "glUniformMatrix4fv")
+    mVertexAttribPointer = GLLoadProc2("glVertexAttribPointerARB", "glVertexAttribPointer")
+    mEnableVertexAttribArray = GLLoadProc2("glEnableVertexAttribArrayARB", "glEnableVertexAttribArray")
+    mDisableVertexAttribArray = GLLoadProc2("glDisableVertexAttribArrayARB", "glDisableVertexAttribArray")
+    mActiveTexture = GLLoadProc2("glActiveTextureARB", "glActiveTexture")
+
+    mShaderReady = (mCreateShader <> 0 And mDeleteShader <> 0 And mShaderSource <> 0 And _
+                    mCompileShader <> 0 And mGetShaderiv <> 0 And mGetShaderInfoLog <> 0 And _
+                    mCreateProgram <> 0 And mDeleteProgram <> 0 And mAttachShader <> 0 And _
+                    mDetachShader <> 0 And mLinkProgram <> 0 And mUseProgram <> 0 And _
+                    mGetUniformLocation <> 0 And mGetAttribLocation <> 0 And _
+                    mBindAttribLocation <> 0 And mUniform1f <> 0 And mUniform1i <> 0 And _
+                    mUniform2f <> 0 And mUniform3f <> 0 And mUniform4f <> 0 And _
+                    mUniform1fv <> 0 And mUniform2fv <> 0 And mUniform3fv <> 0 And _
+                    mUniform4fv <> 0 And mUniform1iv <> 0 And mUniform2iv <> 0 And _
+                    mUniform3iv <> 0 And mUniform4iv <> 0 And mUniformMatrix4fv <> 0 And _
+                    mVertexAttribPointer <> 0 And mEnableVertexAttribArray <> 0 And _
+                    mDisableVertexAttribArray <> 0)
+
+    If mShaderReady = False Then Debug.Print "Shaders nao suportados por este driver"
+
+    LoadShaderExtensions = mShaderReady
+End Function
+
+Public Function GLShaderSupported() As Boolean
+    GLShaderSupported = LoadShaderExtensions()
+End Function
+
+Public Function GLActiveTextureSupported() As Boolean
+    GLActiveTextureSupported = (LoadShaderExtensions() And mActiveTexture <> 0)
+End Function
+
+' Shader objects
+
+Public Sub glCreateShaderARB(ByVal shaderType As Long, ByRef shader As Long)
+    shader = 0
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL shaderType
+    shader = Invoke(mCreateShader, VT_I4)
+End Sub
+
+Public Sub glDeleteShaderARB(ByVal shader As Long)
+    If shader = 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL shader
+    Invoke mDeleteShader, VT_EMPTY
+End Sub
+
+Public Sub glShaderSourceARB(ByVal shader As Long, ByVal count As Long, ByVal stringsPtr As Long, ByVal lengthsPtr As Long)
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL shader
+    ArgL count
+    ArgL stringsPtr
+    ArgL lengthsPtr
+    Invoke mShaderSource, VT_EMPTY
+End Sub
+
+Public Sub glCompileShaderARB(ByVal shader As Long)
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL shader
+    Invoke mCompileShader, VT_EMPTY
+End Sub
+
+Public Sub glGetShaderivARB(ByVal objectId As Long, ByVal pname As Long, ByRef params As Long)
+    params = 0
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL objectId
+    ArgL pname
+    ArgL VarPtr(params)
+    Invoke mGetShaderiv, VT_EMPTY
+End Sub
+
+Public Sub glGetShaderInfoLogARB(ByVal objectId As Long, ByVal bufSize As Long, ByRef lengthOut As Long, ByRef infoLog As Byte)
+    lengthOut = 0
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL objectId
+    ArgL bufSize
+    ArgL VarPtr(lengthOut)
+    ArgL VarPtr(infoLog)
+    Invoke mGetShaderInfoLog, VT_EMPTY
+End Sub
+
+Public Sub glCreateProgramARB(ByRef program As Long)
+    program = 0
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    program = Invoke(mCreateProgram, VT_I4)
+End Sub
+
+Public Sub glDeleteProgramARB(ByVal program As Long)
+    If program = 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL program
+    Invoke mDeleteProgram, VT_EMPTY
+End Sub
+
+Public Sub glAttachShaderARB(ByVal program As Long, ByVal shader As Long)
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL program
+    ArgL shader
+    Invoke mAttachShader, VT_EMPTY
+End Sub
+
+Public Sub glDetachShaderARB(ByVal program As Long, ByVal shader As Long)
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL program
+    ArgL shader
+    Invoke mDetachShader, VT_EMPTY
+End Sub
+
+Public Sub glLinkProgramARB(ByVal program As Long)
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL program
+    Invoke mLinkProgram, VT_EMPTY
+End Sub
+
+Public Sub glUseProgramARB(ByVal program As Long)
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL program
+    Invoke mUseProgram, VT_EMPTY
+End Sub
+
+Public Function glGetUniformLocationARB(ByVal program As Long, ByVal namePtr As Long) As Long
+    glGetUniformLocationARB = -1
+    If LoadShaderExtensions() = False Then Exit Function
+    ArgsReset
+    ArgL program
+    ArgL namePtr
+    glGetUniformLocationARB = Invoke(mGetUniformLocation, VT_I4)
+End Function
+
+Public Function glGetAttribLocationARB(ByVal program As Long, ByVal namePtr As Long) As Long
+    glGetAttribLocationARB = -1
+    If LoadShaderExtensions() = False Then Exit Function
+    ArgsReset
+    ArgL program
+    ArgL namePtr
+    glGetAttribLocationARB = Invoke(mGetAttribLocation, VT_I4)
+End Function
+
+Public Sub glBindAttribLocationARB(ByVal program As Long, ByVal index As Long, ByVal namePtr As Long)
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL program
+    ArgL index
+    ArgL namePtr
+    Invoke mBindAttribLocation, VT_EMPTY
+End Sub
+
+Public Sub glUniform1fARB(ByVal location As Long, ByVal v0 As Single)
+    If location < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL location
+    ArgF v0
+    Invoke mUniform1f, VT_EMPTY
+End Sub
+
+Public Sub glUniform2fARB(ByVal location As Long, ByVal v0 As Single, ByVal v1 As Single)
+    If location < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL location
+    ArgF v0
+    ArgF v1
+    Invoke mUniform2f, VT_EMPTY
+End Sub
+
+Public Sub glUniform3fARB(ByVal location As Long, ByVal v0 As Single, ByVal v1 As Single, ByVal v2 As Single)
+    If location < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL location
+    ArgF v0
+    ArgF v1
+    ArgF v2
+    Invoke mUniform3f, VT_EMPTY
+End Sub
+
+Public Sub glUniform4fARB(ByVal location As Long, ByVal v0 As Single, ByVal v1 As Single, ByVal v2 As Single, ByVal v3 As Single)
+    If location < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL location
+    ArgF v0
+    ArgF v1
+    ArgF v2
+    ArgF v3
+    Invoke mUniform4f, VT_EMPTY
+End Sub
+
+Public Sub glUniform1iARB(ByVal location As Long, ByVal value As Long)
+    If location < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL location
+    ArgL value
+    Invoke mUniform1i, VT_EMPTY
+End Sub
+
+Public Sub glUniform1fvARB(ByVal location As Long, ByVal count As Long, ByVal valuesPtr As Long)
+    If location < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL location
+    ArgL count
+    ArgL valuesPtr
+    Invoke mUniform1fv, VT_EMPTY
+End Sub
+
+Public Sub glUniform2fvARB(ByVal location As Long, ByVal count As Long, ByVal valuesPtr As Long)
+    If location < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL location
+    ArgL count
+    ArgL valuesPtr
+    Invoke mUniform2fv, VT_EMPTY
+End Sub
+
+Public Sub glUniform3fvARB(ByVal location As Long, ByVal count As Long, ByVal valuesPtr As Long)
+    If location < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL location
+    ArgL count
+    ArgL valuesPtr
+    Invoke mUniform3fv, VT_EMPTY
+End Sub
+
+Public Sub glUniform4fvARB(ByVal location As Long, ByVal count As Long, ByVal valuesPtr As Long)
+    If location < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL location
+    ArgL count
+    ArgL valuesPtr
+    Invoke mUniform4fv, VT_EMPTY
+End Sub
+
+Public Sub glUniform1ivARB(ByVal location As Long, ByVal count As Long, ByVal valuesPtr As Long)
+    If location < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL location
+    ArgL count
+    ArgL valuesPtr
+    Invoke mUniform1iv, VT_EMPTY
+End Sub
+
+Public Sub glUniform2ivARB(ByVal location As Long, ByVal count As Long, ByVal valuesPtr As Long)
+    If location < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL location
+    ArgL count
+    ArgL valuesPtr
+    Invoke mUniform2iv, VT_EMPTY
+End Sub
+
+Public Sub glUniform3ivARB(ByVal location As Long, ByVal count As Long, ByVal valuesPtr As Long)
+    If location < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL location
+    ArgL count
+    ArgL valuesPtr
+    Invoke mUniform3iv, VT_EMPTY
+End Sub
+
+Public Sub glUniform4ivARB(ByVal location As Long, ByVal count As Long, ByVal valuesPtr As Long)
+    If location < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL location
+    ArgL count
+    ArgL valuesPtr
+    Invoke mUniform4iv, VT_EMPTY
+End Sub
+
+Public Sub glUniformMatrix4fvARB(ByVal location As Long, ByVal count As Long, ByVal valuesPtr As Long)
+    If location < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL location
+    ArgL count
+    ArgL 0
+    ArgL valuesPtr
+    Invoke mUniformMatrix4fv, VT_EMPTY
+End Sub
+
+Public Sub glVertexAttribPointerARB(ByVal index As Long, ByVal size As Long, ByVal ty As Long, ByVal normalized As Long, ByVal stride As Long, ByVal dataPtr As Long)
+    If index < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL index
+    ArgL size
+    ArgL ty
+    ArgL normalized
+    ArgL stride
+    ArgL dataPtr
+    Invoke mVertexAttribPointer, VT_EMPTY
+End Sub
+
+Public Sub glEnableVertexAttribArrayARB(ByVal index As Long)
+    If index < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL index
+    Invoke mEnableVertexAttribArray, VT_EMPTY
+End Sub
+
+Public Sub glDisableVertexAttribArrayARB(ByVal index As Long)
+    If index < 0 Then Exit Sub
+    If LoadShaderExtensions() = False Then Exit Sub
+    ArgsReset
+    ArgL index
+    Invoke mDisableVertexAttribArray, VT_EMPTY
+End Sub
+
+Public Sub glActiveTextureARB(ByVal texture As Long)
+    If LoadShaderExtensions() = False Then Exit Sub
+    If mActiveTexture = 0 Then Exit Sub
+    ArgsReset
+    ArgL texture
+    Invoke mActiveTexture, VT_EMPTY
 End Sub

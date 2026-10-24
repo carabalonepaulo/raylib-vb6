@@ -197,6 +197,19 @@ Public Type Vector2
     y As Single
 End Type
 
+Public Type Vector3
+    x As Single
+    y As Single
+    z As Single
+End Type
+
+Public Type Vector4
+    x As Single
+    y As Single
+    z As Single
+    W As Single
+End Type
+
 Public Type Rectangle
     x As Single
     y As Single
@@ -290,6 +303,63 @@ Public Type Camera2D
     Rot As Single
     Zoom As Single
 End Type
+
+Public Type Shader
+    Id As Long
+    locs(0 To RL_MAX_SHADER_LOCATIONS - 1) As Long
+End Type
+
+Public Enum ShaderLocationIndex
+    SHADER_LOC_VERTEX_POSITION = 0
+    SHADER_LOC_VERTEX_TEXCOORD01
+    SHADER_LOC_VERTEX_TEXCOORD02
+    SHADER_LOC_VERTEX_NORMAL
+    SHADER_LOC_VERTEX_TANGENT
+    SHADER_LOC_VERTEX_COLOR
+    SHADER_LOC_MATRIX_MVP
+    SHADER_LOC_MATRIX_VIEW
+    SHADER_LOC_MATRIX_PROJECTION
+    SHADER_LOC_MATRIX_MODEL
+    SHADER_LOC_MATRIX_NORMAL
+    SHADER_LOC_VECTOR_VIEW
+    SHADER_LOC_COLOR_DIFFUSE
+    SHADER_LOC_COLOR_SPECULAR
+    SHADER_LOC_COLOR_AMBIENT
+    SHADER_LOC_MAP_ALBEDO
+    SHADER_LOC_MAP_METALNESS
+    SHADER_LOC_MAP_NORMAL
+    SHADER_LOC_MAP_ROUGHNESS
+    SHADER_LOC_MAP_OCCLUSION
+    SHADER_LOC_MAP_EMISSION
+    SHADER_LOC_MAP_HEIGHT
+    SHADER_LOC_MAP_CUBEMAP
+    SHADER_LOC_MAP_IRRADIANCE
+    SHADER_LOC_MAP_PREFILTER
+    SHADER_LOC_MAP_BRDF
+End Enum
+
+Public Enum ShaderUniformDataType
+    SHADER_UNIFORM_FLOAT = 0
+    SHADER_UNIFORM_VEC2
+    SHADER_UNIFORM_VEC3
+    SHADER_UNIFORM_VEC4
+    SHADER_UNIFORM_INT
+    SHADER_UNIFORM_IVEC2
+    SHADER_UNIFORM_IVEC3
+    SHADER_UNIFORM_IVEC4
+    SHADER_UNIFORM_UINT
+    SHADER_UNIFORM_UIVEC2
+    SHADER_UNIFORM_UIVEC3
+    SHADER_UNIFORM_UIVEC4
+    SHADER_UNIFORM_SAMPLER2D
+End Enum
+
+Public Enum ShaderAttributeDataType
+    SHADER_ATTRIB_FLOAT = 0
+    SHADER_ATTRIB_VEC2
+    SHADER_ATTRIB_VEC3
+    SHADER_ATTRIB_VEC4
+End Enum
 
 ' System
 
@@ -398,6 +468,7 @@ Private mRenderFbo(0 To RENDER_STACK_MAX - 1) As Long
 Private mRenderW(0 To RENDER_STACK_MAX - 1) As Long
 Private mRenderH(0 To RENDER_STACK_MAX - 1) As Long
 Private mRenderTop As Long
+Private mNextTextureUnit As Long
 
 ' Core declares (Win32)
 
@@ -886,6 +957,7 @@ Public Sub CloseWindow()
 
     DeinitWindowState
     StopMusic
+    rlglClose
     Unload mTargetForm
     Set mTargetForm = Nothing
     DeinitOpenGL
@@ -3900,6 +3972,262 @@ Public Sub UnloadRenderTexture(ByRef target As RenderTexture2D)
         target.Id = 0
     End If
 End Sub
+
+' Shader
+
+Public Function IsShaderSupported() As Boolean
+    IsShaderSupported = GLShaderSupported()
+End Function
+
+Public Function LoadShader(ByVal vsFileName As String, ByVal fsFileName As String) As Shader
+    Dim sh As Shader
+    Dim vs As String
+    Dim fs As String
+    Dim i As Long
+
+    For i = 0 To RL_MAX_SHADER_LOCATIONS - 1
+        sh.locs(i) = -1
+    Next i
+    sh.Id = 0
+
+    vs = ReadTextFile(vsFileName)
+    fs = ReadTextFile(fsFileName)
+
+    If Len(vsFileName) > 0 Then
+        If Len(vs) = 0 Then
+            Debug.Print "Shader file not usable: " & vsFileName
+            LoadShader = sh
+            Exit Function
+        End If
+    End If
+    If Len(fsFileName) > 0 Then
+        If Len(fs) = 0 Then
+            Debug.Print "Shader file not usable: " & fsFileName
+            LoadShader = sh
+            Exit Function
+        End If
+    End If
+
+    LoadShader = LoadShaderFromMemory(vs, fs)
+End Function
+
+Public Function LoadShaderFromMemory(ByVal vsCode As String, ByVal fsCode As String) As Shader
+    Dim sh As Shader
+    Dim i As Long
+    Dim program As Long
+
+    For i = 0 To RL_MAX_SHADER_LOCATIONS - 1
+        sh.locs(i) = -1
+    Next i
+    sh.Id = 0
+
+    If GLShaderSupported() = False Then
+        LoadShaderFromMemory = sh
+        Exit Function
+    End If
+
+    If Len(vsCode) = 0 Then vsCode = DefaultVertexShader()
+    If Len(fsCode) = 0 Then fsCode = DefaultFragmentShader()
+
+    program = rlLoadShaderCode(vsCode, fsCode)
+    If program = 0 Then
+        LoadShaderFromMemory = sh
+        Exit Function
+    End If
+
+    sh.Id = program
+    sh.locs(SHADER_LOC_VERTEX_POSITION) = rlGetShaderLocationAttrib(program, "vertexPosition")
+    sh.locs(SHADER_LOC_VERTEX_TEXCOORD01) = rlGetShaderLocationAttrib(program, "vertexTexCoord")
+    sh.locs(SHADER_LOC_VERTEX_NORMAL) = rlGetShaderLocationAttrib(program, "vertexNormal")
+    sh.locs(SHADER_LOC_VERTEX_COLOR) = rlGetShaderLocationAttrib(program, "vertexColor")
+    sh.locs(SHADER_LOC_MATRIX_MVP) = rlGetShaderLocation(program, "mvp")
+    sh.locs(SHADER_LOC_COLOR_DIFFUSE) = rlGetShaderLocation(program, "colDiffuse")
+    sh.locs(SHADER_LOC_MAP_ALBEDO) = rlGetShaderLocation(program, "texture0")
+
+    If sh.locs(SHADER_LOC_COLOR_DIFFUSE) >= 0 Then
+        rlSetUniform4f program, sh.locs(SHADER_LOC_COLOR_DIFFUSE), 1!, 1!, 1!, 1!
+    End If
+    If sh.locs(SHADER_LOC_MAP_ALBEDO) >= 0 Then
+        rlSetUniform1i program, sh.locs(SHADER_LOC_MAP_ALBEDO), 0
+    End If
+
+    LoadShaderFromMemory = sh
+End Function
+
+Public Function IsShaderValid(ByRef shader As Shader) As Boolean
+    IsShaderValid = (shader.Id <> 0)
+End Function
+
+Public Sub UnloadShader(ByRef shader As Shader)
+    Dim dummy(0 To 0) As Long
+
+    If shader.Id = 0 Then Exit Sub
+
+    rlSetShader 0, dummy
+    rlUnloadShader shader.Id
+    shader.Id = 0
+End Sub
+
+Public Function GetShaderIdDefault() As Long
+    GetShaderIdDefault = rlGetShaderIdDefault()
+End Function
+
+Public Function GetShaderLocsDefault() As Long()
+    Dim l() As Long
+    rlGetShaderLocsDefault l
+    GetShaderLocsDefault = l
+End Function
+
+Public Function GetShaderLocation(ByRef shader As Shader, ByVal uniformName As String) As Long
+    If shader.Id = 0 Then
+        GetShaderLocation = -1
+        Exit Function
+    End If
+    GetShaderLocation = rlGetShaderLocation(shader.Id, uniformName)
+End Function
+
+Public Function GetShaderLocationAttrib(ByRef shader As Shader, ByVal attribName As String) As Long
+    If shader.Id = 0 Then
+        GetShaderLocationAttrib = -1
+        Exit Function
+    End If
+    GetShaderLocationAttrib = rlGetShaderLocationAttrib(shader.Id, attribName)
+End Function
+
+Public Sub SetShaderValueF(ByRef shader As Shader, ByVal locIndex As Long, ByVal value As Single)
+    If shader.Id = 0 Then Exit Sub
+    rlSetUniform1f shader.Id, locIndex, value
+End Sub
+
+Public Sub SetShaderValueV2(ByRef shader As Shader, ByVal locIndex As Long, ByRef value As Vector2)
+    If shader.Id = 0 Then Exit Sub
+    rlSetUniform2f shader.Id, locIndex, value.x, value.y
+End Sub
+
+Public Sub SetShaderValueV3(ByRef shader As Shader, ByVal locIndex As Long, ByRef value As Vector3)
+    If shader.Id = 0 Then Exit Sub
+    rlSetUniform3f shader.Id, locIndex, value.x, value.y, value.z
+End Sub
+
+Public Sub SetShaderValueV4(ByRef shader As Shader, ByVal locIndex As Long, ByRef value As Vector4)
+    If shader.Id = 0 Then Exit Sub
+    rlSetUniform4f shader.Id, locIndex, value.x, value.y, value.z, value.W
+End Sub
+
+Public Sub SetShaderValueI(ByRef shader As Shader, ByVal locIndex As Long, ByVal value As Long)
+    If shader.Id = 0 Then Exit Sub
+    rlSetUniform1i shader.Id, locIndex, value
+End Sub
+
+Public Sub SetShaderValueV(ByRef shader As Shader, ByVal locIndex As Long, ByRef values() As Single, ByVal uniformType As ShaderUniformDataType, ByVal count As Long)
+    If shader.Id = 0 Then Exit Sub
+    rlSetUniformPtr shader.Id, locIndex, VarPtr(values(LBound(values))), CLng(uniformType), count
+End Sub
+
+Public Sub SetShaderValueIV(ByRef shader As Shader, ByVal locIndex As Long, ByRef values() As Long, ByVal uniformType As ShaderUniformDataType, ByVal count As Long)
+    If shader.Id = 0 Then Exit Sub
+    rlSetUniformPtr shader.Id, locIndex, VarPtr(values(LBound(values))), CLng(uniformType), count
+End Sub
+
+Public Sub SetShaderValueMatrix(ByRef shader As Shader, ByVal locIndex As Long, ByRef mat As rlMatrix)
+    If shader.Id = 0 Then Exit Sub
+    rlSetUniformMatrix4fv shader.Id, locIndex, mat, 1
+End Sub
+
+Public Sub SetShaderValueTexture(ByRef shader As Shader, ByVal locIndex As Long, ByRef texture As Texture2D)
+    If shader.Id = 0 Then Exit Sub
+    mNextTextureUnit = mNextTextureUnit + 1
+    If mNextTextureUnit > 3 Then mNextTextureUnit = 1
+    rlSetUniformSampler shader.Id, locIndex, texture.Id, mNextTextureUnit
+End Sub
+
+Public Sub SetShaderValuePtr(ByRef shader As Shader, ByVal locIndex As Long, ByVal valuePtr As Long, ByVal uniformType As ShaderUniformDataType, ByVal count As Long)
+    If shader.Id = 0 Then Exit Sub
+    rlSetUniformPtr shader.Id, locIndex, valuePtr, CLng(uniformType), count
+End Sub
+
+Public Sub BeginShaderMode(ByRef shader As Shader)
+    If shader.Id = 0 Then
+        EndShaderMode
+        Exit Sub
+    End If
+    rlSetShader shader.Id, shader.locs
+End Sub
+
+Public Sub EndShaderMode()
+    Dim dummy(0 To 0) As Long
+    rlSetShader 0, dummy
+End Sub
+
+Private Function ReadTextFile(ByVal fileName As String) As String
+    Dim n As Long
+    Dim size As Long
+    Dim b() As Byte
+    Dim path As String
+    Dim start As Long
+
+    If Len(fileName) = 0 Then Exit Function
+
+    path = GetFullPath(fileName)
+    If Dir$(path) = "" Then
+        Debug.Print "Shader file not found: " & path
+        Exit Function
+    End If
+
+    n = FreeFile
+    Open path For Binary Access Read As #n
+    size = LOF(n)
+    If size <= 0 Then
+        Close #n
+        Exit Function
+    End If
+    ReDim b(0 To size - 1)
+    Get #n, , b
+    Close #n
+
+    start = 0
+    If size >= 3 Then
+        If b(0) = &HEF And b(1) = &HBB And b(2) = &HBF Then start = 3
+    End If
+
+    If size - start <= 0 Then Exit Function
+
+    If start > 0 Then
+        Dim i As Long
+        For i = 0 To size - start - 1
+            b(i) = b(start + i)
+        Next i
+        ReDim Preserve b(0 To size - start - 1)
+    End If
+
+    ReadTextFile = StrConv(b, vbUnicode)
+End Function
+
+Private Function DefaultVertexShader() As String
+    Dim s As String
+    s = "#version 110" & vbCrLf
+    s = s & "uniform mat4 mvp;" & vbCrLf
+    s = s & "void main()" & vbCrLf
+    s = s & "{" & vbCrLf
+    s = s & "    gl_Position = mvp*gl_Vertex;" & vbCrLf
+    s = s & "    gl_FrontColor = gl_Color;" & vbCrLf
+    s = s & "    gl_TexCoord[0] = gl_MultiTexCoord0;" & vbCrLf
+    s = s & "}" & vbCrLf
+    DefaultVertexShader = s
+End Function
+
+Private Function DefaultFragmentShader() As String
+    Dim s As String
+    s = "#version 110" & vbCrLf
+    s = s & "uniform sampler2D texture0;" & vbCrLf
+    s = s & "uniform vec4 colDiffuse;" & vbCrLf
+    s = s & "void main()" & vbCrLf
+    s = s & "{" & vbCrLf
+    s = s & "    vec4 texelColor = texture2D(texture0, gl_TexCoord[0].xy);" & vbCrLf
+    s = s & "    gl_FragColor = texelColor*gl_Color*colDiffuse;" & vbCrLf
+    s = s & "}" & vbCrLf
+    DefaultFragmentShader = s
+End Function
 
 ' Font
 

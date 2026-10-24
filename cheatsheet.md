@@ -250,6 +250,49 @@ Sub DrawTextureNPatch(ByRef tex As Texture2D, ByRef info As NPatchInfo, ByRef ds
 
 - `DrawTexture` here takes explicit `Width`/`Height` (no separate tint-only overload and no origin/rotation; use `DrawTexturePro` for those).
 
+# Shaders
+
+```vb
+' capability / lifecycle
+Function IsShaderSupported() As Boolean
+Function LoadShader(ByVal vsFileName As String, ByVal fsFileName As String) As Shader
+Function LoadShaderFromMemory(ByVal vsCode As String, ByVal fsCode As String) As Shader
+Function IsShaderValid(ByRef shader As Shader) As Boolean
+Sub UnloadShader(ByRef shader As Shader)
+
+' locations
+Function GetShaderIdDefault() As Long          ' 0 = fixed pipeline
+Function GetShaderLocsDefault() As Long()
+Function GetShaderLocation(ByRef shader As Shader, ByVal uniformName As String) As Long
+Function GetShaderLocationAttrib(ByRef shader As Shader, ByVal attribName As String) As Long
+
+' uniform values
+Sub SetShaderValueF(ByRef shader As Shader, ByVal locIndex As Long, ByVal value As Single)
+Sub SetShaderValueV2(ByRef shader As Shader, ByVal locIndex As Long, ByRef value As Vector2)
+Sub SetShaderValueV3(ByRef shader As Shader, ByVal locIndex As Long, ByRef value As Vector3)
+Sub SetShaderValueV4(ByRef shader As Shader, ByVal locIndex As Long, ByRef value As Vector4)
+Sub SetShaderValueI(ByRef shader As Shader, ByVal locIndex As Long, ByVal value As Long)
+Sub SetShaderValueV(ByRef shader As Shader, ByVal locIndex As Long, ByRef values() As Single, ByVal uniformType As ShaderUniformDataType, ByVal count As Long)
+Sub SetShaderValueIV(ByRef shader As Shader, ByVal locIndex As Long, ByRef values() As Long, ByVal uniformType As ShaderUniformDataType, ByVal count As Long)
+Sub SetShaderValueMatrix(ByRef shader As Shader, ByVal locIndex As Long, ByRef mat As rlMatrix)
+Sub SetShaderValueTexture(ByRef shader As Shader, ByVal locIndex As Long, ByRef texture As Texture2D)
+Sub SetShaderValuePtr(ByRef shader As Shader, ByVal locIndex As Long, ByVal valuePtr As Long, ByVal uniformType As ShaderUniformDataType, ByVal count As Long)
+
+' mode switch (flush the pending batch on change)
+Sub BeginShaderMode(ByRef shader As Shader)
+Sub EndShaderMode()
+```
+
+- `BeginShaderMode`/`EndShaderMode` are batch-global: switching shader flushes what is pending. `EndShaderMode` returns to the fixed pipeline, and `shader.Id = 0` means exactly that (there is no separate default program; `LoadShaderFromMemory("", "")` builds one from the embedded sources when you need a real program).
+- `LoadShaderFromMemory("", fsCode)` keeps the embedded vertex shader; `LoadShaderFromMemory(vsCode, "")` keeps the embedded fragment shader. `LoadShader` on a missing/unreadable file returns an invalid shader (`Id = 0`); no file name at all means "use the embedded stage".
+- A failed compile/link returns `Id = 0` and logs the driver message via `Debug.Print`; drawing keeps working with the fixed pipeline.
+- Uniform values live in the program object; set them any time with `SetShaderValue*` (the program is bound for the call). Matrix values use `rlMatrix` (column-major).
+- `SetShaderValueTexture` binds the texture to a texture unit (1..3, rotating) and sets the sampler. Unit 0 is reserved for the sprite texture that the batch binds per draw.
+- Reserved uniforms filled by the batch: `mvp` (per draw call, `projection * modelview`), `texture0` (unit 0), `colDiffuse` (white at load, overridable). Vertex attributes are fed through the GLSL compatibility built-ins (`gl_Vertex`, `gl_Color`, `gl_MultiTexCoord0`, `gl_Normal`); a shader that declares raylib-style `vertexPosition` / `vertexTexCoord` / `vertexNormal` / `vertexColor` is fed through generic attribute arrays instead.
+- With a shader active, vertices are sent in object space (the coordinates you pass to `Draw*`), so vertex shaders can displace geometry. The fixed-function built-in matrices (`gl_ModelViewProjectionMatrix` etc.) are identity there: use `mvp` instead.
+- Two shaders cannot be nested, and shader calls are only valid between `InitWindow` and `CloseWindow`.
+- `Shader.locs` is indexed by `ShaderLocationIndex`; unknown uniforms/attributes resolve to `-1`, and setting a uniform at `-1` is a no-op.
+
 # Text (ImageFont)
 
 ```vb
@@ -419,6 +462,19 @@ Type Vector2
     y As Single
 End Type
 
+Type Vector3
+    x As Single
+    y As Single
+    z As Single
+End Type
+
+Type Vector4
+    x As Single
+    y As Single
+    z As Single
+    W As Single
+End Type
+
 Type Rectangle
     x As Single
     y As Single
@@ -485,6 +541,11 @@ Type NPatchInfo
     Bottom As Long
     Layout As NPatchMode
 End Type
+
+Type Shader
+    Id As Long                                   ' GL program; 0 = invalid / fixed pipeline
+    locs(0 To RL_MAX_SHADER_LOCATIONS - 1) As Long  ' indexed by ShaderLocationIndex, -1 = absent
+End Type
 ```
 
 # Enums
@@ -521,6 +582,26 @@ MOUSE_CURSOR_NOT_ALLOWED
 NinePatch
 ThreePatchVertical
 ThreePatchHorizontal
+
+' ShaderLocationIndex (mirrors raylib; also the index into Shader.locs)
+SHADER_LOC_VERTEX_POSITION  SHADER_LOC_VERTEX_TEXCOORD01  SHADER_LOC_VERTEX_TEXCOORD02
+SHADER_LOC_VERTEX_NORMAL    SHADER_LOC_VERTEX_TANGENT     SHADER_LOC_VERTEX_COLOR
+SHADER_LOC_MATRIX_MVP       SHADER_LOC_MATRIX_VIEW        SHADER_LOC_MATRIX_PROJECTION
+SHADER_LOC_MATRIX_MODEL     SHADER_LOC_MATRIX_NORMAL      SHADER_LOC_VECTOR_VIEW
+SHADER_LOC_COLOR_DIFFUSE    SHADER_LOC_COLOR_SPECULAR     SHADER_LOC_COLOR_AMBIENT
+SHADER_LOC_MAP_ALBEDO       SHADER_LOC_MAP_METALNESS      SHADER_LOC_MAP_NORMAL
+SHADER_LOC_MAP_ROUGHNESS    SHADER_LOC_MAP_OCCLUSION      SHADER_LOC_MAP_EMISSION
+SHADER_LOC_MAP_HEIGHT       SHADER_LOC_MAP_CUBEMAP        SHADER_LOC_MAP_IRRADIANCE
+SHADER_LOC_MAP_PREFILTER    SHADER_LOC_MAP_BRDF
+
+' ShaderUniformDataType
+SHADER_UNIFORM_FLOAT  SHADER_UNIFORM_VEC2  SHADER_UNIFORM_VEC3  SHADER_UNIFORM_VEC4
+SHADER_UNIFORM_INT    SHADER_UNIFORM_IVEC2 SHADER_UNIFORM_IVEC3 SHADER_UNIFORM_IVEC4
+SHADER_UNIFORM_UINT   SHADER_UNIFORM_UIVEC2 SHADER_UNIFORM_UIVEC3 SHADER_UNIFORM_UIVEC4
+SHADER_UNIFORM_SAMPLER2D
+
+' ShaderAttributeDataType
+SHADER_ATTRIB_FLOAT  SHADER_ATTRIB_VEC2  SHADER_ATTRIB_VEC3  SHADER_ATTRIB_VEC4
 
 ' KeyboardKey
 KEY_NULL

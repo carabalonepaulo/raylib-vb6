@@ -38,11 +38,13 @@ rlDrawRenderBatchActive        ' flush before EndDrawing
 
 ```vb
 Sub rlglInit()
+Sub rlglClose()
 Sub rlLoadRenderBatch(ByVal numBuffers As Long, ByVal maxVertices As Long)
 Sub rlUnloadRenderBatch()
 ```
 
-- `rlglInit` allocates one buffer of 8192 vertices and resets all state. Call it exactly once, together with the raylib init (`InitWindow`).
+- `rlglInit` allocates one buffer of 8192 vertices and resets all state. Call it exactly once, together with the raylib init (`InitWindow`). It also creates the internal 1x1 white texture used by shaders for untextured draws.
+- `rlglClose` deletes that texture and resets the shader state. The raylib layer calls it from `CloseWindow`, before the context is destroyed.
 - `rlLoadRenderBatch` lets you pick the buffer count and max vertices per buffer. Only the first buffer is used for drawing; it is drawn and reused when full.
 - `rlUnloadRenderBatch` just clears the pending batch.
 
@@ -174,6 +176,57 @@ Type rlMatrix
     m(0 To 15) As Single       ' column-major: m(col * 4 + row)
 End Type
 ```
+
+# Shaders
+
+```vb
+Const RL_SHADER_VERTEX   = &H8B31&
+Const RL_SHADER_FRAGMENT = &H8B30&
+Const RL_MAX_SHADER_LOCATIONS = 32
+
+' program build
+Function rlLoadShaderCode(ByVal vsCode As String, ByVal fsCode As String) As Long
+Function rlCompileShader(ByVal code As String, ByVal shaderType As Long) As Long
+Sub rlUnloadShader(ByVal id As Long)
+Function rlGetShaderLocation(ByVal program As Long, ByVal name As String) As Long
+Function rlGetShaderLocationAttrib(ByVal program As Long, ByVal name As String) As Long
+
+' selection / queries
+Sub rlSetShader(ByVal id As Long, ByRef locs() As Long)
+Sub rlEnableShader(ByVal id As Long)
+Sub rlDisableShader()
+Sub rlUseShaderProgram(ByVal id As Long)
+Function rlIsShaderReady(ByVal id As Long) As Boolean
+Function rlGetShaderIdDefault() As Long
+Sub rlGetShaderLocsDefault(ByRef locs() As Long)
+Function rlGetTextureIdDefault() As Long
+
+' uniforms (they bind the program themselves)
+Sub rlSetUniform1f(ByVal programId As Long, ByVal locIndex As Long, ByVal value As Single)
+Sub rlSetUniform2f(ByVal programId As Long, ByVal locIndex As Long, ByVal v0 As Single, ByVal v1 As Single)
+Sub rlSetUniform3f(ByVal programId As Long, ByVal locIndex As Long, ByVal v0 As Single, ByVal v1 As Single, ByVal v2 As Single)
+Sub rlSetUniform4f(ByVal programId As Long, ByVal locIndex As Long, ByVal v0 As Single, ByVal v1 As Single, ByVal v2 As Single, ByVal v3 As Single)
+Sub rlSetUniform1i(ByVal programId As Long, ByVal locIndex As Long, ByVal value As Long)
+Sub rlSetUniform1fv / 2fv / 3fv / 4fv (ByVal programId As Long, ByVal locIndex As Long, ByRef values() As Single, ByVal count As Long)
+Sub rlSetUniform1iv / 2iv / 3iv / 4iv (ByVal programId As Long, ByVal locIndex As Long, ByRef values() As Long, ByVal count As Long)
+Sub rlSetUniformMatrix4fv(ByVal programId As Long, ByVal locIndex As Long, ByRef mat As rlMatrix, ByVal count As Long)
+Sub rlSetUniformSampler(ByVal programId As Long, ByVal locIndex As Long, ByVal textureId As Long, ByVal unit As Long)
+Sub rlSetUniformPtr(ByVal programId As Long, ByVal locIndex As Long, ByVal valuePtr As Long, ByVal uniformType As Long, ByVal count As Long)
+```
+
+- Shader selection is batch-global: `rlSetShader` flushes the pending batch when the program changes, so a batch never mixes object-space (shader) and clip-space (fixed) vertices.
+- `id = 0` is the fixed pipeline; `rlGetShaderIdDefault()` returns 0. `rlDisableShader` is `rlSetShader 0`.
+- `rlSetShader` copies `locs` (indexed by raylib's `SHADER_LOC_*` order, length <= `RL_MAX_SHADER_LOCATIONS`); `rlEnableShader` selects a program without locations (the caller must upload the uniforms).
+- `rlSetUniform*` bind the program, set the value and unbind, so they are safe to call between draws. `uniformType` uses the `ShaderUniformDataType` numbering. `location < 0` is a no-op.
+- The batch uploads `mvp` (per draw call) itself; `rlSetUniformMatrix4fv` is for user uniforms.
+
+# Shader batching rules
+
+- With a shader active, `rlVertex2f/3f` store OBJECT-space coordinates (what you passed), and every draw call carries an MVP snapshot taken when it was created. `FlushBatchShader` binds the program, uploads each draw call's `mvp`, binds the draw texture (or the internal 1x1 white texture when none is set) and calls `glDrawArrays`.
+- The fixed path is untouched: vertices are pre-transformed on the CPU, GL matrices are loaded at flush, identity afterwards.
+- Matrix calls (`rlTranslatef`, `rlRotatef`, `rlScalef`, `rlPushMatrix`/`rlPopMatrix`, ...) mark the batch dirty; the next `rlBegin` starts a NEW draw call while a shader is active. That keeps per-object transforms correct without splitting a primitive. The fixed path keeps merging across matrix changes (vertices are already baked).
+- Consequence: in shader mode, `DrawTexturePro` (push/translate/draw/pop per sprite) costs one draw call per sprite. Batch your static geometry to avoid it.
+- `rlDrawVertexArray*` honour the active shader: the program is bound, `mvp` is uploaded from the current CPU matrices, and the GL matrices are left untouched.
 
 # Notes / gotchas
 
