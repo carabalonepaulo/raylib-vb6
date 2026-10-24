@@ -20,7 +20,7 @@ Sub Main()
     Dim tint As Vector4
     Dim t As Single
 
-    tex = LoadTexture("..\assets\001-Fighter01.png")
+    tex = LoadTexture("..\..\assets\001-Fighter01.png")
 
     ' First frame of the 4x4 sheet: top-left cell.
     Rect src, 0#, 0#, 32#, 48#
@@ -33,7 +33,7 @@ Sub Main()
     tint.W = 1#
 
     ' VS and FS live in assets/ as separate files, loaded together.
-    sh = LoadShader("..\assets\wave.vs", "..\assets\tint.fs")
+    sh = LoadShader("..\..\assets\wave.vs", "..\..\assets\tint.fs")
     If IsShaderValid(sh) = False Then
         MsgBox "Shader failed to load/compile", vbCritical
         CloseWindow
