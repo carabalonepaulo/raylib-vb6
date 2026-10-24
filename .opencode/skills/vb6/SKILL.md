@@ -170,11 +170,15 @@ End Function
 
 - The useful pattern: copy the project to a temporary directory, replace the game
   module with a harness, compile with `/make`, and run the EXE.
-- **If the harness replaces a module whose procedures the main loop calls, it must
-  define ALL of them.** In this project, `Run` (in `modRaylib`) calls
-  `Game_Load`/`Game_Update`/`Game_Draw`/`Game_Unload`, which live in `modGame`.
-  Missing one of them makes the build fail with "Sub or Function not defined"
-  pointing at the WRONG file (e.g. `modRaylib.bas`, a misleading line).
+- There is no game loop in the library anymore: the user owns `Main`. A harness
+  `Main` calls `SetConfigFlags` (optional), `InitWindow frmMain, w, h, "title"`,
+  then runs its own `Do While WindowShouldClose() = False ... BeginDrawing /
+  EndDrawing ... Loop`, then `CloseWindow`. Nothing calls `Game_*` any more, so a
+  harness is free to define whatever it needs (and it must NOT leave the form's
+  `Form_QueryUnload` calling `CloseWindow`, which is now the teardown).
+- Missing procedure errors still point at the WRONG file: VB6 reports
+  "Sub or Function not defined" in the module that *calls* it, not where it is
+  missing.
 - Log to `App.Path & "\out.log"`. Write with `Open ... For Append` and **close
   each line** (or flush) - a crash discards the `Print #` buffer and you lose the
   clue about where it died.

@@ -49,6 +49,8 @@ Private mCurVertices As Long
 
 Private mT0 As Currency
 Private mFreq As Currency
+Private mUpdateActive As Boolean
+Private mDrawActive As Boolean
 
 ' Overlay state
 Private mOverlayMs As Single
@@ -86,6 +88,9 @@ Public Sub DebugInit(ByRef font As ImageFont, Optional ByVal maxSamples As Long 
     mFontSet = True
     mVisible = True
 
+    mUpdateActive = False
+    mDrawActive = False
+
     QueryPerformanceFrequency mFreq
 
     GpuInit
@@ -113,22 +118,28 @@ End Sub
 Public Sub DebugBeginUpdate()
     If DebugReady() = False Then Exit Sub
     QueryPerformanceCounter mT0
+    mUpdateActive = True
 End Sub
 
 Public Sub DebugEndUpdate()
     If DebugReady() = False Then Exit Sub
+    If mUpdateActive = False Then Exit Sub
     mCurUpdateMs = ElapsedMs()
+    mUpdateActive = False
 End Sub
 
 Public Sub DebugBeginDraw()
     If DebugReady() = False Then Exit Sub
     QueryPerformanceCounter mT0
+    mDrawActive = True
 End Sub
 
 Public Sub DebugEndDraw()
     If DebugReady() = False Then Exit Sub
+    If mDrawActive = False Then Exit Sub
     mCurDrawMs = ElapsedMs() - mOverlayMs
     If mCurDrawMs < 0! Then mCurDrawMs = 0!
+    mDrawActive = False
 End Sub
 
 Private Function ElapsedMs() As Single

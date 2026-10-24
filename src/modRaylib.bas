@@ -293,8 +293,12 @@ End Type
 
 ' System
 
-Private mShouldQuit As Boolean
+Private mShouldClose As Boolean
 Private mFps As Long
+Private mExitKey As Long
+Private mEventWaiting As Boolean
+Private mFpsFrames As Long
+Private mFpsTimer As Single
 
 ' Mouse
 
@@ -335,6 +339,7 @@ Private m_hDC As Long
 Private m_hRC As Long
 Private mVSyncOn As Boolean
 Private m_hWnd As Long
+Private mTargetForm As Form
 
 Private mWindowReady As Boolean
 Private mWindowResized As Boolean
@@ -352,6 +357,16 @@ Private mSavedRect As Rect
 Private mTargetFPS As Long
 Private mFrameTime As Single
 Private mTime As Double
+Private mQpcFreq As Currency
+Private mFrameMark As Currency
+
+' Screen (logical, what you draw with) / render (framebuffer, screen * DPI) / DPI
+Private mRenderWidth As Long
+Private mRenderHeight As Long
+Private mScreenScaleX As Single
+Private mScreenScaleY As Single
+Private mDpiScaleX As Single
+Private mDpiScaleY As Single
 
 Private mMonitors() As MONITORINFO
 Private mMonitorHandles() As Long
@@ -509,6 +524,7 @@ Private Const SW_MAXIMIZE As Long = 3
 Private Const SW_RESTORE As Long = 9
 
 Private Const LWA_ALPHA As Long = &H2
+Private Const WM_CLOSE As Long = &H10
 Private Const WM_GETMINMAXINFO As Long = &H24
 Private Const MONITOR_DEFAULTTONEAREST As Long = 2
 Private Const ENUM_CURRENT_SETTINGS As Long = -1
@@ -540,6 +556,7 @@ Private Declare Function SetWindowLongA Lib "user32" (ByVal hwnd As Long, ByVal 
 Private Declare Function CallWindowProcA Lib "user32" (ByVal lpPrevWndFunc As Long, ByVal hwnd As Long, ByVal msg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
 Private Declare Function ShowWindow Lib "user32" (ByVal hwnd As Long, ByVal nCmdShow As Long) As Long
 Private Declare Function GetForegroundWindow Lib "user32" () As Long
+Private Declare Function WaitMessage Lib "user32" () As Long
 Private Declare Function IsIconic Lib "user32" (ByVal hwnd As Long) As Long
 Private Declare Function IsZoomed Lib "user32" (ByVal hwnd As Long) As Long
 Private Declare Function GetClientRect Lib "user32" (ByVal hwnd As Long, lpRect As Rect) As Long
@@ -686,7 +703,36 @@ Private Sub InitImageLoader()
     GdiplusStartup token, si, 0
 End Sub
 
-Public Function InitWindow(ByRef frmMain As Form, ByVal Width As Long, ByVal Height As Long) As Boolean
+Public Function InitWindow(ByRef frmMain As Form, ByVal Width As Long, ByVal Height As Long, ByVal title As String) As Boolean
+    Set mTargetForm = frmMain
+
+    Load frmMain
+    frmMain.ScaleMode = 3
+    frmMain.Width = (Width * Screen.TwipsPerPixelX) + (frmMain.Width - (frmMain.ScaleWidth * Screen.TwipsPerPixelX))
+    frmMain.Height = (Height * Screen.TwipsPerPixelY) + (frmMain.Height - (frmMain.ScaleHeight * Screen.TwipsPerPixelY))
+    frmMain.left = (Screen.Width - frmMain.Width) / 2
+    frmMain.top = (Screen.Height - frmMain.Height) / 2
+    If Len(title) > 0 Then frmMain.Caption = title
+
+    frmMain.Show
+    DoEvents
+
+    If InitOpenGL(frmMain, Width, Height) = False Then
+        Unload frmMain
+        Exit Function
+    End If
+
+    QueryPerformanceFrequency mQpcFreq
+    QueryPerformanceCounter mFrameMark
+
+    ResetCoreState
+    mWindowReady = True
+    ApplyConfigFlags
+
+    InitWindow = True
+End Function
+
+Private Function InitOpenGL(ByRef frmMain As Form, ByVal Width As Long, ByVal Height As Long) As Boolean
     Dim pfd As PIXELFORMATDESCRIPTOR
     Dim pf As Long
     Dim hDC As Long
@@ -716,6 +762,8 @@ Public Function InitWindow(ByRef frmMain As Form, ByVal Width As Long, ByVal Hei
     m_hDC = hDC
     m_hWnd = frmMain.hwnd
 
+    EnsureSubclass
+
     If wglMakeCurrent(hDC, m_hRC) = 0 Then
         Debug.Print "wglMakeCurrent falhou"
         Exit Function
@@ -723,8 +771,9 @@ Public Function InitWindow(ByRef frmMain As Form, ByVal Width As Long, ByVal Hei
 
     screenWidth = Width
     screenHeight = Height
+    UpdateRenderSize
 
-    glViewport 0, 0, Width, Height
+    glViewport 0, 0, mRenderWidth, mRenderHeight
 
     glEnable GL_BLEND
     glBlendFunc GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
@@ -733,7 +782,7 @@ Public Function InitWindow(ByRef frmMain As Form, ByVal Width As Long, ByVal Hei
     InitColors
     rlglInit
 
-    InitWindow = True
+    InitOpenGL = True
 End Function
 
 Private Sub InitColors()
@@ -769,108 +818,6 @@ Private Sub SetVSyncInternal(ByVal enabled As Boolean)
     End If
 End Sub
 
-Public Sub Run(ByRef TargetForm As Form, ByVal ScreenW As Long, ByVal ScreenH As Long, ByVal TargetFPS As Long)
-    On Error GoTo ErrorHandler
-
-    Load TargetForm
-    TargetForm.ScaleMode = 3
-    TargetForm.Width = (ScreenW * Screen.TwipsPerPixelX) + (TargetForm.Width - (TargetForm.ScaleWidth * Screen.TwipsPerPixelX))
-    TargetForm.Height = (ScreenH * Screen.TwipsPerPixelY) + (TargetForm.Height - (TargetForm.ScaleHeight * Screen.TwipsPerPixelY))
-    TargetForm.left = (Screen.Width - TargetForm.Width) / 2
-    TargetForm.top = (Screen.Height - TargetForm.Height) / 2
-
-    TargetForm.Show
-    DoEvents
-
-    If InitWindow(TargetForm, ScreenW, ScreenH) = False Then
-        MsgBox "Failed to init OpenGL!", vbCritical
-        Unload TargetForm
-        Exit Sub
-    End If
-
-    ResetCoreState
-    SetTargetFPS TargetFPS
-    mWindowReady = True
-    ApplyConfigFlags
-
-    Dim freq As Currency
-    Dim counterStart As Currency
-    Dim counterEnd As Currency
-    Dim dt As Single
-    Dim frameCount As Long
-    Dim fpsTimer As Single
-
-    QueryPerformanceFrequency freq
-    QueryPerformanceCounter counterStart
-
-    Game_Load
-
-    Do While mShouldQuit = False
-        QueryPerformanceCounter counterEnd
-        dt = CSng(counterEnd - counterStart) / CSng(freq)
-
-        If mTargetFPS > 0 And IsVSyncEnabled() = False Then
-            Dim targetFrameTime As Single
-            targetFrameTime = 1# / CSng(mTargetFPS)
-            If dt < targetFrameTime Then
-                Do
-                    QueryPerformanceCounter counterEnd
-                    dt = CSng(counterEnd - counterStart) / CSng(freq)
-                    DoEvents
-                Loop While dt < targetFrameTime
-            End If
-        Else
-            DoEvents
-        End If
-
-        counterStart = counterEnd
-        If dt > 0.25 Then dt = 0.25
-
-        mFrameTime = dt
-        mTime = mTime + dt
-
-        fpsTimer = fpsTimer + dt
-        frameCount = frameCount + 1
-
-        If fpsTimer >= 1# Then
-            mFps = frameCount
-            frameCount = 0
-            fpsTimer = fpsTimer - 1#
-        End If
-
-        UpdateInput
-        UpdateMouse m_hWnd
-
-        DebugBeginFrame
-        DebugBeginUpdate
-        Game_Update (dt)
-        DebugEndUpdate
-        DebugBeginDraw
-        Game_Draw (dt)
-        DebugEndDraw
-        DebugEndFrame dt
-
-        mWindowResized = False
-        DoEvents
-    Loop
-
-    DeinitWindowState
-    Game_Unload
-    Unload TargetForm
-    StopMusic
-    DeinitOpenGL
-    mWindowReady = False
-    Exit Sub
-
-ErrorHandler:
-    DeinitWindowState
-    StopMusic
-    DeinitOpenGL
-    mWindowReady = False
-    MsgBox "Error: " & Err.Description, vbCritical
-    End
-End Sub
-
 ' Core
 
 Private Sub ResetCoreState()
@@ -882,12 +829,16 @@ Private Sub ResetCoreState()
     mMouseWheelVY = 0!
     mCursorHidden = False
     mFullscreen = False
-    mShouldQuit = False
+    mShouldClose = False
+    mExitKey = KEY_ESCAPE
+    mEventWaiting = False
     mMinSizeW = 0
     mMinSizeH = 0
     mFrameTime = 0!
     mTime = 0#
     mFps = 0
+    mFpsFrames = 0
+    mFpsTimer = 0!
     mWindowResized = False
 End Sub
 
@@ -924,12 +875,67 @@ End Sub
 ' Window state
 
 Public Function WindowShouldClose() As Boolean
-    WindowShouldClose = mShouldQuit
+    WindowShouldClose = mShouldClose
 End Function
 
 Public Sub CloseWindow()
-    mShouldQuit = True
+    DeinitWindowState
+    StopMusic
+    Unload mTargetForm
+    Set mTargetForm = Nothing
+    DeinitOpenGL
+    mWindowReady = False
 End Sub
+
+Public Sub PollInputEvents()
+    UpdateInput
+    UpdateMouse m_hWnd
+
+    If mExitKey >= 0 And mExitKey <= 255 Then
+        If Keys(mExitKey).IsDown And Not Keys(mExitKey).WasDown Then mShouldClose = True
+    End If
+
+    mWindowResized = False
+
+    If mEventWaiting Then WaitMessage
+    DoEvents
+End Sub
+
+Public Sub SwapScreenBuffer()
+    SwapBuffers m_hDC
+End Sub
+
+Public Sub EnableEventWaiting()
+    mEventWaiting = True
+End Sub
+
+Public Sub DisableEventWaiting()
+    mEventWaiting = False
+End Sub
+
+Public Sub SetExitKey(ByVal key As KeyboardKey)
+    mExitKey = key
+End Sub
+
+Public Function IsWindowState(ByVal flag As Long) As Boolean
+    IsWindowState = ((mConfigFlags And flag) <> 0)
+End Function
+
+Public Function GetScreenWidth() As Long
+    GetScreenWidth = screenWidth
+End Function
+
+Public Function GetScreenHeight() As Long
+    GetScreenHeight = screenHeight
+End Function
+
+Public Function GetRenderWidth() As Long
+    GetRenderWidth = mRenderWidth
+End Function
+
+Public Function GetRenderHeight() As Long
+    GetRenderHeight = mRenderHeight
+End Function
 
 Public Function IsWindowReady() As Boolean
     IsWindowReady = mWindowReady
@@ -1033,6 +1039,7 @@ Public Sub SetWindowState(ByVal flags As Long)
     If (flags And FLAG_WINDOW_HIDDEN) <> 0 Then ShowWindow m_hWnd, SW_HIDE
     If (flags And FLAG_WINDOW_MINIMIZED) <> 0 Then ShowWindow m_hWnd, SW_MINIMIZE
     If (flags And FLAG_WINDOW_MAXIMIZED) <> 0 Then ShowWindow m_hWnd, SW_MAXIMIZE
+    If (flags And FLAG_WINDOW_HIGHDPI) <> 0 Then RefreshRenderSize
 End Sub
 
 Public Sub ClearWindowState(ByVal flags As Long)
@@ -1046,6 +1053,7 @@ Public Sub ClearWindowState(ByVal flags As Long)
     If (flags And FLAG_WINDOW_HIDDEN) <> 0 Then ShowWindow m_hWnd, SW_SHOW
     If (flags And FLAG_WINDOW_MINIMIZED) <> 0 Then ShowWindow m_hWnd, SW_RESTORE
     If (flags And FLAG_WINDOW_MAXIMIZED) <> 0 Then ShowWindow m_hWnd, SW_RESTORE
+    If (flags And FLAG_WINDOW_HIGHDPI) <> 0 Then RefreshRenderSize
 End Sub
 
 Private Sub ApplyConfigFlags()
@@ -1145,6 +1153,14 @@ Private Sub RemoveSubclass()
 End Sub
 
 Private Function WindowProc(ByVal hwnd As Long, ByVal msg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+    If msg = WM_CLOSE Then
+        ' Close request: let WindowShouldClose report it and keep the window
+        ' alive until the user calls CloseWindow
+        mShouldClose = True
+        WindowProc = 0
+        Exit Function
+    End If
+
     If msg = WM_GETMINMAXINFO Then
         Dim mmi As MINMAXINFO
         CopyMemoryPtr VarPtr(mmi), lParam, Len(mmi)
@@ -1319,8 +1335,8 @@ End Sub
 
 Public Sub TakeScreenshot(ByVal fileName As String)
     Dim w As Long, h As Long
-    w = screenWidth
-    h = screenHeight
+    w = mRenderWidth
+    h = mRenderHeight
     If w <= 0 Or h <= 0 Then Exit Sub
 
     Dim pixels() As Byte
@@ -3176,8 +3192,8 @@ End Sub
 Public Function LoadImageFromScreen() As Image
     Dim img As Image
 
-    img.Width = screenWidth
-    img.Height = screenHeight
+    img.Width = mRenderWidth
+    img.Height = mRenderHeight
     img.Format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8
     img.Mipmaps = 1
 
@@ -3948,16 +3964,49 @@ End Function
 Public Sub UpdateViewport(ByVal w As Long, ByVal h As Long)
     screenWidth = w
     screenHeight = h
-    rlViewport 0, 0, screenWidth, screenHeight
+    UpdateRenderSize
+    mWindowResized = True
+    rlViewport 0, 0, mRenderWidth, mRenderHeight
+End Sub
+
+' Screen (logical) is what the user draws with; render is the framebuffer and
+' equals screen unless FLAG_WINDOW_HIGHDPI is set (then render = screen * DPI).
+Private Sub UpdateRenderSize()
+    Dim dpi As Vector2
+
+    dpi = GetWindowScaleDPI()
+    mDpiScaleX = dpi.x
+    mDpiScaleY = dpi.y
+
+    mScreenScaleX = 1!
+    mScreenScaleY = 1!
+    If (mConfigFlags And FLAG_WINDOW_HIGHDPI) <> 0 Then
+        mScreenScaleX = mDpiScaleX
+        mScreenScaleY = mDpiScaleY
+    End If
+
+    mRenderWidth = CLng(screenWidth * mScreenScaleX + 0.5)
+    mRenderHeight = CLng(screenHeight * mScreenScaleY + 0.5)
+    If mRenderWidth < 1 Then mRenderWidth = 1
+    If mRenderHeight < 1 Then mRenderHeight = 1
+End Sub
+
+Private Sub RefreshRenderSize()
+    UpdateRenderSize
+    rlViewport 0, 0, mRenderWidth, mRenderHeight
 End Sub
 
 Public Sub BeginDrawing()
+    DebugEndUpdate
+    DebugBeginDraw
+
     rlMatrixMode RL_PROJECTION
     rlLoadIdentity
-    rlOrtho 0, screenWidth, screenHeight, 0, -1, 1
+    rlOrtho 0, mRenderWidth, mRenderHeight, 0, -1, 1
 
     rlMatrixMode RL_MODELVIEW
     rlLoadIdentity
+    If mScreenScaleX <> 1! Or mScreenScaleY <> 1! Then rlScalef mScreenScaleX, mScreenScaleY, 1!
 End Sub
 
 ' Render target mode
@@ -4014,10 +4063,54 @@ Public Sub Clear(ByVal r As Single, ByVal g As Single, ByVal b As Single, ByVal 
 End Sub
 
 Public Sub EndDrawing()
+    Dim now As Currency
+    Dim dt As Single
+    Dim targetFrameTime As Single
+
+    DebugEndDraw
+
+    QueryPerformanceCounter now
+    If mQpcFreq > 0 Then dt = CSng(CDbl(now - mFrameMark) / CDbl(mQpcFreq))
+
+    ' Frame limiter: busy-wait until the frame reaches the target period,
+    ' re-measuring from mFrameMark so the wall clock (and GetFrameTime) is the
+    ' full frame time. Only when vsync is off (with vsync the swap paces us).
+    If mTargetFPS > 0 And IsVSyncEnabled() = False Then
+        targetFrameTime = 1# / CSng(mTargetFPS)
+        If dt < targetFrameTime Then
+            Do
+                QueryPerformanceCounter now
+                If mQpcFreq > 0 Then dt = CSng(CDbl(now - mFrameMark) / CDbl(mQpcFreq))
+                DoEvents
+            Loop While dt < targetFrameTime
+        End If
+    End If
+
+    mFrameMark = now
+    If dt > 0.25 Then dt = 0.25
+
     DebugGpuBegin
     rlDrawRenderBatchActive
     DebugGpuEnd
-    SwapBuffers m_hDC
+
+    SwapScreenBuffer
+
+    DebugEndFrame dt
+    DebugBeginFrame
+
+    mFrameTime = dt
+    mTime = mTime + dt
+
+    mFpsTimer = mFpsTimer + dt
+    mFpsFrames = mFpsFrames + 1
+    If mFpsTimer >= 1# Then
+        mFps = mFpsFrames
+        mFpsFrames = 0
+        mFpsTimer = mFpsTimer - 1#
+    End If
+
+    PollInputEvents
+    DebugBeginUpdate
 End Sub
 
 Public Sub BeginMode2D(ByRef camera As Camera2D)

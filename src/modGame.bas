@@ -15,17 +15,35 @@ Dim cameraSpeed As Single
 Dim map As Tilemap
 
 Sub Main()
-    Run frmMain, 1280, 768, 60
+    'SetConfigFlags FLAG_VSYNC_HINT
+
+    If InitWindow(frmMain, 1280, 768, "raylib") = False Then
+        MsgBox "Failed to init OpenGL!", vbCritical
+        Exit Sub
+    End If
+
+    SetTargetFPS 75
+
+    Game_Load
+
+    Do While WindowShouldClose() = False
+        Game_Update GetFrameTime()
+
+        BeginDrawing
+        Game_Draw GetFrameTime()
+        EndDrawing
+    Loop
+
+    Game_Unload
+    CloseWindow
 End Sub
 
 Sub Game_Load()
-    SetConfigFlags FLAG_VSYNC_HINT
-
     Color mouseColor, 1, 0, 0, 0.3
     sprite = LoadTexture("assets/001-Fighter01.png")
-    Rect src, 0#, 0#, 32#, 48#
+    rect src, 0#, 0#, 32#, 48#
     Vec dst, 0, 32#
-    Rect dstrect, 300#, 100#, 32#, 48#
+    rect dstrect, 300#, 100#, 32#, 48#
 
     font = LoadImageFont("assets/font2.png", " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;':"",./<>?~`Á«·ÈÌÛ˙¡…Õ”⁄„ı√’‚ÍÙ¬ ‘‡ËÏÚ˘¿»Ã“Ÿ")
 
@@ -60,8 +78,8 @@ Sub Game_Update(ByVal dt As Single)
     If IsKeyDown(KEY_A) Then targetX = targetX + cameraSpeed * dt
     If IsKeyDown(KEY_D) Then targetX = targetX - cameraSpeed * dt
 
-    camera.Offset.x = camera.Offset.x + CInt(targetX)
-    camera.Offset.y = camera.Offset.y + CInt(targetY)
+    camera.Offset.x = camera.Offset.x + targetX
+    camera.Offset.y = camera.Offset.y + targetY
 
     ClampCamera camera, map
 
@@ -96,7 +114,6 @@ Sub Game_Update(ByVal dt As Single)
 End Sub
 
 Sub Game_Draw(ByVal dt As Single)
-    BeginDrawing
     Clear 0.1, 0.1, 0.1, 1#
 
     BeginMode2D camera
@@ -123,7 +140,6 @@ Sub Game_Draw(ByVal dt As Single)
     DrawText font, "FPS: " & CStr(GetFPS()), 10, 10, White
 
     DebugDrawOverlay
-    EndDrawing
 End Sub
 
 Private Sub ClampCamera(ByRef c As Camera2D, ByRef m As Tilemap)

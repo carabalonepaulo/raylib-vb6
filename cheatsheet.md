@@ -7,30 +7,54 @@ Cheatsheet. Low-level batching/GL-emulation layer: [cheatsheet_rlgl.md](cheatshe
 - Text uses `ImageFont` (bitmap font). There is no TTF/font loading.
 - Everything is drawn between `BeginDrawing()` and `EndDrawing()`.
 - Struct helpers: `Vec v, x, y` / `Rect r, x, y, w, h` / `Color c, r, g, b, a`.
-- Typical entry point:
+- Typical entry point (the user owns `Main`; the library has no game loop):
 
 ```vb
 Sub Main()
-    Run frmMain, 1280, 768, 60
+    SetConfigFlags FLAG_VSYNC_HINT
+    If InitWindow(frmMain, 1280, 768, "raylib") = False Then Exit Sub
+    SetTargetFPS 60
+
+    LoadResources
+
+    Do While WindowShouldClose() = False
+        Update GetFrameTime()
+
+        BeginDrawing
+        Clear 0.1, 0.1, 0.1, 1
+        Draw
+        EndDrawing
+    Loop
+
+    UnloadResources
+    CloseWindow
 End Sub
 ```
 
-`Run` loads the form, calls `InitWindow` (creates the GL context and initializes the
-rlgl layer), calls `Game_Load`, loops `Game_Update(dt)` / `Game_Draw(dt)` each frame,
-and finally calls `Game_Unload`.
+`InitWindow` loads the form, sizes/centers/shows it and creates the GL context (pixel
+format, viewport, blending, image loader, colors and the rlgl layer). From then on the
+user owns the loop: `BeginDrawing`/`EndDrawing` delimit a frame, and `EndDrawing` does
+the per-frame plumbing (flush the rlgl batch, swap buffers, frame timing, the FPS
+limiter, input polling). `CloseWindow` releases the window and GL context.
 
 # Core
 
 ```vb
 ' window / frame
-Sub InitWindow(ByRef frmMain As Form, ByVal width As Long, ByVal height As Long)
-Sub Run(ByRef TargetForm As Form, ByVal ScreenW As Long, ByVal ScreenH As Long, ByVal TargetFPS As Long)
+Function InitWindow(ByRef frmMain As Form, ByVal width As Long, ByVal height As Long, ByVal title As String) As Boolean
+Sub CloseWindow()
 Sub UpdateViewport(ByVal w As Long, ByVal h As Long)
 
 ' drawing
 Sub BeginDrawing()
 Sub EndDrawing()
 Sub Clear(ByVal R As Single, ByVal G As Single, ByVal B As Single, ByVal A As Single)
+
+' loop primitives (EndDrawing calls PollInputEvents and SwapScreenBuffer itself)
+Sub PollInputEvents()
+Sub SwapScreenBuffer()
+Sub EnableEventWaiting()
+Sub DisableEventWaiting()
 
 ' timing
 Sub SetTargetFPS(ByVal target As Long)
@@ -41,13 +65,18 @@ Sub WaitTime(ByVal seconds As Double)
 
 ' window state
 Function WindowShouldClose() As Boolean
-Sub CloseWindow()
+Sub SetExitKey(ByVal key As KeyboardKey)
 Function IsWindowReady() As Boolean
 Function IsWindowFocused() As Boolean
 Function IsWindowResized() As Boolean
 Function IsWindowFullscreen() As Boolean
 Function IsWindowMinimized() As Boolean
 Function IsWindowMaximized() As Boolean
+Function IsWindowState(ByVal flag As Long) As Boolean
+Function GetScreenWidth() As Long
+Function GetScreenHeight() As Long
+Function GetRenderWidth() As Long
+Function GetRenderHeight() As Long
 
 ' window setters
 Sub SetWindowTitle(ByVal title As String)
@@ -91,12 +120,15 @@ screenWidth  As Long
 screenHeight As Long
 ```
 
-- `InitWindow` does NOT create a window: it receives the already-created form (`frmMain`) and only initializes what is needed - pixel format, GL context, viewport, blending, image loader, colors and the rlgl layer. `Run` calls it for you; you normally call `Run`, not `InitWindow`.
-- `BeginDrawing` sets an ortho projection `(0, w, h, 0)` through rlgl and `EndDrawing` flushes the rlgl batch and swaps buffers. All the `Draw*` functions below record geometry into the rlgl batch instead of calling OpenGL directly. The map (`modGame.DrawMap`) is the exception: it uses its own world-space vertex array, so it flushes the batch and draws with `rlDrawVertexArray`.
+- `InitWindow` does NOT create a window: it receives the VB6 form (`frmMain`), loads/sizes/centers/shows it and initializes the GL context (pixel format, viewport, blending, image loader, colors, rlgl layer). It also stamps the frame clock. Call it once; then drive your own loop and finish with `CloseWindow`.
+- `BeginDrawing` measures the update phase (time since the previous `EndDrawing`) and sets an ortho projection `(0, render, render, 0)` through rlgl. `EndDrawing` applies the FPS limiter, flushes the rlgl batch, swaps buffers, updates `GetFrameTime`/`GetTime`/`GetFPS` and polls input. All the `Draw*` functions below record geometry into the rlgl batch instead of calling OpenGL directly. The map (`modGame.DrawMap`) is the exception: it uses its own world-space vertex array, so it flushes the batch and draws with `rlDrawVertexArray`.
+- The loop plumbing mirrors raylib: `EndDrawing` calls `SwapScreenBuffer()` then `PollInputEvents()` (which does `UpdateInput` + `UpdateMouse`, clears `IsWindowResized`, and pumps the VB6 message queue via `DoEvents`). You normally never call those two yourself; call `PollInputEvents` manually only if you skip `EndDrawing`. `EnableEventWaiting` makes the poll block on `WaitMessage` (idle CPU) instead of polling.
+- `WindowShouldClose` returns True when the user closes the window (the X button / Alt+F4) or presses the exit key (`SetExitKey`, default `KEY_ESCAPE`; pass `KEY_NULL` = 0 to disable). `CloseWindow` is the teardown (deinit window state, unload the form, stop music, delete the GL context) and must be called once after the loop.
 - `Clear(r, g, b, a)` takes four components, not a `ColorRGBA`.
 - FLAG list: `FLAG_VSYNC_HINT`, `FLAG_FULLSCREEN_MODE`, `FLAG_WINDOW_RESIZABLE`, `FLAG_WINDOW_UNDECORATED`, `FLAG_WINDOW_TRANSPARENT`, `FLAG_MSAA_4X_HINT`, `FLAG_WINDOW_HIDDEN`, `FLAG_WINDOW_ALWAYS_RUN`, `FLAG_WINDOW_MINIMIZED`, `FLAG_WINDOW_MAXIMIZED`, `FLAG_WINDOW_UNFOCUSED`, `FLAG_WINDOW_TOPMOST`, `FLAG_WINDOW_HIGHDPI`, `FLAG_WINDOW_MOUSE_PASSTHROUGH`, `FLAG_BORDERLESS_WINDOWED_MODE`, `FLAG_INTERLACED_HINT`.
-- `SetConfigFlags` may be called before `Run` (flags applied at init) or during `Game_Load`. `FLAG_VSYNC_HINT` replaces the old `SetVSync`/`ToggleVSync`.
-- The `Run` frame limiter (`TargetFPS`, also `SetTargetFPS`) only kicks in when vsync is **off** (`IsVSyncEnabled` = False). With vsync on the display refresh paces the loop and the target is ignored, matching raylib (its frame wait is a top-up over the whole frame and the swap already fills it). Use one or the other: for a vblank-paced loop pass `TargetFPS = 0` and enable `FLAG_VSYNC_HINT`.
+- `SetConfigFlags` may be called before `InitWindow` (recommended; flags applied when it initializes) or at any time afterwards. `IsWindowState flag` reports whether a flag is set. `FLAG_VSYNC_HINT` replaces the old `SetVSync`/`ToggleVSync`.
+- `GetScreenWidth`/`GetScreenHeight` are the logical size you draw with (what `InitWindow`/`UpdateViewport` last applied). `GetRenderWidth`/`GetRenderHeight` are the framebuffer size: equal to the screen size by default, or `screen * DPI` when `FLAG_WINDOW_HIGHDPI` is set (then `BeginDrawing` scales the logical coordinates up to the framebuffer). `GetWindowScaleDPI` returns the monitor DPI ratio (`1.0` at 100%).
+- The frame limiter (`SetTargetFPS`) only kicks in when vsync is **off** (`IsVSyncEnabled` = False). With vsync on the display refresh paces the loop and the target is ignored, matching raylib (its frame wait is a top-up over the whole frame and the swap already fills it). Use one or the other: `SetTargetFPS 60` when running without vsync, or enable `FLAG_VSYNC_HINT` and let the refresh pace the loop.
 
 # 2D Camera mode
 
@@ -342,7 +374,7 @@ Sub DebugInit(ByRef font As ImageFont, Optional ByVal maxSamples As Long = 240)
 Sub DebugToggle()
 Function DebugIsVisible() As Boolean
 
-' per-frame markers (called automatically by Run; see notes)
+' per-frame markers (driven automatically by BeginDrawing/EndDrawing; see notes)
 Sub DebugBeginFrame()
 Sub DebugBeginUpdate()
 Sub DebugEndUpdate()
@@ -373,8 +405,8 @@ Function DebugGpuStatus() As String
 ```
 
 - Enum `DebugMetric`: `DEBUGM_FRAME`, `DEBUGM_UPDATE`, `DEBUGM_DRAW`, `DEBUGM_GPU`.
-- Call `DebugInit font` once (e.g. in `Game_Load`) with the bitmap font used for text. Without it the overlay draws nothing.
-- `Run` drives the timing markers automatically: `DebugBeginFrame` resets the rlgl frame stats, update/draw are timed around `Game_Update`/`Game_Draw`, and `DebugEndFrame dt` records the wall-clock frame time; `EndDrawing` runs the GPU query. The overlay itself is the user's responsibility: call `DebugDrawOverlay` right before `EndDrawing` (it needs the font) and toggle visibility yourself, e.g. `If IsKeyPressed(KEY_F1) Then DebugToggle` in `Game_Update`.
+- Call `DebugInit font` once (e.g. at startup) with the bitmap font used for text. Without it the overlay draws nothing.
+- The library drives the timing markers automatically through the frame hooks: `BeginDrawing` closes the UPDATE metric (time since the previous `EndDrawing`) and opens the DRAW metric, `EndDrawing` closes DRAW at its very start (before the limiter and the batch flush), then swaps buffers, records the sample (`DebugEndFrame`) with the wall-clock frame time and runs the GPU query. So UPDATE is your per-frame update work, DRAW is your draw work, FRAME is the full wall-clock frame (limiter + flush + swap + poll included) and GPU is the GPU execution of the flushed batch. The overlay itself is the user's responsibility: call `DebugDrawOverlay` right before `EndDrawing` (it needs the font) and toggle visibility yourself, e.g. `If IsKeyPressed(KEY_F1) Then DebugToggle` in your update.
 - It keeps a ring buffer of `maxSamples` frames (default 240, ~4 s at 60 fps), one sample per frame. The overlay shows FRAME / UPDATE / DRAW / GPU rows, each with current, max and avg, plus FPS, 1% low, draw calls and vertices.
 - GPU time uses `GL_ARB_timer_query` (or `GL_EXT_timer_query`) through `wglGetProcAddress` + `DispCallFunc` (OpenGL 1.1 has no timer query). It reads the PREVIOUS frame's result (no pipeline stall). If the driver does not expose the extension, `DebugGpuIsAvailable` is False and the row shows `n/a`; `DebugGpuStatus` gives a diagnostic string (e.g. `ARB-ok`).
 
