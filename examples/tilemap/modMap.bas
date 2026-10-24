@@ -26,9 +26,14 @@ Public Sub DebugTilemap(ByRef map As Tilemap)
     Debug.Print "Layers: " & map.Layers
 End Sub
 
-Public Function LoadTilemap(ByVal Id As Integer) As Tilemap
+Public Function LoadTilemap(ByVal Id As Integer, Optional ByVal rootPath As String = "") As Tilemap
     Dim basePath As String
-    basePath = app.path & "\" & "assets\maps\" & Id
+
+    If Len(rootPath) = 0 Then
+        basePath = App.Path & "\assets\maps\" & Id
+    Else
+        basePath = rootPath & "\assets\maps\" & Id
+    End If
 
     Dim path As String
     path = basePath & ".ini"
@@ -38,7 +43,11 @@ Public Function LoadTilemap(ByVal Id As Integer) As Tilemap
 
     Dim map As Tilemap
     map.Id = Id
-    map.Tileset = LoadTexture(tilesetPath)
+    If Len(rootPath) = 0 Then
+        map.Tileset = LoadTexture(tilesetPath)
+    Else
+        map.Tileset = LoadTexture(rootPath & "\" & tilesetPath)
+    End If
     map.TilesetColumns = INI_ReadByte("Meta", "TilesetColumns", path)
     map.TileWidth = INI_ReadByte("Meta", "TileWidth", path)
     map.TileHeight = INI_ReadByte("Meta", "TileHeight", path)
@@ -169,3 +178,27 @@ Public Function LoadTilemap(ByVal Id As Integer) As Tilemap
 
     LoadTilemap = map
 End Function
+
+Public Sub DrawMap(ByRef map As Tilemap)
+    If map.TotalVertices <= 0 Then Exit Sub
+    If map.Tileset.Id = 0 Then Exit Sub
+
+    rlDrawRenderBatchActive
+
+    glEnable GL_TEXTURE_2D
+    glBindTexture GL_TEXTURE_2D, map.Tileset.Id
+
+    glColor4f White.r, White.g, White.b, White.a
+
+    glEnableClientState GL_VERTEX_ARRAY
+    glEnableClientState GL_TEXTURE_COORD_ARRAY
+
+    glVertexPointer 2, GL_FLOAT, 0, ByVal VarPtr(map.Vertices(0))
+    glTexCoordPointer 2, GL_FLOAT, 0, ByVal VarPtr(map.TexCoords(0))
+
+    rlDrawVertexArray RL_QUADS, 0, map.TotalVertices
+
+    glDisableClientState GL_TEXTURE_COORD_ARRAY
+    glDisableClientState GL_VERTEX_ARRAY
+    glDisable GL_TEXTURE_2D
+End Sub

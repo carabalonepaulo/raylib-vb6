@@ -12,7 +12,6 @@ Dim camera As Camera2D
 
 Dim cameraMode As Byte
 Dim cameraSpeed As Single
-Dim map As Tilemap
 
 Sub Main()
     SetConfigFlags FLAG_VSYNC_HINT
@@ -45,13 +44,11 @@ Sub Game_Load()
     Vec dst, 0, 32#
     rect dstrect, 300#, 100#, 32#, 48#
 
-    font = LoadImageFont("assets/font_regular_16.png", "? ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;':"",./<>~`Á«·ÈÌÛ˙¡…Õ”⁄„ı√’‚ÍÙ¬ ‘‡ËÏÚ˘¿»Ã“Ÿ")
+    font = LoadImageFont("assets/font_regular_16.png", "? ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;':"",./<>~`ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ")
 
     cameraSpeed = 1000
     camera.Zoom = 2!
     camera.Rot = 0!
-
-    map = LoadTilemap(0)
 
     DebugInit font
 End Sub
@@ -80,8 +77,6 @@ Sub Game_Update(ByVal dt As Single)
 
     camera.Offset.x = camera.Offset.x + targetX
     camera.Offset.y = camera.Offset.y + targetY
-
-    ClampCamera camera, map
 
     If IsKeyPressed(KEY_DOWN) Then
         If cameraMode > 0 Then
@@ -121,13 +116,6 @@ Sub Game_Draw(ByVal dt As Single)
     DrawTextureRec sprite, src, dst, White
     DrawTexturePro sprite, src, dstrect, origin, Rot, White
 
-    DrawMap map
-
-    DrawRectangle 0, 0, map.TileWidth, map.TileHeight, Red
-    DrawRectangle 0, map.Height * map.TileHeight - map.TileHeight, map.TileWidth, map.TileHeight, Red
-    DrawRectangle map.Width * map.TileWidth - map.TileWidth, 0, map.TileWidth, map.TileHeight, Red
-    DrawRectangle map.Width * map.TileWidth - map.TileWidth, map.Height * map.TileHeight - map.TileHeight, map.TileWidth, map.TileHeight, Red
-
     Dim screenPos As Vector2
     screenPos = GetMousePos
 
@@ -142,50 +130,3 @@ Sub Game_Draw(ByVal dt As Single)
     DebugDrawOverlay
 End Sub
 
-Private Sub ClampCamera(ByRef c As Camera2D, ByRef m As Tilemap)
-    Dim mapWidthPx As Single, mapHeightPx As Single
-    mapWidthPx = CSng(m.Width) * CSng(m.TileWidth)
-    mapHeightPx = CSng(m.Height) * CSng(m.TileHeight)
-
-    Dim minOffsetX As Single, minOffsetY As Single
-    minOffsetX = -((mapWidthPx * camera.Zoom) - screenWidth)
-    minOffsetY = -((mapHeightPx * camera.Zoom) - screenHeight)
-
-    If (mapWidthPx * c.Zoom) > screenWidth Then
-        If c.Offset.x > 0 Then c.Offset.x = 0
-        If c.Offset.x < minOffsetX Then c.Offset.x = minOffsetX
-    Else
-        c.Offset.x = 0
-    End If
-
-    If (mapHeightPx * c.Zoom) > screenHeight Then
-        If c.Offset.y > 0 Then c.Offset.y = 0
-        If c.Offset.y < minOffsetY Then c.Offset.y = minOffsetY
-    Else
-        c.Offset.y = 0
-    End If
-End Sub
-
-Private Sub DrawMap(ByRef map As Tilemap)
-    If map.TotalVertices <= 0 Then Exit Sub
-    If map.Tileset.Id = 0 Then Exit Sub
-
-    rlDrawRenderBatchActive
-
-    glEnable GL_TEXTURE_2D
-    glBindTexture GL_TEXTURE_2D, map.Tileset.Id
-
-    glColor4f White.r, White.g, White.b, White.a
-
-    glEnableClientState GL_VERTEX_ARRAY
-    glEnableClientState GL_TEXTURE_COORD_ARRAY
-
-    glVertexPointer 2, GL_FLOAT, 0, ByVal VarPtr(map.Vertices(0))
-    glTexCoordPointer 2, GL_FLOAT, 0, ByVal VarPtr(map.TexCoords(0))
-
-    rlDrawVertexArray RL_QUADS, 0, map.TotalVertices
-
-    glDisableClientState GL_TEXTURE_COORD_ARRAY
-    glDisableClientState GL_VERTEX_ARRAY
-    glDisable GL_TEXTURE_2D
-End Sub
