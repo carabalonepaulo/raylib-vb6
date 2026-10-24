@@ -15,14 +15,14 @@ Dim cameraSpeed As Single
 Dim map As Tilemap
 
 Sub Main()
-    'SetConfigFlags FLAG_VSYNC_HINT
+    SetConfigFlags FLAG_VSYNC_HINT
 
     If InitWindow(frmMain, 1280, 768, "raylib") = False Then
         MsgBox "Failed to init OpenGL!", vbCritical
         Exit Sub
     End If
 
-    SetTargetFPS 75
+    SetExitKey KEY_NULL
 
     Game_Load
 
@@ -45,7 +45,7 @@ Sub Game_Load()
     Vec dst, 0, 32#
     rect dstrect, 300#, 100#, 32#, 48#
 
-    font = LoadImageFont("assets/font2.png", " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;':"",./<>?~`çÇáéíóúÁÉÍÓÚãõÃÕâêôÂÊÔàèìòùÀÈÌÒÙ")
+    font = LoadImageFont("assets/font_regular_16.png", "? ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;':"",./<>~`çÇáéíóúÁÉÍÓÚãõÃÕâêôÂÊÔàèìòùÀÈÌÒÙ")
 
     cameraSpeed = 1000
     camera.Zoom = 2!
