@@ -42,7 +42,6 @@ Sub Main()
     SetShaderValueV4 sh, GetShaderLocation(sh, "tint"), tint
 
     Do While WindowShouldClose() = False
-        PollInputEvents
         t = GetTime()
 
         BeginDrawing
