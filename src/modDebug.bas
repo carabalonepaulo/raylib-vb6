@@ -8,17 +8,18 @@ Private Declare Function lstrlenA Lib "kernel32" (ByVal lpString As Long) As Lon
 Private Declare Function DispCallFunc Lib "oleaut32.dll" (ByVal pvInstance As Long, ByVal oVft As Long, ByVal cc As Long, ByVal vtReturn As Integer, ByVal cActuals As Long, ByVal prgvt As Long, ByVal prgpvarg As Long, ByVal pvargResult As Long) As Long
 
 ' ============================================================================
-' modDebug - overlay de diagnostico (plot rolante) para o loop do jogo.
+' modDebug - diagnostic overlay (rolling plot) for the game loop.
 '
-' Nao faz parte da API da raylib: e uma conveniencia do projeto. A cada frame
-' coleta o tempo de frame, o tempo de CPU gasto em Game_Update e em Game_Draw,
-' o tempo de GPU (via timer query, quando o driver expoe) e as estatisticas do
-' rlgl (draw calls / vertices). O Run chama os marcadores de tempo e o
-' EndDrawing desenha o overlay.
+' Not part of the raylib API: it is a project convenience. Each frame it
+' collects frame time, CPU time spent in Game_Update and Game_Draw, GPU time
+' (via timer query, when the driver exposes it) and the rlgl statistics
+' (draw calls / vertices). The core calls the timing markers; the overlay is
+' drawn and toggled by the user, who owns the font.
 '
-' Uso:
-'   Game_Load:  DebugInit font
-'   (o Run cuida do resto; F1 liga/desliga o overlay)
+' Usage:
+'   Game_Load:    DebugInit font
+'   Game_Update:  If IsKeyPressed(KEY_F1) Then DebugToggle
+'   Game_Draw:    DebugDrawOverlay   (before EndDrawing)
 ' ============================================================================
 
 ' Metricas disponiveis no plot (valores em milissegundos).
@@ -450,7 +451,7 @@ Public Sub DebugGpuEnd()
 End Sub
 
 ' ============================================================================
-' Overlay (desenhado pelo EndDrawing, ja em espaco de tela)
+' Overlay (drawn by the user, already in screen space)
 ' ============================================================================
 
 Public Sub DebugDrawOverlay()

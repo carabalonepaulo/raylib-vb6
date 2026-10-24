@@ -361,7 +361,7 @@ Function DebugLow1Fps() As Single
 Function DebugDrawCallCount() As Long
 Function DebugVertexCount() As Long
 
-' drawing (called automatically by EndDrawing)
+' drawing (called by the user, who owns the font)
 Sub DebugDrawOverlay()
 
 ' GPU timer query (GL_ARB/EXT_timer_query; loaded dynamically)
@@ -373,7 +373,7 @@ Function DebugGpuStatus() As String
 
 - Enum `DebugMetric`: `DEBUGM_FRAME`, `DEBUGM_UPDATE`, `DEBUGM_DRAW`, `DEBUGM_GPU`.
 - Call `DebugInit font` once (e.g. in `Game_Load`) with the bitmap font used for text. Without it the overlay draws nothing.
-- `Run` drives the markers automatically: `DebugBeginFrame` resets the rlgl frame stats, update/draw are timed around `Game_Update`/`Game_Draw`, and `DebugEndFrame dt` records the wall-clock frame time. `EndDrawing` draws the overlay and runs the GPU query. F1 toggles visibility.
+- `Run` drives the timing markers automatically: `DebugBeginFrame` resets the rlgl frame stats, update/draw are timed around `Game_Update`/`Game_Draw`, and `DebugEndFrame dt` records the wall-clock frame time; `EndDrawing` runs the GPU query. The overlay itself is the user's responsibility: call `DebugDrawOverlay` right before `EndDrawing` (it needs the font) and toggle visibility yourself, e.g. `If IsKeyPressed(KEY_F1) Then DebugToggle` in `Game_Update`.
 - It keeps a ring buffer of `maxSamples` frames (default 240, ~4 s at 60 fps), one sample per frame. The overlay shows FRAME / UPDATE / DRAW / GPU rows, each with current, max and avg, plus FPS, 1% low, draw calls and vertices.
 - GPU time uses `GL_ARB_timer_query` (or `GL_EXT_timer_query`) through `wglGetProcAddress` + `DispCallFunc` (OpenGL 1.1 has no timer query). It reads the PREVIOUS frame's result (no pipeline stall). If the driver does not expose the extension, `DebugGpuIsAvailable` is False and the row shows `n/a`; `DebugGpuStatus` gives a diagnostic string (e.g. `ARB-ok`).
 

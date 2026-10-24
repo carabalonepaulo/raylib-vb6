@@ -43,6 +43,8 @@ Sub Game_Unload()
 End Sub
 
 Sub Game_Update(ByVal dt As Single)
+    If IsKeyPressed(KEY_F1) Then DebugToggle
+
     Rot = Rot + (90 * dt)
 
     If IsMouseButtonDown(MOUSE_BUTTON_LEFT) Then
@@ -126,6 +128,10 @@ Sub Game_Draw(ByVal dt As Single)
     EndMode2D
 
     DrawText font, "FPS: " & CStr(GetFPS()), 10, 10, White
+
+    ' Diagnostic overlay: drawn by the user, who owns the font, right before
+    ' EndDrawing flushes the batch.
+    DebugDrawOverlay
     EndDrawing
 End Sub
 

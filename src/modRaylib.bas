@@ -846,7 +846,6 @@ Public Sub Run(ByRef TargetForm As Form, ByVal ScreenW As Long, ByVal ScreenH As
 
         UpdateInput
         UpdateMouse m_hWnd
-        If IsKeyPressed(KEY_F1) Then DebugToggle
 
         DebugBeginFrame
         DebugBeginUpdate
@@ -4097,7 +4096,6 @@ Public Sub Clear(ByVal r As Single, ByVal g As Single, ByVal b As Single, ByVal 
 End Sub
 
 Public Sub EndDrawing()
-    DebugDrawOverlay
     DebugGpuBegin
     rlDrawRenderBatchActive
     DebugGpuEnd
