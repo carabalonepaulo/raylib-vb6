@@ -441,7 +441,7 @@ Private Sub DebugPlot(ByVal x As Single, ByVal y As Single, ByVal w As Single, B
     Dim s1 As String, s2 As String
 
     pad = 6!
-    fh = CSng(mFont.Height)
+    fh = CSng(mFont.texture.Height)
     If fh <= 0! Then fh = 8!
 
     rlSetLineWidth 1!
@@ -482,7 +482,7 @@ Private Sub DebugRowPanel(ByVal x As Single, ByVal y As Single, ByVal w As Singl
     Dim r As Rectangle
     Dim label As String
 
-    fh = CSng(mFont.Height)
+    fh = CSng(mFont.texture.Height)
     If fh <= 0! Then fh = 8!
     plotY = y + fh
     plotH = h - fh - 2!
@@ -516,7 +516,7 @@ Private Sub DebugRowLine(ByVal x As Single, ByVal y As Single, ByVal w As Single
 
     If idx = 3 And mGpuAvailable = False Then Exit Sub
 
-    fh = CSng(mFont.Height)
+    fh = CSng(mFont.texture.Height)
     If fh <= 0! Then fh = 8!
     plotY = y + fh
     plotH = h - fh - 2!

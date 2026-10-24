@@ -3914,6 +3914,28 @@ Public Function LoadImageFont(ByVal filePath As String, ByVal CharList As String
     Dim sepCol As ColorRGBA
     sepCol = GetImageColor(img, 0, 0)
 
+    ' Read the font size (height) encoded in the first column: a marker pixel
+    ' whose color differs from the separator color (magenta) at row = font size.
+    Dim markerY As Long
+    Dim yy As Long
+    markerY = -1
+    For yy = 0 To img.Height - 1
+        Dim markerCol As ColorRGBA
+        markerCol = GetImageColor(img, 0, yy)
+        If Not (Abs(markerCol.r - sepCol.r) < 0.05 And _
+                Abs(markerCol.g - sepCol.g) < 0.05 And _
+                Abs(markerCol.b - sepCol.b) < 0.05) Then
+            markerY = yy
+            Exit For
+        End If
+    Next yy
+
+    If markerY >= 0 Then
+        fnt.Height = markerY
+    Else
+        fnt.Height = img.Height
+    End If
+
     ReDim fnt.Glyphs(Len(CharList) - 1)
 
     Dim charIndex As Long
@@ -4547,7 +4569,7 @@ Public Sub DrawText(ByRef font As ImageFont, ByVal text As String, ByVal x As Si
     Dim texelWidth As Single
     texelWidth = 1! / CSng(font.texture.Width)
     Dim fHeight As Single
-    fHeight = CSng(font.Height)
+    fHeight = CSng(font.texture.Height)
 
     For i = 1 To Len(text)
         Dim charChar As String
@@ -4580,6 +4602,37 @@ Public Sub DrawText(ByRef font As ImageFont, ByVal text As String, ByVal x As Si
     rlEnd
     rlDisableTexture
 End Sub
+
+Public Function MeasureText(ByRef font As ImageFont, ByVal text As String) As Vector2
+    Dim result As Vector2
+    Dim i As Long
+    Dim totalWidth As Single
+
+    totalWidth = 0!
+
+    For i = 1 To Len(text)
+        Dim charChar As String
+        charChar = Mid$(text, i, 1)
+
+        Dim charIdx As Long
+        charIdx = InStr(1, font.CharList, charChar, vbBinaryCompare)
+
+        If charIdx > 0 Then
+            charIdx = charIdx - 1
+        Else
+            charIdx = 0
+        End If
+
+        Dim g As GlyphRect
+        g = font.Glyphs(charIdx)
+
+        totalWidth = totalWidth + g.Width
+    Next i
+
+    result.x = totalWidth
+    result.y = CSng(font.Height)
+    MeasureText = result
+End Function
 
 Public Sub DrawCircle(ByVal centerX As Long, ByVal centerY As Long, ByVal radius As Single, ByRef Color As ColorRGBA)
     DrawCircleSectorSimple centerX, centerY, radius, 0!, 360!, 32, Color

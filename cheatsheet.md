@@ -255,6 +255,7 @@ Sub DrawTextureNPatch(ByRef tex As Texture2D, ByRef info As NPatchInfo, ByRef ds
 ```vb
 Function LoadImageFont(ByVal filePath As String, ByVal CharList As String) As ImageFont
 Sub DrawText(ByRef font As ImageFont, ByVal text As String, ByVal x As Single, ByVal y As Single, ByRef tint As ColorRGBA)
+Function MeasureText(ByRef font As ImageFont, ByVal text As String) As Vector2
 ```
 
 # Images
