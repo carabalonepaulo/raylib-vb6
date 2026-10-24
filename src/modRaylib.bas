@@ -879,6 +879,11 @@ Public Function WindowShouldClose() As Boolean
 End Function
 
 Public Sub CloseWindow()
+    If mWindowReady = False Then
+        Exit Sub
+    End If
+    mShouldClose = True
+
     DeinitWindowState
     StopMusic
     Unload mTargetForm

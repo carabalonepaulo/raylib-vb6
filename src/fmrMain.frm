@@ -30,8 +30,9 @@ Private Sub Form_Resize()
     End If
 End Sub
 
-
-
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
+    CloseWindow
+End Sub
 
 
 
