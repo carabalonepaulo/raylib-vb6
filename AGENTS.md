@@ -47,3 +47,9 @@ fall out of date with the code.
 - The low-level layer uses the `rl` prefix and only OpenGL 1.1.
 - Do not compile the project inside the repository (it would overwrite
   `Raylib.exe`); use a temporary directory.
+
+## Git
+
+- Never commit or push to the repository without the user's explicit
+  permission. Always show the proposed changes and ask before running
+  `git commit` or `git push`. The user owns the repository history.
