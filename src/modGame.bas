@@ -27,7 +27,7 @@ Sub Game_Load()
     Vec dst, 0, 32#
     Rect dstrect, 300#, 100#, 32#, 48#
 
-    font = LoadImageFont("assets/font2.png", " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;':"",./<>?~`√ß√á√°√©√≠√≥√∫√Å√â√ç√ì√ö√£√µ√É√ï√¢√™√¥√Ç√ä√î√†√®√¨√≤√π√Ä√à√å√í√ô")
+    font = LoadImageFont("assets/font2.png", " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;':"",./<>?~`Á«·ÈÌÛ˙¡…Õ”⁄„ı√’‚ÍÙ¬ ‘‡ËÏÚ˘¿»Ã“Ÿ")
 
     cameraSpeed = 1000
     camera.Zoom = 2!
