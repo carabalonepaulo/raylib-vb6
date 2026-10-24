@@ -846,9 +846,16 @@ Public Sub Run(ByRef TargetForm As Form, ByVal ScreenW As Long, ByVal ScreenH As
 
         UpdateInput
         UpdateMouse m_hWnd
+        If IsKeyPressed(KEY_F1) Then DebugToggle
 
+        DebugBeginFrame
+        DebugBeginUpdate
         Game_Update (dt)
+        DebugEndUpdate
+        DebugBeginDraw
         Game_Draw (dt)
+        DebugEndDraw
+        DebugEndFrame dt
 
         mWindowResized = False
         DoEvents
@@ -4090,7 +4097,10 @@ Public Sub Clear(ByVal r As Single, ByVal g As Single, ByVal b As Single, ByVal 
 End Sub
 
 Public Sub EndDrawing()
+    DebugDrawOverlay
+    DebugGpuBegin
     rlDrawRenderBatchActive
+    DebugGpuEnd
     SwapBuffers m_hDC
 End Sub
 

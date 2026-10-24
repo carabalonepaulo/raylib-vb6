@@ -35,6 +35,8 @@ Sub Game_Load()
     camera.Rot = 0!
 
     map = LoadTilemap(0)
+
+    DebugInit font
 End Sub
 
 Sub Game_Unload()

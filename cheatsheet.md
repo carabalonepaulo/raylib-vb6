@@ -330,6 +330,53 @@ Sub PlayMusic(ByVal path As String)
 Sub StopMusic()
 ```
 
+# Debug overlay (modDebug)
+
+Not part of the raylib API: it is a project convenience module. It collects per-frame
+timings and rlgl stats and draws a rolling plot overlay (a replacement for `DrawFPS`).
+
+```vb
+' setup / control
+Sub DebugInit(ByRef font As ImageFont, Optional ByVal maxSamples As Long = 240)
+Sub DebugToggle()
+Function DebugIsVisible() As Boolean
+
+' per-frame markers (called automatically by Run; see notes)
+Sub DebugBeginFrame()
+Sub DebugBeginUpdate()
+Sub DebugEndUpdate()
+Sub DebugBeginDraw()
+Sub DebugEndDraw()
+Sub DebugEndFrame(ByVal frameDt As Single)
+
+' query (values in milliseconds, except the fps getters)
+Function DebugCurrent(ByVal metric As DebugMetric) As Single
+Function DebugAverage(ByVal metric As DebugMetric) As Single
+Function DebugMaximum(ByVal metric As DebugMetric) As Single
+Function DebugLow1(ByVal metric As DebugMetric) As Single   ' mean of the worst 1%
+Function DebugSample(ByVal metric As DebugMetric, ByVal i As Long) As Single  ' i = 0 is the oldest
+Function DebugGetCount() As Long
+Function DebugCurrentFps() As Single
+Function DebugLow1Fps() As Single
+Function DebugDrawCallCount() As Long
+Function DebugVertexCount() As Long
+
+' drawing (called automatically by EndDrawing)
+Sub DebugDrawOverlay()
+
+' GPU timer query (GL_ARB/EXT_timer_query; loaded dynamically)
+Sub DebugGpuBegin()
+Sub DebugGpuEnd()
+Function DebugGpuIsAvailable() As Boolean
+Function DebugGpuStatus() As String
+```
+
+- Enum `DebugMetric`: `DEBUGM_FRAME`, `DEBUGM_UPDATE`, `DEBUGM_DRAW`, `DEBUGM_GPU`.
+- Call `DebugInit font` once (e.g. in `Game_Load`) with the bitmap font used for text. Without it the overlay draws nothing.
+- `Run` drives the markers automatically: `DebugBeginFrame` resets the rlgl frame stats, update/draw are timed around `Game_Update`/`Game_Draw`, and `DebugEndFrame dt` records the wall-clock frame time. `EndDrawing` draws the overlay and runs the GPU query. F1 toggles visibility.
+- It keeps a ring buffer of `maxSamples` frames (default 240, ~4 s at 60 fps), one sample per frame. The overlay shows FRAME / UPDATE / DRAW / GPU rows, each with current, max and avg, plus FPS, 1% low, draw calls and vertices.
+- GPU time uses `GL_ARB_timer_query` (or `GL_EXT_timer_query`) through `wglGetProcAddress` + `DispCallFunc` (OpenGL 1.1 has no timer query). It reads the PREVIOUS frame's result (no pipeline stall). If the driver does not expose the extension, `DebugGpuIsAvailable` is False and the row shows `n/a`; `DebugGpuStatus` gives a diagnostic string (e.g. `ARB-ok`).
+
 # Types
 
 ```vb
@@ -464,4 +511,7 @@ KEY_F1 .. KEY_F12
 ' modifiers
 KEY_LEFT_SHIFT  KEY_LEFT_CONTROL  KEY_LEFT_ALT
 KEY_RIGHT_SHIFT  KEY_RIGHT_CONTROL  KEY_RIGHT_ALT
+
+' DebugMetric (modDebug)
+DEBUGM_FRAME  DEBUGM_UPDATE  DEBUGM_DRAW  DEBUGM_GPU
 ```

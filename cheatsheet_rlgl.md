@@ -123,9 +123,13 @@ Function rlGetBatchVertexCount() As Long
 Function rlGetBatchDrawCallCount() As Long
 Function rlGetBatchMaxVertices() As Long
 Function rlIsBatchActive() As Boolean              ' True between rlBegin/rlEnd
+Sub rlResetFrameStats()
+Function rlGetFrameDrawCallCount() As Long
+Function rlGetFrameVertexCount() As Long
 ```
 
 - The batch is flushed automatically when it is full (`rlGetBatchMaxVertices`) and when the draw-call list overflows. Consecutive vertices with the same mode and texture are merged into a single draw call.
+- `rlGetBatch*` report the state of the batch that is CURRENTLY being recorded (pending, not yet flushed). `rlGetFrame*` report the ACCUMULATED totals for the whole frame: every flush (partial or forced) plus every raw draw (`rlDrawVertexArray*`) adds to them. `rlResetFrameStats` zeroes those accumulators; call it once at the start of each frame (the debug overlay does this via `DebugBeginFrame`).
 
 # Direct OpenGL emulation
 

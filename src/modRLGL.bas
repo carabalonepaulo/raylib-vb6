@@ -101,6 +101,10 @@ Private mMaxVertices As Long
 Private mLineWidth As Single
 Private mPointSize As Single
 
+' Estatisticas acumuladas do frame atual (zera em rlResetFrameStats).
+Private mFrameDrawCalls As Long
+Private mFrameVertexCount As Long
+
 Private mCurrentMode As Long
 Private mInBeginEnd As Boolean
 Private mCurrentTextureId As Long
@@ -147,6 +151,8 @@ Public Sub rlLoadRenderBatch(ByVal numBuffers As Long, ByVal maxVertices As Long
     mBatch.drawCounter = 0
     mBatch.currentDepth = 0!
     mBatch.maxDraws = DEFAULT_MAX_DRAWS
+    mFrameDrawCalls = 0
+    mFrameVertexCount = 0
 
     ReDim mBatch.vertexBuffer(0 To numBuffers - 1)
     For i = 0 To numBuffers - 1
@@ -394,6 +400,21 @@ Public Function rlGetBatchDrawCallCount() As Long
     rlGetBatchDrawCallCount = mBatch.drawCounter
 End Function
 
+' Estatisticas acumuladas do frame (todas as chamadas de desenho, inclusive os
+' flushes parciais). O Run zera o acumulador no inicio de cada frame.
+Public Sub rlResetFrameStats()
+    mFrameDrawCalls = 0
+    mFrameVertexCount = 0
+End Sub
+
+Public Function rlGetFrameDrawCallCount() As Long
+    rlGetFrameDrawCallCount = mFrameDrawCalls
+End Function
+
+Public Function rlGetFrameVertexCount() As Long
+    rlGetFrameVertexCount = mFrameVertexCount
+End Function
+
 Public Function rlGetBatchMaxVertices() As Long
     rlGetBatchMaxVertices = mMaxVertices
 End Function
@@ -455,12 +476,16 @@ End Sub
 ' a GPU e restauradas depois, para a array ser desenhada em espaco de objeto com
 ' a camera/projecao atuais.
 Public Sub rlDrawVertexArray(ByVal mode As Long, ByVal first As Long, ByVal count As Long)
+    mFrameDrawCalls = mFrameDrawCalls + 1
+    mFrameVertexCount = mFrameVertexCount + count
     ApplyMatricesToGL
     glDrawArrays mode, first, count
     ResetGLMatrices
 End Sub
 
 Public Sub rlDrawVertexArrayElements(ByVal mode As Long, ByVal count As Long, ByVal indices As Long)
+    mFrameDrawCalls = mFrameDrawCalls + 1
+    mFrameVertexCount = mFrameVertexCount + count
     ApplyMatricesToGL
     glDrawElements mode, count, GL_UNSIGNED_INT, indices
     ResetGLMatrices
@@ -517,6 +542,9 @@ Private Sub FlushBatch()
         glDisableClientState GL_TEXTURE_COORD_ARRAY
         glDisable GL_TEXTURE_2D
     End If
+
+    mFrameDrawCalls = mFrameDrawCalls + mBatch.drawCounter
+    mFrameVertexCount = mFrameVertexCount + mBatch.vertexBuffer(b).elementCount
 
     mBatch.vertexBuffer(b).elementCount = 0
     mBatch.drawCounter = 0
