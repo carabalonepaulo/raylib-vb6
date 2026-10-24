@@ -96,6 +96,7 @@ screenHeight As Long
 - `Clear(r, g, b, a)` takes four components, not a `ColorRGBA`.
 - FLAG list: `FLAG_VSYNC_HINT`, `FLAG_FULLSCREEN_MODE`, `FLAG_WINDOW_RESIZABLE`, `FLAG_WINDOW_UNDECORATED`, `FLAG_WINDOW_TRANSPARENT`, `FLAG_MSAA_4X_HINT`, `FLAG_WINDOW_HIDDEN`, `FLAG_WINDOW_ALWAYS_RUN`, `FLAG_WINDOW_MINIMIZED`, `FLAG_WINDOW_MAXIMIZED`, `FLAG_WINDOW_UNFOCUSED`, `FLAG_WINDOW_TOPMOST`, `FLAG_WINDOW_HIGHDPI`, `FLAG_WINDOW_MOUSE_PASSTHROUGH`, `FLAG_BORDERLESS_WINDOWED_MODE`, `FLAG_INTERLACED_HINT`.
 - `SetConfigFlags` may be called before `Run` (flags applied at init) or during `Game_Load`. `FLAG_VSYNC_HINT` replaces the old `SetVSync`/`ToggleVSync`.
+- The `Run` frame limiter (`TargetFPS`, also `SetTargetFPS`) only kicks in when vsync is **off** (`IsVSyncEnabled` = False). With vsync on the display refresh paces the loop and the target is ignored, matching raylib (its frame wait is a top-up over the whole frame and the swap already fills it). Use one or the other: for a vblank-paced loop pass `TargetFPS = 0` and enable `FLAG_VSYNC_HINT`.
 
 # 2D Camera mode
 

@@ -809,7 +809,7 @@ Public Sub Run(ByRef TargetForm As Form, ByVal ScreenW As Long, ByVal ScreenH As
         QueryPerformanceCounter counterEnd
         dt = CSng(counterEnd - counterStart) / CSng(freq)
 
-        If mTargetFPS > 0 Then
+        If mTargetFPS > 0 And IsVSyncEnabled() = False Then
             Dim targetFrameTime As Single
             targetFrameTime = 1# / CSng(mTargetFPS)
             If dt < targetFrameTime Then
